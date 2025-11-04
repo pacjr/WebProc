@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Actus Nível Legal Services - Professional Design System
+All colors MUST be HSL.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@layer base {
+  :root {
+    /* Primary Colors - Deep Professional Blue */
+    --background: 0 0% 100%;
+    --foreground: 213 30% 15%;
+    
+    /* Legal Blue - Deep and Professional */
+    --primary: 213 30% 15%;
+    --primary-foreground: 35 25% 88%;
+    
+    /* Warm Beige/Brown - Traditional Legal */
+    --secondary: 35 25% 88%;
+    --secondary-foreground: 213 30% 15%;
+    
+    /* Elegant Neutrals */
+    --muted: 35 15% 95%;
+    --muted-foreground: 213 15% 35%;
+    
+    --accent: 42 15% 85%;
+    --accent-foreground: 213 30% 15%;
+    
+    /* Card and Surface Colors */
+    --card: 0 0% 100%;
+    --card-foreground: 213 30% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 30% 15%;
+    
+    /* Utility Colors */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 35 20% 90%;
+    --input: 35 20% 95%;
+    --ring: 213 30% 15%;
+    
+    /* Gold Accent for Premium Feel */
+    --gold: 42 100% 50%;
+    --gold-muted: 42 50% 85%;
+    
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(213, 30%, 15%), hsl(213, 35%, 25%));
+    --gradient-section: linear-gradient(180deg, hsl(35, 25%, 97%), hsl(0, 0%, 100%));
+    
+    /* Shadows */
+    --shadow-elegant: 0 10px 40px -10px hsl(213, 30%, 15%, 0.15);
+    --shadow-card: 0 4px 20px -4px hsl(213, 30%, 15%, 0.1);
+    --shadow-button: 0 2px 10px -2px hsl(213, 30%, 15%, 0.2);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 96%;
+
+    --sidebar-foreground: 213 30% 15%;
+
+    --sidebar-primary: 213 30% 15%;
+
+    --sidebar-primary-foreground: 35 25% 88%;
+
+    --sidebar-accent: 35 20% 92%;
+
+    --sidebar-accent-foreground: 213 30% 15%;
+
+    --sidebar-border: 35 20% 88%;
+
+    --sidebar-ring: 213 30% 15%;
+  }
+
+  .dark {
+    --background: 213 30% 8%;
+    --foreground: 35 25% 88%;
+    
+    --primary: 35 25% 88%;
+    --primary-foreground: 213 30% 15%;
+    
+    --secondary: 213 25% 18%;
+    --secondary-foreground: 35 25% 88%;
+    
+    --muted: 213 25% 12%;
+    --muted-foreground: 35 15% 65%;
+    
+    --accent: 213 25% 20%;
+    --accent-foreground: 35 25% 88%;
+    
+    --card: 213 25% 10%;
+    --card-foreground: 35 25% 88%;
+    
+    --popover: 213 25% 10%;
+    --popover-foreground: 35 25% 88%;
+    
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 213 25% 18%;
+    --input: 213 25% 15%;
+    --ring: 35 25% 88%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(213, 30%, 8%), hsl(213, 35%, 15%));
+    --gradient-section: linear-gradient(180deg, hsl(213, 25%, 10%), hsl(213, 30%, 8%));
+    
+    --shadow-elegant: 0 10px 40px -10px hsl(0, 0%, 0%, 0.4);
+    --shadow-card: 0 4px 20px -4px hsl(0, 0%, 0%, 0.3);
+    --shadow-button: 0 2px 10px -2px hsl(0, 0%, 0%, 0.4);
+
+    --sidebar-background: 213 25% 12%;
+    --sidebar-foreground: 35 25% 88%;
+    --sidebar-primary: 35 25% 88%;
+    --sidebar-primary-foreground: 213 30% 15%;
+    --sidebar-accent: 213 25% 18%;
+    --sidebar-accent-foreground: 35 25% 88%;
+    --sidebar-border: 213 25% 18%;
+    --sidebar-ring: 35 25% 88%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+  
+  .font-sans {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .section-gradient {
+    background: var(--gradient-section);
+  }
+  
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-spring {
+    transition: var(--transition-spring);
+  }
+}
