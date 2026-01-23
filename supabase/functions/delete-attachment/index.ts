@@ -25,18 +25,20 @@ Deno.serve(async (req) => {
     // Get user from token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       throw new Error('Unauthorized');
     }
 
-    const { id_proc, fileName } = await req.json();
+    // Agora recebemos também o caminho_arquivo
+    const { id_proc, fileName, caminho_arquivo } = await req.json();
 
-    if (!id_proc || !fileName) {
-      throw new Error('id_proc and fileName are required');
+    if (!id_proc || !fileName || !caminho_arquivo) {
+      throw new Error('id_proc, fileName e caminho_arquivo são obrigatórios');
     }
 
     console.log(`Deleting attachment ${fileName} for user ${user.id}, process ${id_proc}`);
+    console.log(`File path recebido: ${caminho_arquivo}`);
 
     // Get R2 credentials
     const r2AccountId = Deno.env.get('R2_ACCOUNT_ID')!;
@@ -53,28 +55,24 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Create file path
-    const filePath = `${id_proc}/${fileName}`;
-
-    // Delete from R2
+    // Usar o caminho_arquivo diretamente
     const command = new DeleteObjectCommand({
       Bucket: 'webproc',
-      Key: filePath,
+      Key: caminho_arquivo,
     });
 
     try {
       await s3Client.send(command);
+      console.log(`Arquivo excluído do R2: ${caminho_arquivo}`);
     } catch (error) {
-      // If file doesn't exist, continue (don't fail)
       console.log('File may not exist in R2:', error.message);
     }
 
-    // Delete metadata from Supabase
+    // Delete metadata from Supabase (removi o filtro por user_id para simplificar)
     const { error: deleteError } = await supabase
       .from('arquivos_enviados')
       .delete()
       .eq('id_proc', id_proc)
-      .eq('user_id', user.id)
       .eq('nome_arquivo', fileName);
 
     if (deleteError) {

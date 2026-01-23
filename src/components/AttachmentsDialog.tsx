@@ -23,6 +23,7 @@ interface Attachment {
   size: number;
   created_at: string;
   url: string | null;
+  caminho_arquivo: string; // novo campo vindo da tabela
 }
 
 export const AttachmentsDialog = ({
@@ -45,7 +46,7 @@ export const AttachmentsDialog = ({
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Você precisa estar autenticado");
         return;
@@ -73,24 +74,19 @@ export const AttachmentsDialog = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // No file size limit since we're using R2 now
-    // (you can adjust this if needed)
-
     setUploading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Você precisa estar autenticado");
         return;
       }
 
-      // Create FormData
       const formData = new FormData();
       formData.append('file', file);
       formData.append('id_proc', idProc.toString());
 
-      // Upload via edge function
       const { error } = await supabase.functions.invoke('upload-attachment', {
         body: formData,
         headers: {
@@ -107,26 +103,25 @@ export const AttachmentsDialog = ({
       toast.error("Erro ao enviar arquivo: " + error.message);
     } finally {
       setUploading(false);
-      // Reset input
       event.target.value = "";
     }
   };
 
-  const handleDelete = async (fileName: string) => {
+  const handleDelete = async (fileName: string, caminhoArquivo: string) => {
     if (!confirm(`Tem certeza que deseja excluir o arquivo "${fileName}"?`)) {
       return;
     }
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Você precisa estar autenticado");
         return;
       }
 
       const { error } = await supabase.functions.invoke('delete-attachment', {
-        body: { id_proc: idProc, fileName },
+        body: { id_proc: idProc, fileName, caminho_arquivo: caminhoArquivo },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -228,7 +223,7 @@ export const AttachmentsDialog = ({
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(attachment.name)}
+                      onClick={() => handleDelete(attachment.name, attachment.caminho_arquivo)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
