@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClienteProvider } from "@/contexts/ClienteContext";
+import { WebProcProvider } from "@/contexts/WebProcContext";
 import Navigation from "@/components/ui/navigation";
 import Home from "@/pages/Home";
 import Auth from "@/pages/Auth";
@@ -15,13 +16,32 @@ import ConsultaProcessos from "@/pages/ConsultaProcessos";
 import RecuperarSenha from "@/pages/RecuperarSenha";
 import NovaSenha from "@/pages/NovaSenha";
 import NotFound from "@/pages/NotFound";
+import WebProcShell from "@/components/webproc/WebProcShell";
+import ProcessosList from "@/pages/webproc/ProcessosList";
+import NovoProcesso from "@/pages/webproc/NovoProcesso";
+import ProcessoDetail from "@/pages/webproc/ProcessoDetail";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [currentSection, setCurrentSection] = useState("home");
   const location = useLocation();
-  const isAuthPage = location.pathname === "/auth" || location.pathname === "/recuperar-senha" || location.pathname === "/nova-senha" || location.pathname.startsWith("/dashboard");
+  const isPublicOnlyRoute =
+    location.pathname === "/" ||
+    location.pathname.startsWith("/#");
+
+  const hidePublicNavigation =
+    location.pathname === "/auth" ||
+    location.pathname === "/recuperar-senha" ||
+    location.pathname === "/nova-senha" ||
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/app");
 
   const handleNavigation = (section: string) => {
     setCurrentSection(section);
@@ -29,9 +49,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen">
-      {!isAuthPage && (
-        <Navigation 
-          currentSection={currentSection} 
+      {!hidePublicNavigation && isPublicOnlyRoute && (
+        <Navigation
+          currentSection={currentSection}
           onSectionChange={handleNavigation}
         />
       )}
@@ -52,6 +72,19 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route
+                  path="/app"
+                  element={
+                    <WebProcProvider>
+                      <WebProcShell />
+                    </WebProcProvider>
+                  }
+                >
+                  <Route index element={<Navigate to="processos" replace />} />
+                  <Route path="processos" element={<ProcessosList />} />
+                  <Route path="processos/novo" element={<NovoProcesso />} />
+                  <Route path="processos/:idProc" element={<ProcessoDetail />} />
+                </Route>
                 <Route path="/dashboard" element={<Dashboard />}>
                   <Route index element={<DashboardHome />} />
                   <Route path="cadastro" element={<CadastroProcessos />} />

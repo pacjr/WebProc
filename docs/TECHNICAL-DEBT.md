@@ -1,0 +1,46 @@
+# WebProc Technical Debt
+
+## TD-WP-01 — Temporary Client Master
+
+`webproc.clientes` is a temporary WebProc client master table introduced in WP-01.
+
+Future target: **FlowProc** should become the canonical client master. Do not integrate FlowProc in WP-01.
+
+## TD-WP-02 — Legacy Supabase Objects
+
+Existing `public` schema tables, RLS policies, Storage objects, and legacy Edge Functions remain preserved as historical/reference sources until the new WebProc application passes validation.
+
+**Rule:** No legacy object should be deleted during reconstruction.
+
+Legacy runtime code must not be used for new WebProc features. New runtime code uses the `webproc` schema only.
+
+## TD-WP-03 — Same-Client Membership Visibility for Author Display
+
+Resolved in WP-01D (`20260307200000_wp01d_same_client_membership_select.sql`).
+
+Authenticated users with an active membership in client X may SELECT active membership identity rows (`user_id`, `nome`, `email`, `cliente_id`) for client X only. Cross-client and inactive membership reads remain denied. Authorization is evaluated through `webproc_private.has_active_client_membership()` to avoid RLS recursion on `webproc.usuarios_clientes`.
+
+## Deployment Portability
+
+The following constraints apply to every environment (development, staging, production):
+
+1. **Supabase Data API must expose schema `webproc`.** Without it, PostgREST returns `PGRST106` and WebProc queries fail before RLS is evaluated. Preserve existing exposed schemas and add `webproc` (for example: `public`, `graphql_public`, `webproc`).
+
+2. **Required WebProc tables must be exposed through the Data API.** At minimum: `webproc.clientes`, `webproc.usuarios_clientes`, `webproc.processos`, `webproc.processo_documentos`.
+
+3. **Internal trigger functions do not need Data API exposure.** Functions such as `webproc.set_updated_at()` are invoked by triggers only.
+
+4. **Current Supabase and Cloudflare infrastructure is temporary.** Development/staging may run on Insight-owned accounts during reconstruction.
+
+5. **Production infrastructure will be recreated or migrated to Actus-owned accounts.** Do not treat current project refs, bucket names, or account IDs as permanent.
+
+6. **Required Edge Functions must exist in Git and be reproducible during Actus deployment.** No runtime may depend on dashboard-only functions that are absent from the repository.
+
+7. **No account IDs, project refs, bucket identifiers, secrets, or administrative UUIDs may become application business logic.** Configuration belongs in environment variables and deployment docs; authorization belongs in RLS and membership data—not hard-coded identifiers in source code.
+
+## Authorship Model (WP-01C)
+
+- `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).
+- Operational display identity is resolved through `webproc.usuarios_clientes` (`nome`, `email`) linked by `user_id`.
+- Author names/emails are not duplicated on `webproc.processos`.
+- Reassignment and impersonation are out of scope; future actions by another authorized user use that user's own authentication identity without overwriting original authorship.

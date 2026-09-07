@@ -46,7 +46,7 @@ const Auth = () => {
           title: "Login realizado com sucesso",
           description: "Redirecionando...",
         });
-        navigate("/dashboard");
+        navigate("/app/processos");
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -1,0 +1,320 @@
+export type ProcessoStatus =
+  | "EM_PREENCHIMENTO"
+  | "PENDENTE"
+  | "IMPORTADO"
+  | "CONCLUIDO"
+  | "CANCELADO";
+
+export type DocumentoTipo = "LINK" | "ARQUIVO";
+
+export interface WebProcProcesso {
+  id_proc: number;
+  cliente_id: number;
+  created_by: string;
+  n_processo: string | null;
+  exec_prov: string | null;
+  nome_cli: string | null;
+  reclamante: string | null;
+  reclamado: string | null;
+  instituicao: string | null;
+  instrucao: string | null;
+  obs: string | null;
+  dt_entrada: string;
+  dt_fatal: string | null;
+  status: ProcessoStatus;
+  pendente_at: string | null;
+  importado_at: string | null;
+  concluido_at: string | null;
+  cancelado_at: string | null;
+  cancelado_por: string | null;
+  motivo_cancelamento: string | null;
+  origem_cancelamento: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type WebProcProcessoInsert = {
+  id_proc?: number;
+  cliente_id: number;
+  created_by: string;
+  n_processo?: string | null;
+  exec_prov?: string | null;
+  nome_cli?: string | null;
+  reclamante?: string | null;
+  reclamado?: string | null;
+  instituicao?: string | null;
+  instrucao?: string | null;
+  obs?: string | null;
+  dt_entrada?: string;
+  dt_fatal?: string | null;
+  status?: ProcessoStatus;
+  pendente_at?: string | null;
+  importado_at?: string | null;
+  concluido_at?: string | null;
+  cancelado_at?: string | null;
+  cancelado_por?: string | null;
+  motivo_cancelamento?: string | null;
+  origem_cancelamento?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type WebProcProcessoDraftUpdate = {
+  n_processo?: string | null;
+  exec_prov?: string | null;
+  reclamante?: string | null;
+  reclamado?: string | null;
+  instrucao?: string | null;
+  obs?: string | null;
+  dt_fatal?: string | null;
+};
+
+export interface WebProcProcessoLink {
+  id: string;
+  id_proc: number;
+  tipo: "LINK";
+  nome: string | null;
+  url: string;
+  created_at: string;
+}
+
+export interface WebProcAuthorIdentity {
+  nome: string | null;
+  email: string;
+}
+
+export interface WebProcProtocolarResult {
+  success: boolean;
+  id_proc: number;
+  status?: ProcessoStatus;
+  pendente_at?: string | null;
+  already_protocolado?: boolean;
+  error?: string;
+}
+
+export interface WebProcSalvarRascunhoResult {
+  success: boolean;
+  id_proc: number;
+  error?: string;
+}
+
+export interface WebProcReabrirResult {
+  success: boolean;
+  id_proc: number;
+  status: ProcessoStatus;
+  pendente_at: string | null;
+  already_open: boolean;
+}
+
+export interface WebProcProtocolRequirement {
+  id: string;
+  label: string;
+  met: boolean;
+}
+
+export type WebProcDatabase = {
+  webproc: {
+    Tables: {
+      clientes: {
+        Row: {
+          id: number;
+          codigo_cliente: number;
+          nome: string;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          codigo_cliente: number;
+          nome: string;
+          ativo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          codigo_cliente?: number;
+          nome?: string;
+          ativo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      usuarios_clientes: {
+        Row: {
+          id: number;
+          cliente_id: number;
+          user_id: string | null;
+          nome: string | null;
+          email: string;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          cliente_id: number;
+          user_id?: string | null;
+          nome?: string | null;
+          email: string;
+          ativo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          cliente_id?: number;
+          user_id?: string | null;
+          nome?: string | null;
+          email?: string;
+          ativo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_clientes_cliente_id_fkey";
+            columns: ["cliente_id"];
+            isOneToOne: false;
+            referencedRelation: "clientes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      processos: {
+        Row: WebProcProcesso;
+        Insert: WebProcProcessoInsert;
+        Update: Partial<WebProcProcesso>;
+        Relationships: [
+          {
+            foreignKeyName: "processos_cliente_id_fkey";
+            columns: ["cliente_id"];
+            isOneToOne: false;
+            referencedRelation: "clientes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      processo_documentos: {
+        Row: {
+          id: string;
+          id_proc: number;
+          tipo: DocumentoTipo;
+          nome: string | null;
+          url: string | null;
+          object_key: string | null;
+          nome_arquivo: string | null;
+          content_type: string | null;
+          tamanho: number | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          id_proc: number;
+          tipo: DocumentoTipo;
+          nome?: string | null;
+          url?: string | null;
+          object_key?: string | null;
+          nome_arquivo?: string | null;
+          content_type?: string | null;
+          tamanho?: number | null;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          id_proc?: number;
+          tipo?: DocumentoTipo;
+          nome?: string | null;
+          url?: string | null;
+          object_key?: string | null;
+          nome_arquivo?: string | null;
+          content_type?: string | null;
+          tamanho?: number | null;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "processo_documentos_id_proc_fkey";
+            columns: ["id_proc"];
+            isOneToOne: false;
+            referencedRelation: "processos";
+            referencedColumns: ["id_proc"];
+          },
+        ];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      protocolar_processo: {
+        Args: {
+          p_id_proc: number;
+        };
+        Returns: WebProcProtocolarResult;
+      };
+      reabrir_processo: {
+        Args: {
+          p_id_proc: number;
+        };
+        Returns: WebProcReabrirResult;
+      };
+      salvar_rascunho: {
+        Args: {
+          p_id_proc: number;
+          p_n_processo: string | null;
+          p_exec_prov: string | null;
+          p_reclamante: string | null;
+          p_reclamado: string | null;
+          p_instrucao: string | null;
+          p_obs: string | null;
+          p_dt_fatal: string | null;
+        };
+        Returns: WebProcSalvarRascunhoResult;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+};
+
+export interface WebProcMembership {
+  membershipId: number;
+  clienteId: number;
+  nome: string | null;
+  email: string;
+  cliente: {
+    id: number;
+    codigo_cliente: number;
+    nome: string;
+  };
+}
+
+export interface WebProcProcessoDetail extends WebProcProcesso {
+  author: WebProcAuthorIdentity | null;
+  cliente: {
+    nome: string;
+  };
+}
+
+export type WebProcProcessoListItem = Pick<
+  WebProcProcesso,
+  | "id_proc"
+  | "n_processo"
+  | "exec_prov"
+  | "reclamante"
+  | "dt_entrada"
+  | "dt_fatal"
+  | "status"
+> & {
+  author: WebProcAuthorIdentity | null;
+};
