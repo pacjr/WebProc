@@ -1,5 +1,5 @@
 -- WP-02B validation harness
--- Requires: local Supabase with all migrations applied (through 20260307260000).
+-- Requires: local Supabase with all migrations applied (through 20260307270000).
 -- Run: supabase/reference/run_wp02b_validation.sh
 -- Or:  psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/reference/wp02b_validation_harness.sql
 --
@@ -1029,6 +1029,462 @@ BEGIN
       v_expired_resolved
     )
   );
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 18: authenticated INSERT process succeeds (execution boundary)
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_business date := (timezone('America/Sao_Paulo', now()))::date + 2;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  INSERT INTO webproc.processos (
+    cliente_id,
+    created_by,
+    status,
+    n_processo,
+    instrucao,
+    dt_fatal
+  )
+  VALUES (
+    v_cliente_a,
+    v_user_a,
+    'EM_PREENCHIMENTO',
+    'WP02B-AUTH-INSERT',
+    'authenticated execution-boundary insert',
+    pg_temp.wp02b_dt_fatal_for_business_date(v_business)
+  )
+  RETURNING id_proc INTO v_id_proc;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    18,
+    'authenticated process INSERT succeeds',
+    v_id_proc IS NOT NULL,
+    'insert returned null id_proc'
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    PERFORM pg_temp.wp02b_assert(
+      18,
+      'authenticated process INSERT succeeds',
+      false,
+      format('sqlstate=%s message=%s', SQLSTATE, SQLERRM)
+    );
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 19: PROCESS_CREATED recorded under authenticated INSERT
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_events integer;
+  v_business date := (timezone('America/Sao_Paulo', now()))::date + 2;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  INSERT INTO webproc.processos (
+    cliente_id,
+    created_by,
+    status,
+    dt_fatal
+  )
+  VALUES (
+    v_cliente_a,
+    v_user_a,
+    'EM_PREENCHIMENTO',
+    pg_temp.wp02b_dt_fatal_for_business_date(v_business)
+  )
+  RETURNING id_proc INTO v_id_proc;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  SELECT count(*) INTO v_events
+  FROM webproc.operacional_eventos e
+  WHERE e.id_proc = v_id_proc
+    AND e.event_type = 'PROCESS_CREATED';
+
+  PERFORM pg_temp.wp02b_assert(
+    19,
+    'PROCESS_CREATED recorded on authenticated INSERT',
+    v_events = 1,
+    format('events=%s', v_events)
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    PERFORM pg_temp.wp02b_assert(
+      19,
+      'PROCESS_CREATED recorded on authenticated INSERT',
+      false,
+      format('sqlstate=%s message=%s', SQLSTATE, SQLERRM)
+    );
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 20: authenticated salvar_rascunho succeeds
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_business date := (timezone('America/Sao_Paulo', now()))::date + 1;
+  v_result jsonb;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  INSERT INTO webproc.processos (cliente_id, created_by, status)
+  VALUES (v_cliente_a, v_user_a, 'EM_PREENCHIMENTO')
+  RETURNING id_proc INTO v_id_proc;
+
+  SELECT webproc.salvar_rascunho(
+    v_id_proc,
+    'WP02B-AUTH-SAVE',
+    NULL,
+    'Reclamante',
+    'Reclamado',
+    'instrucao valida',
+    'obs',
+    pg_temp.wp02b_dt_fatal_for_business_date(v_business)
+  ) INTO v_result;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    20,
+    'authenticated salvar_rascunho succeeds',
+    (v_result ->> 'success') = 'true'
+      AND (v_result #>> '{operational,opa}') IS NOT NULL,
+    format('result=%s', v_result)
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    PERFORM pg_temp.wp02b_assert(
+      20,
+      'authenticated salvar_rascunho succeeds',
+      false,
+      format('sqlstate=%s message=%s', SQLSTATE, SQLERRM)
+    );
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 21: authenticated get_operational_context succeeds
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_business date := (timezone('America/Sao_Paulo', now()))::date;
+  v_result jsonb;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  INSERT INTO webproc.processos (
+    cliente_id,
+    created_by,
+    status,
+    dt_fatal
+  )
+  VALUES (
+    v_cliente_a,
+    v_user_a,
+    'EM_PREENCHIMENTO',
+    pg_temp.wp02b_dt_fatal_for_business_date(v_business)
+  )
+  RETURNING id_proc INTO v_id_proc;
+
+  SELECT webproc.get_operational_context(v_id_proc) INTO v_result;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    21,
+    'authenticated get_operational_context succeeds',
+    (v_result ->> 'id_proc')::bigint = v_id_proc
+      AND (v_result #>> '{operational,opa}') = 'ACT',
+    format('result=%s', v_result)
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    PERFORM pg_temp.wp02b_assert(
+      21,
+      'authenticated get_operational_context succeeds',
+      false,
+      format('sqlstate=%s message=%s', SQLSTATE, SQLERRM)
+    );
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 22: authenticated protocolar and reabrir succeed
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_business date := (timezone('America/Sao_Paulo', now()))::date;
+  v_proto jsonb;
+  v_reopen jsonb;
+  v_status text;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  INSERT INTO webproc.processos (
+    cliente_id,
+    created_by,
+    status,
+    n_processo,
+    instrucao,
+    dt_fatal
+  )
+  VALUES (
+    v_cliente_a,
+    v_user_a,
+    'EM_PREENCHIMENTO',
+    'WP02B-AUTH-LIFE',
+    'instrucao valida',
+    pg_temp.wp02b_dt_fatal_for_business_date(v_business)
+  )
+  RETURNING id_proc INTO v_id_proc;
+
+  INSERT INTO webproc.processo_documentos (id_proc, tipo, url, created_by)
+  VALUES (v_id_proc, 'LINK', 'https://example.com/wp02b-auth-life', v_user_a);
+
+  SELECT webproc.protocolar_processo(v_id_proc) INTO v_proto;
+  SELECT webproc.reabrir_processo(v_id_proc) INTO v_reopen;
+
+  SELECT status INTO v_status
+  FROM webproc.processos
+  WHERE id_proc = v_id_proc;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    22,
+    'authenticated protocolar and reabrir succeed',
+    (v_proto ->> 'success') = 'true'
+      AND (v_reopen ->> 'success') = 'true'
+      AND v_status = 'EM_PREENCHIMENTO',
+    format('proto=%s reopen=%s status=%s', v_proto, v_reopen, v_status)
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    PERFORM pg_temp.wp02b_assert(
+      22,
+      'authenticated protocolar and reabrir succeed',
+      false,
+      format('sqlstate=%s message=%s', SQLSTATE, SQLERRM)
+    );
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 23: authenticated cannot EXECUTE private evidence mutators
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_allowed boolean := false;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  SELECT p.id_proc
+  INTO v_id_proc
+  FROM webproc.processos p
+  WHERE p.cliente_id = v_cliente_a
+    AND p.created_by = v_user_a
+  ORDER BY p.id_proc DESC
+  LIMIT 1;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  BEGIN
+    PERFORM webproc_private.record_operational_event(
+      v_id_proc,
+      v_cliente_a,
+      'PROCESS_CREATED',
+      v_user_a,
+      jsonb_build_object('initial_status', 'EM_PREENCHIMENTO')
+    );
+    v_allowed := true;
+  EXCEPTION
+    WHEN insufficient_privilege THEN
+      v_allowed := false;
+    WHEN OTHERS THEN
+      IF SQLSTATE = '42501' THEN
+        v_allowed := false;
+      ELSE
+        RAISE;
+      END IF;
+  END;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    23,
+    'authenticated cannot EXECUTE private evidence mutators',
+    NOT v_allowed,
+    'direct EXECUTE on record_operational_event unexpectedly succeeded'
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    RAISE;
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 24: authenticated direct evidence DML denied (insert/update/delete)
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_intervention_id uuid;
+  v_insert_ok boolean := false;
+  v_update_ok boolean := false;
+  v_delete_ok boolean := false;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  SELECT p.id_proc
+  INTO v_id_proc
+  FROM webproc.processos p
+  WHERE p.cliente_id = v_cliente_a
+    AND p.created_by = v_user_a
+  ORDER BY p.id_proc DESC
+  LIMIT 1;
+
+  SELECT i.intervention_id
+  INTO v_intervention_id
+  FROM webproc.operacional_intervencoes i
+  WHERE i.id_proc = v_id_proc
+  LIMIT 1;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_a);
+
+  BEGIN
+    INSERT INTO webproc.operacional_eventos (
+      id_proc, cliente_id, event_type, actor_user_id
+    ) VALUES (v_id_proc, v_cliente_a, 'PROCESS_CREATED', v_user_a);
+    v_insert_ok := true;
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+    WHEN OTHERS THEN IF SQLSTATE = '42501' THEN NULL; ELSE RAISE; END IF;
+  END;
+
+  IF v_intervention_id IS NOT NULL THEN
+    BEGIN
+      UPDATE webproc.operacional_intervencoes
+      SET presentation_count = 999
+      WHERE intervention_id = v_intervention_id;
+      v_update_ok := true;
+    EXCEPTION WHEN insufficient_privilege THEN NULL;
+      WHEN OTHERS THEN IF SQLSTATE = '42501' THEN NULL; ELSE RAISE; END IF;
+    END;
+
+    BEGIN
+      DELETE FROM webproc.operacional_situacao_mudancas
+      WHERE id_proc = v_id_proc;
+      v_delete_ok := true;
+    EXCEPTION WHEN insufficient_privilege THEN NULL;
+      WHEN OTHERS THEN IF SQLSTATE = '42501' THEN NULL; ELSE RAISE; END IF;
+    END;
+  END IF;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    24,
+    'authenticated direct evidence DML denied',
+    NOT v_insert_ok AND NOT v_update_ok AND NOT v_delete_ok,
+    format('insert=%s update=%s delete=%s', v_insert_ok, v_update_ok, v_delete_ok)
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    RAISE;
+END;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Case 25: authenticated cross-client operational read denied
+-- ---------------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_user_a uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  v_user_b uuid := 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+  v_cliente_a bigint;
+  v_id_proc bigint;
+  v_cross_count integer;
+BEGIN
+  SELECT id INTO v_cliente_a FROM webproc.clientes WHERE codigo_cliente = 990001;
+
+  SELECT p.id_proc
+  INTO v_id_proc
+  FROM webproc.processos p
+  WHERE p.cliente_id = v_cliente_a
+  ORDER BY p.id_proc DESC
+  LIMIT 1;
+
+  PERFORM pg_temp.wp02b_begin_authenticated(v_user_b);
+
+  SELECT count(*) INTO v_cross_count
+  FROM webproc.operacional_eventos e
+  WHERE e.id_proc = v_id_proc;
+
+  PERFORM pg_temp.wp02b_reset_auth_context();
+
+  PERFORM pg_temp.wp02b_assert(
+    25,
+    'authenticated cross-client operational read denied',
+    v_cross_count = 0,
+    format('cross_count=%s', v_cross_count)
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    PERFORM pg_temp.wp02b_reset_auth_context();
+    RAISE;
 END;
 $$;
 

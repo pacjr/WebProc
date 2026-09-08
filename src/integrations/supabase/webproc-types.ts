@@ -5,6 +5,8 @@ export type ProcessoStatus =
   | "CONCLUIDO"
   | "CANCELADO";
 
+export type DocumentoStorageState = "STORED" | "PERSISTED" | "PURGED";
+
 export type DocumentoTipo = "LINK" | "ARQUIVO";
 
 export interface WebProcProcesso {
@@ -208,6 +210,10 @@ export type WebProcDatabase = {
           nome_arquivo: string | null;
           content_type: string | null;
           tamanho: number | null;
+          storage_state: DocumentoStorageState | null;
+          persisted_at: string | null;
+          purged_at: string | null;
+          r2_cleanup_pending: boolean;
           created_by: string;
           created_at: string;
         };
@@ -221,6 +227,10 @@ export type WebProcDatabase = {
           nome_arquivo?: string | null;
           content_type?: string | null;
           tamanho?: number | null;
+          storage_state?: DocumentoStorageState | null;
+          persisted_at?: string | null;
+          purged_at?: string | null;
+          r2_cleanup_pending?: boolean;
           created_by: string;
           created_at?: string;
         };
@@ -234,6 +244,10 @@ export type WebProcDatabase = {
           nome_arquivo?: string | null;
           content_type?: string | null;
           tamanho?: number | null;
+          storage_state?: DocumentoStorageState | null;
+          persisted_at?: string | null;
+          purged_at?: string | null;
+          r2_cleanup_pending?: boolean;
           created_by?: string;
           created_at?: string;
         };
