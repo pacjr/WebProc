@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Supabase local/runtime state
+supabase/.temp/
+supabase/.branches/
+
+# Local validation output
+wp03b-smoke-output.txt

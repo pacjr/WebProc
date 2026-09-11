@@ -41,6 +41,14 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION pg_temp.wp02b_today_sp()
+RETURNS date
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT (timezone('America/Sao_Paulo', now()))::date;
+$$;
+
 CREATE OR REPLACE FUNCTION pg_temp.wp02b_dt_fatal_for_business_date(p_deadline date)
 RETURNS timestamptz
 LANGUAGE sql
@@ -180,7 +188,8 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_today date := pg_temp.wp02b_today_sp();
+  v_business date := v_today;
   v_situation_count integer;
   v_intervention_count integer;
 BEGIN
@@ -192,7 +201,7 @@ BEGIN
     v_cliente_id,
     v_user,
     'EM_PREENCHIMENTO',
-    pg_temp.wp02b_dt_fatal_for_business_date(v_business + 1)
+    pg_temp.wp02b_dt_fatal_for_business_date(v_today + 1)
   )
   RETURNING id_proc INTO v_id_proc;
 
@@ -229,7 +238,8 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_today date := pg_temp.wp02b_today_sp();
+  v_business date := v_today;
   v_active integer;
   v_material integer;
 BEGIN
@@ -241,7 +251,7 @@ BEGIN
     v_cliente_id,
     v_user,
     'EM_PREENCHIMENTO',
-    pg_temp.wp02b_dt_fatal_for_business_date(v_business + 1)
+    pg_temp.wp02b_dt_fatal_for_business_date(v_today + 1)
   )
   RETURNING id_proc INTO v_id_proc;
 
@@ -274,8 +284,9 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business_dplus1 date := date '2026-09-08';
-  v_business_d0 date := date '2026-09-09';
+  v_today date := pg_temp.wp02b_today_sp();
+  v_business_dplus1 date := v_today;
+  v_business_d0 date := v_today + 1;
   v_first uuid;
   v_second uuid;
   v_changes integer;
@@ -327,9 +338,10 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_deadline date := date '2026-09-09';
-  v_business_d0 date := date '2026-09-09';
-  v_business_exp date := date '2026-09-10';
+  v_today date := pg_temp.wp02b_today_sp();
+  v_deadline date := v_today;
+  v_business_d0 date := v_today;
+  v_business_exp date := v_today + 1;
   v_resolved integer;
   v_expired_active integer;
 BEGIN
@@ -380,7 +392,7 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_business date := pg_temp.wp02b_today_sp();
   v_old timestamptz := pg_temp.wp02b_dt_fatal_for_business_date(v_business);
   v_new timestamptz := pg_temp.wp02b_dt_fatal_for_business_date(v_business) + interval '6 hours';
   v_first uuid;
@@ -429,7 +441,7 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_business date := pg_temp.wp02b_today_sp();
   v_result jsonb;
   v_active integer;
 BEGIN
@@ -473,7 +485,7 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_business date := pg_temp.wp02b_today_sp();
   v_result jsonb;
   v_opa text;
   v_alert boolean;
@@ -517,7 +529,8 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_today date := pg_temp.wp02b_today_sp();
+  v_business date := v_today;
   v_result jsonb;
   v_events integer;
   v_active integer;
@@ -535,7 +548,7 @@ BEGIN
     'EM_PREENCHIMENTO',
     'NP-PROTO',
     'instrucao',
-    pg_temp.wp02b_dt_fatal_for_business_date(v_business + 1)
+    pg_temp.wp02b_dt_fatal_for_business_date(v_today + 1)
   )
   RETURNING id_proc INTO v_id_proc;
 
@@ -585,7 +598,7 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_business date := pg_temp.wp02b_today_sp();
   v_before uuid;
   v_after uuid;
 BEGIN
@@ -639,7 +652,7 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_business date := pg_temp.wp02b_today_sp();
   i integer;
   v_active integer;
   v_material integer;
@@ -873,7 +886,7 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_business date := date '2026-09-08';
+  v_business date := pg_temp.wp02b_today_sp();
   v_before integer;
   v_after integer;
   v_first timestamptz;
@@ -939,9 +952,10 @@ DECLARE
   v_user uuid := 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   v_cliente_id bigint;
   v_id_proc bigint;
-  v_declared date := date '2026-09-08';
-  v_declare_day date := date '2026-09-07';
-  v_expired_day date := date '2026-09-09';
+  v_today date := pg_temp.wp02b_today_sp();
+  v_declared date := v_today + 1;
+  v_declare_day date := v_today;
+  v_expired_day date := v_today + 2;
   v_original_dt_fatal timestamptz;
   v_stored_dt_fatal timestamptz;
   v_result jsonb;

@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.upload-attachment]
 verify_jwt = true
+
+[functions.webproc-document-upload-prepare]
+verify_jwt = true
+
+[functions.webproc-document-upload-confirm]
+verify_jwt = true
