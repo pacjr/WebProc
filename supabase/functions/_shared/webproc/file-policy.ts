@@ -85,3 +85,16 @@ export function normalizeUploadMetadata(input: {
 
   return { filename, contentType, size: Math.trunc(size), nome };
 }
+
+/** Safe attachment filename derived from authorized DB metadata only. */
+export function sanitizeDownloadFilename(nomeArquivo: string): string {
+  const trimmed = nomeArquivo.trim();
+  let name = (trimmed || 'download').replace(/[\x00-\x1f\x7f\\/:*?"<>|]/g, '_');
+  if (!name || name === '.' || name === '..') {
+    name = 'download';
+  }
+  if (name.length > 180) {
+    name = name.slice(0, 180);
+  }
+  return name;
+}

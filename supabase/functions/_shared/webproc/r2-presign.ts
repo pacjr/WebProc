@@ -1,5 +1,5 @@
 import { AwsClient } from 'https://esm.sh/aws4fetch@1.0.20';
-import { getPresignedPutTtlSeconds, getR2Config } from './config.ts';
+import { getPresignedGetTtlSeconds, getPresignedPutTtlSeconds, getR2Config } from './config.ts';
 
 let cachedClient: AwsClient | null = null;
 
@@ -38,4 +38,31 @@ export async function createPresignedPutUrl(input: {
   );
 
   return { uploadUrl: signed.url, expiresIn };
+}
+
+export async function createPresignedGetUrl(input: {
+  objectKey: string;
+  contentType?: string;
+  downloadFilename?: string;
+}): Promise<{ downloadUrl: string; expiresIn: number }> {
+  const expiresIn = getPresignedGetTtlSeconds();
+  const targetUrl = new URL(buildObjectUrl(input.objectKey));
+
+  if (input.downloadFilename) {
+    targetUrl.searchParams.set(
+      'response-content-disposition',
+      `attachment; filename="${input.downloadFilename}"`,
+    );
+  }
+
+  if (input.contentType) {
+    targetUrl.searchParams.set('response-content-type', input.contentType);
+  }
+
+  const signed = await getAwsClient().sign(
+    new Request(targetUrl.toString(), { method: 'GET' }),
+    { aws: { signQuery: true, expires: expiresIn } },
+  );
+
+  return { downloadUrl: signed.url, expiresIn };
 }

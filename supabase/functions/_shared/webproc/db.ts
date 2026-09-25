@@ -23,6 +23,18 @@ export interface RegisterUploadResult {
   storage_state: string;
 }
 
+export interface ResolveDownloadTargetResult {
+  success: boolean;
+  document_id: string;
+  id_proc: number;
+  cliente_id: number;
+  object_key: string;
+  content_type: string;
+  nome_arquivo: string;
+  storage_state: string;
+  tamanho: number;
+}
+
 function createWebprocServiceClient() {
   return createClient(getSupabaseUrl(), getServiceRoleKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -54,6 +66,38 @@ function mapDbError(error: { message?: string; details?: string; hint?: string }
   }
 
   return new HttpError(message, 400, 'database_error');
+}
+
+function mapDownloadDbError(
+  error: { message?: string; details?: string; hint?: string },
+  fallback: string,
+): HttpError {
+  const message = [error.message, error.details, error.hint].filter(Boolean).join(' | ') || fallback;
+  const lower = message.toLowerCase();
+
+  if (lower.includes('not_authenticated')) {
+    return new HttpError('Authentication required', 401, 'not_authenticated');
+  }
+  if (lower.includes('documento_not_found')) {
+    return new HttpError('Document not found', 404, 'documento_not_found');
+  }
+  if (lower.includes('download_not_authorized')) {
+    return new HttpError('Download not authorized', 403, 'download_not_authorized');
+  }
+  if (lower.includes('link_document_no_r2')) {
+    return new HttpError('Link documents are not stored in R2', 409, 'link_document_no_r2');
+  }
+  if (lower.includes('document_bytes_unavailable')) {
+    return new HttpError('Document bytes are no longer available', 410, 'document_bytes_unavailable');
+  }
+  if (lower.includes('invalid_storage_state_for_download')) {
+    return new HttpError('Document is not available for download', 409, 'invalid_storage_state_for_download');
+  }
+  if (lower.includes('invalid_object_key_format')) {
+    return new HttpError('Document storage invariant failed', 500, 'invalid_object_key_format');
+  }
+
+  return new HttpError('Download resolution failed', 500, 'download_resolution_failed');
 }
 
 export async function serverPrepareDocumentUpload(input: {
@@ -121,4 +165,22 @@ export async function countStoredArquivoRows(idProc: number, documentId?: string
   const { count, error } = await query;
   if (error) throw mapDbError(error, 'Document lookup failed');
   return count ?? 0;
+}
+
+export async function serverResolveArquivoDownloadTarget(input: {
+  document_id: string;
+  actor_user_id: string;
+}): Promise<ResolveDownloadTargetResult> {
+  const supabase = createWebprocServiceClient();
+  const { data, error } = await supabase.rpc('server_resolve_arquivo_download_target', {
+    p_document_id: input.document_id,
+    p_actor_user_id: input.actor_user_id,
+  });
+
+  if (error) throw mapDownloadDbError(error, 'Download resolution failed');
+  if (!data?.success) {
+    throw new HttpError('Download resolution failed', 500, 'download_resolution_failed');
+  }
+
+  return data as ResolveDownloadTargetResult;
 }

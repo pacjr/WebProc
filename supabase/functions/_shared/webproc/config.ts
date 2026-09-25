@@ -10,6 +10,7 @@ import { HttpError } from './http.ts';
 const DEFAULT_MAX_UPLOAD_BYTES = 104_857_600;
 const DEFAULT_CAPABILITY_TTL_SECONDS = 900;
 const DEFAULT_PRESIGNED_PUT_TTL_SECONDS = 900;
+const DEFAULT_PRESIGNED_GET_TTL_SECONDS = 300;
 
 function readPositiveInt(name: string, fallback: number): number {
   const raw = Deno.env.get(name);
@@ -36,6 +37,13 @@ export function getPresignedPutTtlSeconds(): number {
   return readPositiveInt(
     'WEBPROC_PRESIGNED_PUT_TTL_SECONDS',
     DEFAULT_PRESIGNED_PUT_TTL_SECONDS,
+  );
+}
+
+export function getPresignedGetTtlSeconds(): number {
+  return readPositiveInt(
+    'WEBPROC_DOWNLOAD_URL_TTL_SECONDS',
+    DEFAULT_PRESIGNED_GET_TTL_SECONDS,
   );
 }
 
