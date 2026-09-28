@@ -70,16 +70,19 @@ Presentation-only identity for Connect auth surfaces:
 
 ## TD-AC-AUTH-02 — Supabase recovery pipeline (WP-04A.2c)
 
-**Status:** OPEN (presentation unified in WP-04A.2b; transport/session deferred)
+**Status:** CLOSED (WP-04A.2c.2 — implicit flow, `/nova-senha` landing)
 
-Connect-owned gaps to address in WP-04A.2c:
+Implementation notes:
 
-- `resetPasswordForEmail` still uses `redirectTo: ${origin}/auth` (not `/nova-senha` with callback handling).
-- No `getSession` / `exchangeCodeForSession` / `verifyOtp` / `PASSWORD_RECOVERY` bootstrap on `/nova-senha`.
-- No URL hash/query callback parsing; no invalid/expired recovery link UI; no direct-access guard for `/nova-senha`.
-- Supabase Dashboard redirect URLs and e-mail templates unchanged.
-- `NovaSenha` error toasts may surface raw Supabase `error.message` on failed `updateUser`.
-- Recovery success UX is intentionally generic (no account enumeration); transport errors still use a generic toast.
+- `redirectTo`: `${origin}/nova-senha` (production origins must be allowlisted in Supabase Auth redirect URLs per environment).
+- `/nova-senha` authorizes password reset only with an explicit recovery grant (`PASSWORD_RECOVERY` and/or `type=recovery` hash, persisted tab-scoped in `sessionStorage` for refresh within the same tab). Normal `getSession()` alone is insufficient.
+- After successful reset: `signOut()` + success card → user navigates to `/auth` (recovery completion decoupled from WebProc).
+- Invalid/expired/missing recovery: single product-facing blocked state (Supabase does not expose a reliable client-side split).
+
+**Remaining (not WP-04A.2c):**
+
+- Branded Actus Connect authentication e-mail templates (Supabase Dashboard / ops).
+- PKCE migration if implicit recovery links are retired (not required for current project behavior).
 
 ## Authorship Model (WP-01C)
 

@@ -26,7 +26,7 @@ const RecuperarSenha = () => {
       setLoading(true);
 
       const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/nova-senha`,
       });
 
       if (error) {

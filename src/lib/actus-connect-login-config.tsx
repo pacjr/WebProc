@@ -21,6 +21,14 @@ export const ACTUS_AUTH_CARD = {
     authTitle: "Definir nova senha",
     authDescription: "Escolha uma nova senha para continuar usando o Actus Connect.",
   },
+  recoveryInvalid: {
+    authTitle: "Link inválido ou expirado",
+    authDescription: "Solicite uma nova redefinição de senha para continuar.",
+  },
+  passwordUpdated: {
+    authTitle: "Senha atualizada",
+    authDescription: "Sua senha foi redefinida com sucesso.",
+  },
   activation: {
     authTitle: "Ativação",
     authDescription: "Defina sua senha para ativar sua conta.",

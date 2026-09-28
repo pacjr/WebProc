@@ -7,13 +7,22 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 import { ActusConnectAuthShell } from "@/components/auth/ActusConnectAuthShell";
+import { AuthRecoveryBlockedActions } from "@/components/auth/AuthRecoveryBlockedActions";
+import { usePasswordRecoveryGate } from "@/hooks/usePasswordRecoveryGate";
+import {
+  clearPasswordRecoveryGrant,
+  hasPasswordRecoveryGrant,
+} from "@/lib/auth/password-recovery-grant";
+
+type NovaSenhaUiPhase = "password_submitting" | "password_updated";
 
 const NovaSenha = () => {
+  const { phase: gatePhase, invalidateRecovery } = usePasswordRecoveryGate();
+  const [uiPhase, setUiPhase] = useState<NovaSenhaUiPhase | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const getPasswordStrength = (pass: string) => {
@@ -35,9 +44,14 @@ const NovaSenha = () => {
   };
 
   const passwordStrength = getPasswordStrength(password);
+  const submitting = uiPhase === "password_submitting";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (gatePhase !== "recovery_valid" || submitting) {
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error("As senhas não coincidem");
@@ -49,20 +63,81 @@ const NovaSenha = () => {
       return;
     }
 
+    if (!hasPasswordRecoveryGrant()) {
+      invalidateRecovery();
+      return;
+    }
+
+    setUiPhase("password_submitting");
+
     try {
-      setLoading(true);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        invalidateRecovery();
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({ password });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Falha ao atualizar senha (recovery):", error);
+        const {
+          data: { session: sessionAfterError },
+        } = await supabase.auth.getSession();
 
-      toast.success("Senha atualizada com sucesso!");
-      setTimeout(() => navigate("/app/processos"), 1500);
-    } catch (error: any) {
-      toast.error("Erro ao atualizar senha: " + error.message);
-    } finally {
-      setLoading(false);
+        if (!sessionAfterError || !hasPasswordRecoveryGrant()) {
+          invalidateRecovery();
+          return;
+        }
+
+        toast.error("Não foi possível atualizar sua senha. Tente novamente.");
+        setUiPhase(null);
+        return;
+      }
+
+      clearPasswordRecoveryGrant();
+      await supabase.auth.signOut();
+      setUiPhase("password_updated");
+    } catch (error) {
+      console.error("Erro inesperado ao atualizar senha (recovery):", error);
+      toast.error("Não foi possível atualizar sua senha. Tente novamente.");
+      setUiPhase(null);
     }
   };
+
+  if (uiPhase === "password_updated") {
+    return (
+      <ActusConnectAuthShell flow="passwordUpdated">
+        <Button
+          type="button"
+          variant="legal"
+          className="w-full"
+          onClick={() => navigate("/auth")}
+        >
+          Entrar
+        </Button>
+      </ActusConnectAuthShell>
+    );
+  }
+
+  if (gatePhase === "bootstrapping") {
+    return (
+      <ActusConnectAuthShell flow="newPassword">
+        <p className="text-center text-sm text-muted-foreground">Carregando...</p>
+      </ActusConnectAuthShell>
+    );
+  }
+
+  if (gatePhase === "recovery_invalid") {
+    return (
+      <ActusConnectAuthShell flow="recoveryInvalid">
+        <AuthRecoveryBlockedActions />
+      </ActusConnectAuthShell>
+    );
+  }
 
   return (
     <ActusConnectAuthShell flow="newPassword">
@@ -78,11 +153,13 @@ const NovaSenha = () => {
               required
               className="pr-10"
               autoComplete="new-password"
+              disabled={submitting}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -118,11 +195,13 @@ const NovaSenha = () => {
               required
               className="pr-10"
               autoComplete="new-password"
+              disabled={submitting}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -144,8 +223,8 @@ const NovaSenha = () => {
           )}
         </div>
 
-        <Button type="submit" variant="legal" className="w-full" disabled={loading}>
-          {loading ? "Salvando..." : "Salvar nova senha"}
+        <Button type="submit" variant="legal" className="w-full" disabled={submitting}>
+          {submitting ? "Salvando..." : "Salvar nova senha"}
         </Button>
       </form>
     </ActusConnectAuthShell>
