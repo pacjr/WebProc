@@ -27,20 +27,20 @@
     @apply bg-brand-surface/95;
   }
 
-  /* Hero image card */
+  /*
+   * Hero card: ProductPresentation renders <img> directly inside section > div:last-child
+   * (not an extra wrapper). Frame the image itself.
+   */
   .actus-connect-auth
     [data-testid="product-login-container"]
     > div:first-child
+    section
     > div:last-child
-    > div:has(> img) {
-    @apply overflow-hidden rounded-xl bg-brand-background;
-    border: 1px solid hsl(var(--connect-border-structural));
-  }
-
-  .actus-connect-auth [data-testid="product-login-container"] img {
-    @apply block w-full max-h-[min(42vh,26rem)] object-contain bg-brand-background shadow-none;
-    border: 0;
-    border-radius: 0;
+    > img {
+    @apply block w-full max-h-[min(42vh,26rem)] overflow-hidden bg-brand-background shadow-none;
+    border: 1px solid hsl(var(--connect-border-structural-strong)) !important;
+    border-radius: 0.75rem !important;
+    object-fit: contain !important;
   }
 
   /* Authentication card (Shared Login LoginCardShell) */
@@ -66,14 +66,11 @@
     .actus-connect-auth
     [data-testid="product-login-container"]
     > div:first-child
+    section
     > div:last-child
-    > div:has(> img) {
+    > img {
     @apply bg-brand-surface/35;
-    border-color: hsl(var(--connect-border-structural) / 0.42);
-  }
-
-  .dark .actus-connect-auth [data-testid="product-login-container"] img {
-    @apply bg-transparent;
+    border: 1px solid hsl(var(--connect-border-structural-strong) / 0.52) !important;
   }
 
   .dark .actus-connect-auth [data-testid="product-login-container"] [data-slot="card"] {
