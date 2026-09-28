@@ -1,12 +1,12 @@
-import { Link } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { navigateToInstitutionalSite } from "@/lib/site-entry";
 
 export default function AccessDenied() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = "/auth";
   };
 
   return (
@@ -23,8 +23,8 @@ export default function AccessDenied() {
           WebProc. Entre em contato com a Actus para solicitar acesso.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button variant="outline" asChild>
-            <Link to="/">Voltar ao site</Link>
+          <Button variant="outline" type="button" onClick={navigateToInstitutionalSite}>
+            Voltar ao site
           </Button>
           <Button variant="legal" onClick={handleLogout}>
             Sair

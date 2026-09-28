@@ -51,7 +51,7 @@ export default function WebProcShell() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/", { replace: true });
+    navigate("/auth", { replace: true });
   };
 
   if (loading) {

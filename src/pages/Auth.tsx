@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { navigateToInstitutionalSite } from "@/lib/site-entry";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -125,7 +126,8 @@ const Auth = () => {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => navigate("/")}
+              type="button"
+              onClick={navigateToInstitutionalSite}
               className="text-sm text-muted-foreground hover:text-foreground transition-smooth"
             >
               ← Voltar ao site
