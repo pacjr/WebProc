@@ -1,14 +1,30 @@
+import markDark from "@/assets/auth/actus-connect-mark-dark.png";
+import markLight from "@/assets/auth/actus-connect-mark-light.png";
+
 /**
- * TEMPORARY VISUAL MARK — not an approved Actus Connect logo.
- * Placeholder until official brand assets exist.
+ * Actus Connect product mark for the auth card (theme-aware via document .dark class).
  */
 export function ActusConnectLogo() {
   return (
-    <div
-      className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-primary font-serif text-sm font-bold tracking-tight text-primary-foreground"
-      aria-hidden
+    <span
+      className="inline-flex h-12 w-12 shrink-0 items-center justify-center"
+      role="img"
+      aria-label="Actus Connect"
     >
-      AC
-    </div>
+      <img
+        src={markLight}
+        alt=""
+        aria-hidden
+        className="block h-12 w-auto max-h-12 max-w-full object-contain dark:hidden"
+        decoding="async"
+      />
+      <img
+        src={markDark}
+        alt=""
+        aria-hidden
+        className="hidden h-12 w-auto max-h-12 max-w-full object-contain dark:block"
+        decoding="async"
+      />
+    </span>
   );
 }
