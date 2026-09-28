@@ -70,7 +70,15 @@ Presentation-only identity for Connect auth surfaces:
 
 ## TD-AC-AUTH-02 — Supabase recovery pipeline (WP-04A.2c)
 
-**Status:** CLOSED (WP-04A.2c.2 — implicit flow, `/nova-senha` landing)
+**Status:** CLOSED / PASS (manual E2E sign-off; implementation `dc8edd2`)
+
+Verified:
+
+- Recovery via e-mail; `redirectTo` → `/nova-senha` (implicit flow, no PKCE).
+- `PASSWORD_RECOVERY` / recovery grant; new password + confirmation; `updateUser` effective.
+- Recovery session ended after success; return to normal login (`/auth`).
+- Normal session does not authorize reset; direct `/nova-senha` fail-closed; invalid/expired sanitized UI.
+- `typecheck` and production `build` pass.
 
 Implementation notes:
 
