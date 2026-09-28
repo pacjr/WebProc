@@ -28,3 +28,10 @@ supabase/.branches/
 
 # Local validation output
 wp03b-smoke-output.txt
+
+# Local development / AI tooling
+.cursor/
+scratch/
+
+# Local development seed data
+docs/dev-seed/
