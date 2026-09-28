@@ -68,6 +68,19 @@ Presentation-only identity for Connect auth surfaces:
 
 **Deferred (not part of V1):** PWA icons (192/512/maskable/splash), browser favicon dark-mode swap, final wordmark in auth card.
 
+## TD-AC-AUTH-02 — Supabase recovery pipeline (WP-04A.2c)
+
+**Status:** OPEN (presentation unified in WP-04A.2b; transport/session deferred)
+
+Connect-owned gaps to address in WP-04A.2c:
+
+- `resetPasswordForEmail` still uses `redirectTo: ${origin}/auth` (not `/nova-senha` with callback handling).
+- No `getSession` / `exchangeCodeForSession` / `verifyOtp` / `PASSWORD_RECOVERY` bootstrap on `/nova-senha`.
+- No URL hash/query callback parsing; no invalid/expired recovery link UI; no direct-access guard for `/nova-senha`.
+- Supabase Dashboard redirect URLs and e-mail templates unchanged.
+- `NovaSenha` error toasts may surface raw Supabase `error.message` on failed `updateUser`.
+- Recovery success UX is intentionally generic (no account enumeration); transport errors still use a generic toast.
+
 ## Authorship Model (WP-01C)
 
 - `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).

@@ -108,7 +108,7 @@ const NovaSenha = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmar senha</Label>
+          <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
           <div className="relative">
             <Input
               id="confirmPassword"
@@ -145,7 +145,7 @@ const NovaSenha = () => {
         </div>
 
         <Button type="submit" variant="legal" className="w-full" disabled={loading}>
-          {loading ? "Atualizando..." : "Atualizar senha"}
+          {loading ? "Salvando..." : "Salvar nova senha"}
         </Button>
       </form>
     </ActusConnectAuthShell>

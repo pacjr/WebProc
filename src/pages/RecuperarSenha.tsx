@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ActusConnectAuthShell } from "@/components/auth/ActusConnectAuthShell";
+import { AuthBackToAccess } from "@/components/auth/AuthBackToAccess";
 import { z } from "zod";
 
 const emailSchema = z.object({
@@ -16,7 +16,6 @@ const RecuperarSenha = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,10 +39,6 @@ const RecuperarSenha = () => {
       }
 
       setEmailSent(true);
-      toast({
-        title: "E-mail enviado!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha.",
-      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
@@ -59,15 +54,8 @@ const RecuperarSenha = () => {
 
   if (emailSent) {
     return (
-      <ActusConnectAuthShell flow="recovery">
-        <div className="space-y-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.
-          </p>
-          <Button variant="legal" onClick={() => navigate("/auth")} className="w-full">
-            Voltar ao login
-          </Button>
-        </div>
+      <ActusConnectAuthShell flow="recoverySent">
+        <AuthBackToAccess variant="button" />
       </ActusConnectAuthShell>
     );
   }
@@ -93,13 +81,7 @@ const RecuperarSenha = () => {
         </Button>
 
         <div className="text-center">
-          <button
-            type="button"
-            onClick={() => navigate("/auth")}
-            className="text-sm text-muted-foreground hover:text-foreground transition-smooth"
-          >
-            ← Voltar ao login
-          </button>
+          <AuthBackToAccess variant="link" />
         </div>
       </form>
     </ActusConnectAuthShell>

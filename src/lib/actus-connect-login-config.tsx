@@ -9,12 +9,17 @@ export const ACTUS_AUTH_CARD = {
     authDescription: "Entre com e-mail e senha para acessar a aplicação.",
   },
   recovery: {
-    authTitle: "Recuperação",
+    authTitle: "Recuperar senha",
     authDescription: "Informe seu e-mail para receber as instruções de recuperação.",
   },
+  recoverySent: {
+    authTitle: "Verifique seu e-mail",
+    authDescription:
+      "Se existir uma conta associada ao endereço informado, enviaremos as instruções para redefinição da senha.",
+  },
   newPassword: {
-    authTitle: "Nova senha",
-    authDescription: "Defina uma nova senha para continuar.",
+    authTitle: "Definir nova senha",
+    authDescription: "Escolha uma nova senha para continuar usando o Actus Connect.",
   },
   activation: {
     authTitle: "Ativação",
