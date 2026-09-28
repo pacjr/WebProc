@@ -1,28 +1,69 @@
 /**
- * Semantic brand tokens for @insight/product-login-system (maps to Actus Connect theme).
+ * Actus Connect auth presentation tokens (local to login shell).
+ * Shared Login consumes --brand-*; form controls consume standard shadcn vars inside .actus-connect-auth.
  */
 @layer base {
-  :root {
-    --brand-primary: var(--primary);
-    --brand-primary-hover: var(--primary);
-    --brand-foreground: var(--foreground);
-    --brand-foreground-muted: var(--muted-foreground);
-    --brand-border: var(--border);
-    --brand-background: var(--background);
-    --brand-background-secondary: var(--muted);
-    --brand-surface: var(--card);
-    --brand-info: var(--accent);
+  .actus-connect-auth {
+    --background: 210 25% 99%;
+    --foreground: 215 28% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 16%;
+    --primary: 213 24% 36%;
+    --primary-foreground: 210 25% 99%;
+    --secondary: 210 18% 94%;
+    --secondary-foreground: 215 28% 16%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 14% 42%;
+    --accent: 210 18% 93%;
+    --accent-foreground: 215 28% 16%;
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 16% 87%;
+    --input: 214 16% 90%;
+    --ring: 213 24% 36%;
+
+    --brand-primary: 213 24% 36%;
+    --brand-primary-hover: 213 26% 32%;
+    --brand-foreground: 215 28% 16%;
+    --brand-foreground-muted: 215 14% 42%;
+    --brand-border: 214 16% 87%;
+    --brand-background: 210 25% 99%;
+    --brand-background-secondary: 210 22% 97%;
+    --brand-surface: 0 0% 100%;
+    --brand-info: 213 18% 88%;
   }
 
-  .dark {
-    --brand-primary: var(--primary);
-    --brand-primary-hover: var(--primary);
-    --brand-foreground: var(--foreground);
-    --brand-foreground-muted: var(--muted-foreground);
-    --brand-border: var(--border);
-    --brand-background: var(--background);
-    --brand-background-secondary: var(--card);
-    --brand-surface: var(--card);
-    --brand-info: var(--accent);
+  .dark .actus-connect-auth {
+    --background: 213 30% 8%;
+    --foreground: 35 25% 88%;
+    --card: 213 24% 12%;
+    --card-foreground: 35 25% 88%;
+    --popover: 213 24% 12%;
+    --popover-foreground: 35 25% 88%;
+    --primary: 35 26% 54%;
+    --primary-foreground: 213 32% 10%;
+    --secondary: 213 22% 14%;
+    --secondary-foreground: 35 25% 88%;
+    --muted: 213 22% 14%;
+    --muted-foreground: 35 12% 62%;
+    --accent: 213 20% 16%;
+    --accent-foreground: 35 25% 88%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 213 18% 20%;
+    --input: 213 22% 14%;
+    --ring: 35 26% 54%;
+
+    --brand-primary: 35 26% 54%;
+    --brand-primary-hover: 35 28% 48%;
+    --brand-foreground: 35 25% 88%;
+    --brand-foreground-muted: 35 12% 62%;
+    --brand-border: 213 18% 22%;
+    --brand-background: 213 30% 8%;
+    --brand-background-secondary: 213 26% 11%;
+    --brand-surface: 213 24% 13%;
+    --brand-info: 213 18% 22%;
   }
 }

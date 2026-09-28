@@ -68,7 +68,7 @@ const Auth = () => {
   };
 
   return (
-    <>
+    <div className="actus-connect-auth">
       <div className="fixed top-4 right-4 z-[100]">
         <ThemeToggle />
       </div>
@@ -129,7 +129,7 @@ const Auth = () => {
           </button>
         </div>
       </ProductLoginLayout>
-    </>
+    </div>
   );
 };
 

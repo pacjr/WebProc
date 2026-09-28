@@ -1,4 +1,7 @@
-/** Minimal textual product mark — no external logo asset in repository. */
+/**
+ * TEMPORARY VISUAL MARK — not an approved Actus Connect logo.
+ * Placeholder until official brand assets exist.
+ */
 export function ActusConnectLogo() {
   return (
     <div

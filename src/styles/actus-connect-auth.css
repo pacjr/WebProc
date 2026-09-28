@@ -1,0 +1,33 @@
+/**
+ * Auth-only presentation refinements (does not affect /app operational UI).
+ */
+@layer components {
+  .actus-connect-auth {
+    @apply bg-background text-foreground min-h-screen min-h-dvh;
+  }
+
+  .actus-connect-auth [data-testid="product-login-container"] {
+    @apply border-brand-border/30 bg-brand-background-secondary/70 shadow-none;
+  }
+
+  .actus-connect-auth [data-testid="product-login-container"] > div:first-child {
+    @apply bg-brand-background border-brand-border/20;
+  }
+
+  .actus-connect-auth [data-testid="product-login-container"] > div:last-child {
+    @apply bg-brand-surface/90;
+  }
+
+  /* Hero: contain, no crop; blend with panel (Shared Login default is object-cover). */
+  .actus-connect-auth [data-testid="product-login-container"] img {
+    @apply object-contain bg-brand-background max-h-[min(42vh,26rem)] w-full rounded-t-xl border-0 shadow-none;
+  }
+
+  .dark .actus-connect-auth [data-testid="product-login-container"] > div:first-child > div:last-child {
+    @apply rounded-xl bg-brand-surface/40 p-space-12;
+  }
+
+  .dark .actus-connect-auth [data-testid="product-login-container"] img {
+    @apply bg-transparent;
+  }
+}
