@@ -61,6 +61,19 @@
     flex: none !important;
   }
 
+  /* Login card: no "Acesso" heading; mark-led hierarchy */
+  .actus-connect-auth[data-auth-flow="login"] [data-slot="card-header"] h2 {
+    @apply hidden;
+  }
+
+  .actus-connect-auth[data-auth-flow="login"] [data-slot="card-header"] .gap-space-10 {
+    @apply !gap-4;
+  }
+
+  .actus-connect-auth[data-auth-flow="login"] [data-slot="card-header"] .space-y-space-8 {
+    @apply !space-y-0;
+  }
+
   /* Authentication card (Shared Login LoginCardShell) */
   .actus-connect-auth [data-testid="product-login-container"] [data-slot="card"] {
     @apply bg-brand-surface/90 shadow-none;

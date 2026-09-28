@@ -5,7 +5,7 @@ import actusConnectAuthHero from "@/assets/auth/actus-connect-auth-hero.png";
 /** Auth card copy per Connect lifecycle surface (presentation only). */
 export const ACTUS_AUTH_CARD = {
   login: {
-    authTitle: "Acesso",
+    authTitle: "",
     authDescription: "Entre com e-mail e senha para acessar a aplicação.",
   },
   recovery: {

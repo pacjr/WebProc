@@ -18,7 +18,7 @@ export function ActusConnectAuthShell({ flow, children }: ActusConnectAuthShellP
   const presentation = getActusConnectAuthPresentation(ACTUS_AUTH_CARD[flow]);
 
   return (
-    <div className="actus-connect-auth">
+    <div className="actus-connect-auth" data-auth-flow={flow}>
       <div className="fixed top-4 right-4 z-[100]">
         <ThemeToggle />
       </div>

@@ -7,7 +7,7 @@ import markLight from "@/assets/auth/actus-connect-mark-light.png";
 export function ActusConnectLogo() {
   return (
     <span
-      className="inline-flex h-12 w-12 shrink-0 items-center justify-center"
+      className="inline-flex h-14 w-14 shrink-0 items-center justify-center"
       role="img"
       aria-label="Actus Connect"
     >
@@ -15,14 +15,14 @@ export function ActusConnectLogo() {
         src={markLight}
         alt=""
         aria-hidden
-        className="block h-12 w-auto max-h-12 max-w-full object-contain dark:hidden"
+        className="block h-14 w-auto max-h-14 max-w-full object-contain dark:hidden"
         decoding="async"
       />
       <img
         src={markDark}
         alt=""
         aria-hidden
-        className="hidden h-12 w-auto max-h-12 max-w-full object-contain dark:block"
+        className="hidden h-14 w-auto max-h-14 max-w-full object-contain dark:block"
         decoding="async"
       />
     </span>
