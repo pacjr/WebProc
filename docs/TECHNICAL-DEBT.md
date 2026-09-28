@@ -53,6 +53,21 @@ The legacy `/dashboard/*` Lovable frontend was removed. The following backend ar
 
 Do not drop migrations, tables, or WP-03 functions without a separate controlled backend cleanup step.
 
+## AR-AC-IDENT-01 — Actus Connect Product Identity V1 (WP-04A.2a CLOSED)
+
+**Status:** CLOSED / APPROVED (manual visual sign-off)
+
+Presentation-only identity for Connect auth surfaces:
+
+- **Shared Login:** `@insight/product-login-system` v1.1.0 (Git dependency; package source not forked).
+- **Product mark:** `src/assets/auth/actus-connect-mark-light.png` (light) and `actus-connect-mark-dark.png` (dark); **72px** rendered height in auth card; theme via `html.dark` + `ActusConnectLogo`.
+- **Login card:** no separate “Acesso” heading; mark + `authDescription` hierarchy.
+- **Auth shell:** `ActusConnectAuthShell` + scoped tokens in `src/styles/product-login-theme.css` and `actus-connect-auth.css` (Connect-owned; not Actus-Site).
+- **Hero:** `src/assets/auth/actus-connect-auth-hero.png` with approved border/framing rules.
+- **Favicon:** `public/favicon.png` derived from the approved **light** mark; referenced in `index.html`. No PWA/manifest icon set yet.
+
+**Deferred (not part of V1):** PWA icons (192/512/maskable/splash), browser favicon dark-mode swap, final wordmark in auth card.
+
 ## Authorship Model (WP-01C)
 
 - `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).
