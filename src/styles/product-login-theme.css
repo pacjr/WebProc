@@ -1,0 +1,28 @@
+/**
+ * Semantic brand tokens for @insight/product-login-system (maps to Actus Connect theme).
+ */
+@layer base {
+  :root {
+    --brand-primary: var(--primary);
+    --brand-primary-hover: var(--primary);
+    --brand-foreground: var(--foreground);
+    --brand-foreground-muted: var(--muted-foreground);
+    --brand-border: var(--border);
+    --brand-background: var(--background);
+    --brand-background-secondary: var(--muted);
+    --brand-surface: var(--card);
+    --brand-info: var(--accent);
+  }
+
+  .dark {
+    --brand-primary: var(--primary);
+    --brand-primary-hover: var(--primary);
+    --brand-foreground: var(--foreground);
+    --brand-foreground-muted: var(--muted-foreground);
+    --brand-border: var(--border);
+    --brand-background: var(--background);
+    --brand-background-secondary: var(--card);
+    --brand-surface: var(--card);
+    --brand-info: var(--accent);
+  }
+}

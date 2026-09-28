@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ProductLoginLayout } from "@insight/product-login-system";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { navigateToInstitutionalSite } from "@/lib/site-entry";
+import {
+  actusConnectLoginConfig,
+  ACTUS_CONNECT_APP_VERSION,
+} from "@/lib/actus-connect-login-config";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -23,7 +28,7 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const validated = loginSchema.parse({ email, password });
       setLoading(true);
@@ -63,79 +68,68 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/5 to-background px-4">
-      <div className="fixed top-4 right-4 z-50">
+    <>
+      <div className="fixed top-4 right-4 z-[100]">
         <ThemeToggle />
       </div>
-      
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg shadow-elegant p-8 border border-border">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-serif font-bold text-primary mb-2">
-              Área do Cliente
-            </h1>
-            <p className="text-muted-foreground">
-              Acesse sua conta Actus Nível
-            </p>
+
+      <ProductLoginLayout
+        {...actusConnectLoginConfig}
+        version={ACTUS_CONNECT_APP_VERSION}
+      >
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+          <Button type="submit" variant="legal" className="w-full" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
+          </Button>
 
-            <Button
-              type="submit"
-              variant="legal"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? "Entrando..." : "Entrar"}
-            </Button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => navigate("/recuperar-senha")}
-                className="text-sm text-primary hover:underline transition-smooth"
-              >
-                Esqueci minha senha
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6 text-center">
+          <div className="text-center">
             <button
               type="button"
-              onClick={navigateToInstitutionalSite}
-              className="text-sm text-muted-foreground hover:text-foreground transition-smooth"
+              onClick={() => navigate("/recuperar-senha")}
+              className="text-sm text-primary hover:underline transition-smooth"
             >
-              ← Voltar ao site
+              Esqueci minha senha
             </button>
           </div>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={navigateToInstitutionalSite}
+            className="text-sm text-muted-foreground hover:text-foreground transition-smooth"
+          >
+            ← Voltar ao site
+          </button>
         </div>
-      </div>
-    </div>
+      </ProductLoginLayout>
+    </>
   );
 };
 

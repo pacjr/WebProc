@@ -2,7 +2,13 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "./node_modules/@insight/product-login-system/src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -61,11 +67,42 @@ export default {
           DEFAULT: "hsl(var(--gold))",
           muted: "hsl(var(--gold-muted))",
         },
+        brand: {
+          primary: "hsl(var(--brand-primary) / <alpha-value>)",
+          "primary-hover": "hsl(var(--brand-primary-hover) / <alpha-value>)",
+          foreground: "hsl(var(--brand-foreground) / <alpha-value>)",
+          "foreground-muted": "hsl(var(--brand-foreground-muted) / <alpha-value>)",
+          border: "hsl(var(--brand-border) / <alpha-value>)",
+          background: "hsl(var(--brand-background) / <alpha-value>)",
+          "background-secondary": "hsl(var(--brand-background-secondary) / <alpha-value>)",
+          surface: "hsl(var(--brand-surface) / <alpha-value>)",
+          info: "hsl(var(--brand-info) / <alpha-value>)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      spacing: {
+        "space-8": "0.5rem",
+        "space-10": "0.625rem",
+        "space-12": "0.75rem",
+        "space-16": "1rem",
+        "space-20": "1.25rem",
+        "space-24": "1.5rem",
+        "space-28": "1.75rem",
+        "space-32": "2rem",
+        "space-40": "2.5rem",
+      },
+      fontSize: {
+        display: ["2.25rem", { lineHeight: "2.75rem", fontWeight: "700" }],
+        heading: ["1.875rem", { lineHeight: "2.25rem", fontWeight: "600" }],
+        title: ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],
+        subtitle: ["1.0625rem", { lineHeight: "1.5rem", fontWeight: "500" }],
+        body: ["0.9375rem", { lineHeight: "1.5rem" }],
+        caption: ["0.8125rem", { lineHeight: "1.25rem" }],
+        label: ["0.6875rem", { lineHeight: "1rem", fontWeight: "500" }],
       },
       keyframes: {
         "accordion-down": {
