@@ -28,19 +28,37 @@
   }
 
   /*
-   * Hero card: ProductPresentation renders <img> directly inside section > div:last-child
-   * (not an extra wrapper). Frame the image itself.
+   * Hero card: frame section > div:last-child (direct parent of <img>).
+   * Shrink-wrap to artwork + ~5% uniform inset (padding), not full panel width.
    */
+  .actus-connect-auth
+    [data-testid="product-login-container"]
+    > div:first-child
+    section
+    > div:last-child {
+    @apply mt-space-16 max-w-full shrink-0 self-start overflow-hidden rounded-xl bg-brand-background shadow-none lg:mt-space-20;
+    width: fit-content;
+    flex: 0 1 auto !important;
+    padding: clamp(0.65rem, 2.5vw, 1.15rem) !important;
+    padding-top: clamp(0.65rem, 2.5vw, 1.15rem) !important;
+    border: 1px solid hsl(var(--connect-border-structural-strong));
+  }
+
   .actus-connect-auth
     [data-testid="product-login-container"]
     > div:first-child
     section
     > div:last-child
     > img {
-    @apply block w-full max-h-[min(42vh,26rem)] overflow-hidden bg-brand-background shadow-none;
-    border: 1px solid hsl(var(--connect-border-structural-strong)) !important;
-    border-radius: 0.75rem !important;
+    @apply block max-w-full bg-transparent shadow-none;
+    width: auto !important;
+    height: auto !important;
+    max-height: min(42vh, 26rem);
+    border: none !important;
+    border-radius: 0 !important;
+    aspect-ratio: auto !important;
     object-fit: contain !important;
+    flex: none !important;
   }
 
   /* Authentication card (Shared Login LoginCardShell) */
@@ -67,10 +85,19 @@
     [data-testid="product-login-container"]
     > div:first-child
     section
+    > div:last-child {
+    @apply bg-brand-surface/35;
+    border-color: hsl(var(--connect-border-structural-strong) / 0.52);
+  }
+
+  .dark
+    .actus-connect-auth
+    [data-testid="product-login-container"]
+    > div:first-child
+    section
     > div:last-child
     > img {
-    @apply bg-brand-surface/35;
-    border: 1px solid hsl(var(--connect-border-structural-strong) / 0.52) !important;
+    @apply bg-transparent;
   }
 
   .dark .actus-connect-auth [data-testid="product-login-container"] [data-slot="card"] {
