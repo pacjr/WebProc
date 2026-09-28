@@ -56,7 +56,7 @@ const NovaSenha = () => {
       if (error) throw error;
 
       toast.success("Senha atualizada com sucesso!");
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/app/processos"), 1500);
     } catch (error: any) {
       toast.error("Erro ao atualizar senha: " + error.message);
     } finally {

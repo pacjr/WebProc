@@ -38,6 +38,21 @@ The following constraints apply to every environment (development, staging, prod
 
 7. **No account IDs, project refs, bucket identifiers, secrets, or administrative UUIDs may become application business logic.** Configuration belongs in environment variables and deployment docs; authorization belongs in RLS and membership data—not hard-coded identifiers in source code.
 
+## AR-AC-DASH-01 — Operational Projection Boundary (WP-04)
+
+The Actus Connect Dashboard is a projection of the operational domain. It does not constitute a second source of truth and must not maintain parallel state to processes, timeline, situations, or other authoritative domain facts.
+
+Implementation belongs to WP-04. Do not add dashboard analytics tables or materialized views for Step 2B.
+
+## TD-AC-LEGACY-FE-01 — Legacy public-schema frontend retired (Step 2B)
+
+The legacy `/dashboard/*` Lovable frontend was removed. The following backend artifacts may remain unreferenced by the Connect frontend and are **cleanup candidates only** (no destructive DB/Edge changes in Step 2B):
+
+- **Public tables (historical):** e.g. `public.clientes`, `public.t_processoweb`, legacy attachment metadata as used by the old dashboard
+- **Legacy Edge Functions:** `list-attachments`, `upload-attachment`, `delete-attachment` (distinct from validated `webproc-document-*`)
+
+Do not drop migrations, tables, or WP-03 functions without a separate controlled backend cleanup step.
+
 ## Authorship Model (WP-01C)
 
 - `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).
