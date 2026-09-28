@@ -1,33 +1,86 @@
 /**
- * Auth-only presentation refinements (does not affect /app operational UI).
+ * Auth-only presentation: border hierarchy and hero framing.
  */
 @layer components {
   .actus-connect-auth {
     @apply bg-background text-foreground min-h-screen min-h-dvh;
   }
 
+  /* Main authentication shell */
   .actus-connect-auth [data-testid="product-login-container"] {
-    @apply border-brand-border/30 bg-brand-background-secondary/70 shadow-none;
+    @apply bg-brand-background-secondary/80 shadow-none;
+    border: 1px solid hsl(var(--connect-border-structural));
   }
 
   .actus-connect-auth [data-testid="product-login-container"] > div:first-child {
-    @apply bg-brand-background border-brand-border/20;
+    @apply bg-brand-background;
+    border-color: hsl(var(--connect-border-separator) / 0.85);
+  }
+
+  @media (min-width: 1024px) {
+    .actus-connect-auth [data-testid="product-login-container"] > div:first-child {
+      border-right: 1px solid hsl(var(--connect-border-separator) / 0.85);
+    }
   }
 
   .actus-connect-auth [data-testid="product-login-container"] > div:last-child {
-    @apply bg-brand-surface/90;
+    @apply bg-brand-surface/95;
   }
 
-  /* Hero: contain, no crop; blend with panel (Shared Login default is object-cover). */
+  /* Hero image card */
+  .actus-connect-auth
+    [data-testid="product-login-container"]
+    > div:first-child
+    > div:last-child
+    > div:has(> img) {
+    @apply overflow-hidden rounded-xl bg-brand-background;
+    border: 1px solid hsl(var(--connect-border-structural));
+  }
+
   .actus-connect-auth [data-testid="product-login-container"] img {
-    @apply object-contain bg-brand-background max-h-[min(42vh,26rem)] w-full rounded-t-xl border-0 shadow-none;
+    @apply block w-full max-h-[min(42vh,26rem)] object-contain bg-brand-background shadow-none;
+    border: 0;
+    border-radius: 0;
   }
 
-  .dark .actus-connect-auth [data-testid="product-login-container"] > div:first-child > div:last-child {
-    @apply rounded-xl bg-brand-surface/40 p-space-12;
+  /* Authentication card (Shared Login LoginCardShell) */
+  .actus-connect-auth [data-testid="product-login-container"] [data-slot="card"] {
+    @apply bg-brand-surface/90 shadow-none;
+    border: 1px solid hsl(var(--connect-border-structural-strong));
+  }
+
+  .actus-connect-auth [data-testid="product-login-container"] [data-slot="card"] footer {
+    border-top-color: hsl(var(--connect-border-separator) / 0.9);
+  }
+
+  /* Inputs stay subordinate to structural cards */
+  .actus-connect-auth [data-slot="card"] input {
+    border-color: hsl(var(--connect-border-input));
+  }
+
+  .dark .actus-connect-auth [data-testid="product-login-container"] {
+    border-color: hsl(var(--connect-border-structural) / 0.42);
+  }
+
+  .dark
+    .actus-connect-auth
+    [data-testid="product-login-container"]
+    > div:first-child
+    > div:last-child
+    > div:has(> img) {
+    @apply bg-brand-surface/35;
+    border-color: hsl(var(--connect-border-structural) / 0.42);
   }
 
   .dark .actus-connect-auth [data-testid="product-login-container"] img {
     @apply bg-transparent;
+  }
+
+  .dark .actus-connect-auth [data-testid="product-login-container"] [data-slot="card"] {
+    border-color: hsl(var(--connect-border-structural-strong) / 0.52);
+  }
+
+  .dark .actus-connect-auth [data-slot="card"] input {
+    border-color: hsl(var(--connect-border-input));
   }
 }

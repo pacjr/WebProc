@@ -20,15 +20,20 @@
     --accent-foreground: 215 28% 16%;
     --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 16% 87%;
-    --input: 214 16% 90%;
+    --connect-border-structural: 213 18% 76%;
+    --connect-border-structural-strong: 213 20% 68%;
+    --connect-border-input: 214 16% 91%;
+    --connect-border-separator: 214 14% 89%;
+
+    --border: var(--connect-border-separator);
+    --input: var(--connect-border-input);
     --ring: 213 24% 36%;
 
     --brand-primary: 213 24% 36%;
     --brand-primary-hover: 213 26% 32%;
     --brand-foreground: 215 28% 16%;
     --brand-foreground-muted: 215 14% 42%;
-    --brand-border: 214 16% 87%;
+    --brand-border: var(--connect-border-structural);
     --brand-background: 210 25% 99%;
     --brand-background-secondary: 210 22% 97%;
     --brand-surface: 0 0% 100%;
@@ -52,15 +57,20 @@
     --accent-foreground: 35 25% 88%;
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 213 18% 20%;
-    --input: 213 22% 14%;
+    --connect-border-structural: 35 26% 54%;
+    --connect-border-structural-strong: 35 28% 58%;
+    --connect-border-input: 213 18% 24%;
+    --connect-border-separator: 213 16% 26%;
+
+    --border: var(--connect-border-separator);
+    --input: var(--connect-border-input);
     --ring: 35 26% 54%;
 
     --brand-primary: 35 26% 54%;
     --brand-primary-hover: 35 28% 48%;
     --brand-foreground: 35 25% 88%;
     --brand-foreground-muted: 35 12% 62%;
-    --brand-border: 213 18% 22%;
+    --brand-border: var(--connect-border-separator);
     --brand-background: 213 30% 8%;
     --brand-background-secondary: 213 26% 11%;
     --brand-surface: 213 24% 13%;
