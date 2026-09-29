@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { useWebProc } from "@/contexts/WebProcContext";
 
 const statusLabels: Record<string, string> = {
   EM_PREENCHIMENTO: "Em preenchimento",
@@ -31,6 +32,8 @@ function formatDate(value: string | null) {
 
 export default function ProcessosList() {
   const navigate = useNavigate();
+  const { connectAccess } = useWebProc();
+  const isClientActor = connectAccess.kind === "CLIENT";
   const [processos, setProcessos] = useState<WebProcProcessoListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -59,15 +62,19 @@ export default function ProcessosList() {
             Processos
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Processos visíveis para o seu cliente.
+            {isClientActor
+              ? "Processos visíveis para o seu cliente."
+              : "Processos visíveis conforme permissões de supervisão Actus."}
           </p>
         </div>
-        <Button variant="legal" asChild>
-          <Link to="/app/processos/novo">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Processo
-          </Link>
-        </Button>
+        {isClientActor && (
+          <Button variant="legal" asChild>
+            <Link to="/app/processos/novo">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Processo
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="rounded-lg border border-border bg-card shadow-card overflow-hidden">

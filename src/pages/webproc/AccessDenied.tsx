@@ -19,8 +19,8 @@ export default function AccessDenied() {
           Acesso não autorizado
         </h1>
         <p className="text-muted-foreground mb-6">
-          Sua conta está autenticada, mas não possui vínculo ativo com um cliente
-          WebProc. Entre em contato com a Actus para solicitar acesso.
+          Sua conta não possui acesso ativo ao Actus Connect. Entre em contato com a
+          Actus para solicitar acesso.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" type="button" onClick={navigateToInstitutionalSite}>

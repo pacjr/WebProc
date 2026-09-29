@@ -45,7 +45,8 @@ const statusLabels: Record<string, string> = {
 
 export default function ProcessoDetail() {
   const { idProc } = useParams();
-  const { user } = useWebProc();
+  const { user, connectAccess } = useWebProc();
+  const canMutateAsClient = connectAccess.kind === "CLIENT";
   const parsedId = Number(idProc);
 
   const [processo, setProcesso] = useState<WebProcProcessoDetail | null>(null);
@@ -62,8 +63,10 @@ export default function ProcessoDetail() {
   const [reabrindo, setReabrindo] = useState(false);
 
   const isCreator = Boolean(processo && user && processo.created_by === user.id);
-  const canEdit = Boolean(isCreator && processo?.status === "EM_PREENCHIMENTO");
-  const canReopen = Boolean(isCreator && processo?.status === "PENDENTE");
+  const canEdit = Boolean(
+    canMutateAsClient && isCreator && processo?.status === "EM_PREENCHIMENTO",
+  );
+  const canReopen = Boolean(canMutateAsClient && isCreator && processo?.status === "PENDENTE");
 
   const loadDetail = useCallback(async () => {
     if (!Number.isFinite(parsedId)) {

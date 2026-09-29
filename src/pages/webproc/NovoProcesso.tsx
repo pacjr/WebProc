@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWebProc } from "@/contexts/WebProcContext";
 import { insertProcesso } from "@/integrations/supabase/webproc-api";
@@ -12,8 +12,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function NovoProcesso() {
-  const { user, membership } = useWebProc();
+  const { user, membership, connectAccess, loading } = useWebProc();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && connectAccess.kind !== "CLIENT") {
+      navigate("/app/processos", { replace: true });
+    }
+  }, [connectAccess.kind, loading, navigate]);
   const [form, setForm] = useState<ProcessoFormState>(emptyProcessoForm);
   const [saving, setSaving] = useState(false);
   const [dtFatalError, setDtFatalError] = useState<string | null>(null);

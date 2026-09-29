@@ -278,6 +278,10 @@ export type WebProcDatabase = {
         };
         Returns: WebProcReabrirResult;
       };
+      is_active_connect_actus_user: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       salvar_rascunho: {
         Args: {
           p_id_proc: number;

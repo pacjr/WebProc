@@ -60,7 +60,35 @@ const LIFECYCLE_ERROR_MESSAGES: Record<string, string> = {
     "A transição de status deve ser feita pelas ações de protocolar ou reabrir.",
 };
 
+function mapMembershipRow(row: MembershipRow): WebProcMembership | null {
+  const cliente = Array.isArray(row.clientes) ? row.clientes[0] : row.clientes;
+  if (!cliente) {
+    return null;
+  }
+
+  return {
+    membershipId: row.id,
+    clienteId: row.cliente_id,
+    nome: row.nome,
+    email: row.email,
+    cliente: {
+      id: cliente.id,
+      codigo_cliente: cliente.codigo_cliente,
+      nome: cliente.nome,
+    },
+  };
+}
+
+/** @deprecated Prefer fetchActiveClientMemberships + connect access resolution. */
 export async function fetchActiveMembership(userId: string) {
+  const { memberships, error } = await fetchActiveClientMemberships(userId);
+  return {
+    membership: memberships[0] ?? null,
+    error,
+  };
+}
+
+export async function fetchActiveClientMemberships(userId: string) {
   const { data, error } = await webprocDb()
     .from("usuarios_clientes")
     .select(
@@ -69,34 +97,27 @@ export async function fetchActiveMembership(userId: string) {
     .eq("user_id", userId)
     .eq("ativo", true)
     .eq("clientes.ativo", true)
-    .limit(1)
-    .maybeSingle();
+    .order("cliente_id", { ascending: true });
 
-  if (error || !data) {
-    return { membership: null as WebProcMembership | null, error };
+  if (error) {
+    return { memberships: [] as WebProcMembership[], error };
   }
 
-  const row = data as unknown as MembershipRow;
-  const cliente = Array.isArray(row.clientes) ? row.clientes[0] : row.clientes;
+  const memberships = (data as unknown as MembershipRow[])
+    .map(mapMembershipRow)
+    .filter((m): m is WebProcMembership => m !== null);
 
-  if (!cliente) {
-    return { membership: null, error: null };
+  return { memberships, error: null };
+}
+
+export async function fetchActusConnectAuthorization() {
+  const { data, error } = await webprocDb().rpc("is_active_connect_actus_user");
+
+  if (error) {
+    return { isActus: false, error };
   }
 
-  return {
-    membership: {
-      membershipId: row.id,
-      clienteId: row.cliente_id,
-      nome: row.nome,
-      email: row.email,
-      cliente: {
-        id: cliente.id,
-        codigo_cliente: cliente.codigo_cliente,
-        nome: cliente.nome,
-      },
-    } satisfies WebProcMembership,
-    error: null,
-  };
+  return { isActus: data === true, error: null };
 }
 
 async function fetchAuthorIdentities(userIds: string[]) {

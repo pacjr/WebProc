@@ -92,6 +92,24 @@ Implementation notes:
 - Branded Actus Connect authentication e-mail templates (Supabase Dashboard / ops).
 - PKCE migration if implicit recovery links are retired (not required for current project behavior).
 
+## AR-AC-AUTH-05 — Internal Actor Precedence (WP-04A.2d)
+
+If an identity has both active Actus authorization (`usuarios_actus`) and active client membership (`usuarios_clientes` + active `clientes`), **Actus authorization takes precedence**. The frontend resolves `ConnectAccess.kind === 'ACTUS'` and does **not** attach a client membership for that session.
+
+## AR-AC-AUTH-06 — Actus Supervisory Scope (WP-04A.2d)
+
+Internal Actus users operate in transversal/global supervisory scope in Connect. Future client selection or filtering is a **filter**, not identity switching, and must not fabricate `usuarios_clientes` membership. The global operational dashboard belongs to **WP-04C**.
+
+## TD-AC-AUTH-03 — Connect access resolution (WP-04A.2d)
+
+**Status:** IMPLEMENTED (pending migration apply on each Supabase environment)
+
+- Post-login access: `resolveConnectAccess()` — parallel `webproc.is_active_connect_actus_user()` + active client memberships (no silent `.limit(1)`).
+- **Migration required:** `supabase/migrations/20260329120000_wp04a_connect_actus_access_rpc.sql` (`webproc.is_active_connect_actus_user` wrapper). `webproc_private.is_active_actus_user()` is **not** PostgREST-callable (`PGRST106`).
+- **Deferred:** interactive multi-client picker ( `CLIENT_SELECTION_REQUIRED` safe state only); Actus global dashboard (WP-04C); supervisory cancellation/reconciliation; Flow → Connect client-facing projections; communication/WhatsApp discovery.
+
+**Domain direction (not implemented):** After Flow imports a demand, Flow governs operational execution; Connect must not duplicate Flow operations; Flow transit logs remain internal unless a client-facing projection is defined.
+
 ## Authorship Model (WP-01C)
 
 - `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).

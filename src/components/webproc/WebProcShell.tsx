@@ -3,20 +3,32 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { FileText, LogOut, Menu, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWebProc } from "@/contexts/WebProcContext";
+import { canEnterProtectedApp } from "@/lib/connect-access";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AccessDenied from "@/pages/webproc/AccessDenied";
+import ClientSelectionRequired from "@/pages/webproc/ClientSelectionRequired";
 
-const navItems = [
+const clientNavItems = [
   { to: "/app/processos", label: "Processos", icon: FileText, end: true },
   { to: "/app/processos/novo", label: "Novo Processo", icon: Plus, end: false },
-];
+] as const;
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+const actusNavItems = [
+  { to: "/app/processos", label: "Processos", icon: FileText, end: true },
+] as const;
+
+function NavLinks({
+  items,
+  onNavigate,
+}: {
+  items: readonly { to: string; label: string; icon: typeof FileText; end: boolean }[];
+  onNavigate?: () => void;
+}) {
   return (
     <nav className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
-      {navItems.map((item) => (
+      {items.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
@@ -40,8 +52,12 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export default function WebProcShell() {
-  const { user, membership, loading } = useWebProc();
+  const { user, connectAccess, membership, loading } = useWebProc();
   const navigate = useNavigate();
+
+  const isActus = connectAccess.kind === "ACTUS";
+  const isClient = connectAccess.kind === "CLIENT";
+  const navItems = isActus ? actusNavItems : isClient ? clientNavItems : [];
 
   useEffect(() => {
     if (!loading && !user) {
@@ -57,7 +73,7 @@ export default function WebProcShell() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/5 to-background">
-        <p className="text-muted-foreground">Carregando WebProc...</p>
+        <p className="text-muted-foreground">Carregando Actus Connect...</p>
       </div>
     );
   }
@@ -66,9 +82,23 @@ export default function WebProcShell() {
     return null;
   }
 
-  if (!membership) {
+  if (connectAccess.kind === "CLIENT_SELECTION_REQUIRED") {
+    return <ClientSelectionRequired />;
+  }
+
+  if (connectAccess.kind === "UNAUTHORIZED") {
     return <AccessDenied />;
   }
+
+  if (!canEnterProtectedApp(connectAccess)) {
+    return <AccessDenied />;
+  }
+
+  const headerSubtitle = isActus
+    ? "Ambiente de supervisão Actus"
+    : membership?.cliente.nome ?? "Actus Connect";
+
+  const headerTitle = isActus ? "Actus Connect" : "Actus Connect";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-background">
@@ -84,29 +114,23 @@ export default function WebProcShell() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-72">
                   <div className="mb-6">
-                    <p className="font-serif text-lg font-bold text-primary">
-                      WebProc
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {membership.cliente.nome}
-                    </p>
+                    <p className="font-serif text-lg font-bold text-primary">{headerTitle}</p>
+                    <p className="text-sm text-muted-foreground truncate">{headerSubtitle}</p>
                   </div>
-                  <NavLinks />
+                  <NavLinks items={navItems} />
                 </SheetContent>
               </Sheet>
             </div>
             <div className="min-w-0">
               <p className="font-serif text-lg font-bold text-primary leading-tight">
-                WebProc
+                {headerTitle}
               </p>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                {membership.cliente.nome}
-              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{headerSubtitle}</p>
             </div>
           </div>
 
           <div className="hidden md:block">
-            <NavLinks />
+            <NavLinks items={navItems} />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -120,6 +144,12 @@ export default function WebProcShell() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        {isActus && (
+          <p className="mb-6 rounded-md border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            Você está no Actus Connect com autorização interna Actus (escopo transversal de
+            supervisão). Operações exclusivas de cliente não estão disponíveis neste perfil.
+          </p>
+        )}
         <Outlet />
       </main>
     </div>

@@ -3,81 +3,76 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchActiveMembership } from "@/integrations/supabase/webproc-api";
+import {
+  type ConnectAccess,
+  getClientMembership,
+  resolveConnectAccess,
+} from "@/lib/connect-access";
 import type { WebProcMembership } from "@/integrations/supabase/webproc-types";
 
 interface WebProcContextValue {
   user: User | null;
+  connectAccess: ConnectAccess;
   membership: WebProcMembership | null;
   loading: boolean;
-  refresh: () => Promise<void>;
+  refresh: (options?: { blockUi?: boolean }) => Promise<void>;
   clear: () => void;
 }
 
 const WebProcContext = createContext<WebProcContextValue | undefined>(undefined);
 
+const initialAccess: ConnectAccess = { kind: "AUTHENTICATION_REQUIRED" };
+
 export function WebProcProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [membership, setMembership] = useState<WebProcMembership | null>(null);
+  const [connectAccess, setConnectAccess] = useState<ConnectAccess>(initialAccess);
   const [loading, setLoading] = useState(true);
   const initializedRef = useRef(false);
 
+  const membership = useMemo(
+    () => getClientMembership(connectAccess),
+    [connectAccess],
+  );
+
   const clear = useCallback(() => {
     setUser(null);
-    setMembership(null);
+    setConnectAccess({ kind: "AUTHENTICATION_REQUIRED" });
   }, []);
 
-  const resolveMembership = useCallback(async (userId: string) => {
-    const { membership: activeMembership, error } =
-      await fetchActiveMembership(userId);
+  const refresh = useCallback(async (options?: { blockUi?: boolean }) => {
+    const shouldBlockUi = options?.blockUi ?? !initializedRef.current;
 
-    if (error) {
-      console.error("Erro ao resolver membership WebProc:", error);
-      setMembership(null);
-      return;
+    if (shouldBlockUi) {
+      setLoading(true);
     }
 
-    setMembership(activeMembership);
-  }, []);
+    try {
+      const resolved = await resolveConnectAccess();
 
-  const refresh = useCallback(
-    async (options?: { blockUi?: boolean }) => {
-      const shouldBlockUi = options?.blockUi ?? !initializedRef.current;
+      if (!resolved.user) {
+        clear();
+        return;
+      }
 
+      setUser(resolved.user);
+      setConnectAccess(resolved.access);
+    } catch (error) {
+      console.error("Erro ao carregar contexto Connect:", error);
+      setConnectAccess({ kind: "UNAUTHORIZED" });
+    } finally {
+      initializedRef.current = true;
       if (shouldBlockUi) {
-        setLoading(true);
+        setLoading(false);
       }
-
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-
-        if (!currentUser) {
-          clear();
-          return;
-        }
-
-        setUser(currentUser);
-        await resolveMembership(currentUser.id);
-      } catch (error) {
-        console.error("Erro ao carregar contexto WebProc:", error);
-        setMembership(null);
-      } finally {
-        initializedRef.current = true;
-        if (shouldBlockUi) {
-          setLoading(false);
-        }
-      }
-    },
-    [clear, resolveMembership]
-  );
+    }
+  }, [clear]);
 
   useEffect(() => {
     void refresh({ blockUi: true });
@@ -101,20 +96,17 @@ export function WebProcProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (event === "SIGNED_IN") {
-        setUser(session.user);
-        if (initializedRef.current) {
-          void resolveMembership(session.user.id);
-        }
+      if (event === "SIGNED_IN" && initializedRef.current) {
+        void refresh({ blockUi: false });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [clear, refresh, resolveMembership]);
+  }, [clear, refresh]);
 
   return (
     <WebProcContext.Provider
-      value={{ user, membership, loading, refresh, clear }}
+      value={{ user, connectAccess, membership, loading, refresh, clear }}
     >
       {children}
     </WebProcContext.Provider>

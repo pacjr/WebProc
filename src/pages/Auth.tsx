@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { navigateToInstitutionalSite } from "@/lib/site-entry";
 import { ActusConnectAuthShell } from "@/components/auth/ActusConnectAuthShell";
+import { resolveConnectAccess } from "@/lib/connect-access";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -43,10 +44,24 @@ const Auth = () => {
       }
 
       if (data.user) {
+        const { access } = await resolveConnectAccess();
+
+        if (access.kind === "UNAUTHORIZED" || access.kind === "AUTHENTICATION_REQUIRED") {
+          toast({
+            title: "Acesso não autorizado",
+            description:
+              "Sua conta não possui acesso ativo ao Actus Connect. Entre em contato com a Actus.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+          return;
+        }
+
         toast({
           title: "Login realizado com sucesso",
           description: "Redirecionando...",
         });
+
         navigate("/app/processos");
       }
     } catch (error) {
