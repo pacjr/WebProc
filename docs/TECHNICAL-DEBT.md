@@ -145,7 +145,84 @@ Actus internal users operate in transversal supervisory scope in Connect. Select
 | WP-04C.1 — Pulse data audit | CLOSED / PASS | Connect demand facts on `webproc.processos` |
 | WP-04C.2a — Pulse read contract design | PASS | Five public RPCs + author resolver |
 | WP-04C.2b — Pulse read layer implementation | CLOSED / PASS | Commit `763a2c8` — `feat(pulse): add Connect Pulse read contract`; migration `20260329140000_wp04c_pulse_read_layer.sql` applied on linked DEV |
-| WP-04C.3 — ACTUS PULSE / Analytics UI | **Not started** | Next workstream after this closeout |
+| WP-04C.3 — ACTUS PULSE MVP (Connect UI) | **CLOSED / PASS** | Connect Pulse feature development **frozen** for MVP — see below |
+| WP-04C.3c — Pulse MVP readiness review | CLOSED | Recommendation **A**: PULSE MVP FUNCTIONALLY COMPLETE — STOP FEATURE DEVELOPMENT |
+| WP-04C.3d — Pulse MVP closeout + pre-prod gate | PO review | Documentation / validation only (no feature WP) |
+
+**No active Pulse feature work package.** Next Connect work returns to broader roadmap / production readiness, not additional Pulse UI slices unless PO explicitly reopens scope.
+
+### WP-04C.3 — ACTUS PULSE MVP (implementation closeout)
+
+**Status:** CLOSED / PASS (baseline commit `a4cb4dd` — demand drill-down with keyset pagination).
+
+**PO decision (WP-04C.3c):** **A — PULSE MVP FUNCTIONALLY COMPLETE — STOP FEATURE DEVELOPMENT.**
+
+| Milestone | Status | Evidence |
+|-----------|--------|----------|
+| WP-04C.3a — UI/UX audit | PASS | Audit-only (no commit) |
+| WP-04C.3b.1 — Filters + summary KPIs | CLOSED | Commit `cc9ed62` |
+| WP-04C.3b.2 — Daily REGISTERED series + lazy Pulse route | CLOSED | Commit `0591cbc` |
+| WP-04C.3b.3 — User / client distributions | CLOSED | Commit `708e2db` |
+| WP-04C.3b.4 — Demand drill-down | CLOSED | Commit `a4cb4dd` |
+| WP-04C.3c — Readiness review | CLOSED | Recommendation A (audit-only) |
+
+#### Connect Pulse analytical chain (MVP)
+
+Under **applied** analytical filters (draft → Apply):
+
+1. KPI summary (`pulse_summary`)
+2. Daily **REGISTERED** series (`pulse_daily_series` — cadastros por dia)
+3. Distribution by user — **REGISTERED** (`pulse_by_user`)
+4. Distribution by client — **REGISTERED**, **ACTUS only** (`pulse_by_client`)
+5. **REGISTERED** demand drill-down (`pulse_drilldown`, keyset pagination)
+6. Navigation to existing **`/app/processos/:idProc`** — **ProcessoDetail** remains operational authority
+
+Pulse is an **analytical projection / cockpit** over Connect demand facts. It does **not** maintain parallel operational state.
+
+Pulse is **not**:
+
+- a second operational source of truth;
+- a process-management module or Flow substitute;
+- an employee productivity or performance-ranking system;
+- a representation of total Actus workload outside the Connect domain;
+- a reporting/export subsystem;
+- an AI/Cortex interpretation layer.
+
+#### MVP UI performance boundary
+
+Route **`/app/pulse`** is **lazy-loaded** (`React.lazy` + `Suspense` in `src/App.tsx`) so Recharts and Pulse analytics code do **not** inflate the normal Processos / auth entry path.
+
+Reference production build measurements (not contractual budgets):
+
+| Chunk | Raw | Gzip |
+|-------|-----|------|
+| Initial app bundle | ~610.78 kB | ~180.95 kB |
+| Lazy `PulsePage` chunk | ~497.78 kB | ~140.77 kB |
+
+#### Pre-production gate (release validation — not a feature WP)
+
+**MUST before production:**
+
+1. Confirm migration **`20260329140000_wp04c_pulse_read_layer.sql`** is applied in the target environment (Pulse RPCs, author resolver, RLS-invoker behavior).
+2. **CLIENT** staging smoke: login → `/app/pulse` → expect `pulse_summary`, `pulse_daily_series`, `pulse_by_user`, `pulse_drilldown` — **never** `pulse_by_client` → drill-down → **Ver processo** → correct **ProcessoDetail** → return to Pulse.
+3. **ACTUS** staging smoke: supervisory identity → global Pulse → optional **client analytical filter** (no identity / membership switch) → supervisory process detail remains **read-only**.
+4. Confirm target-environment RPC availability, `authenticated` execute grants, and RLS behavior for both actors.
+
+**SHOULD if practical:**
+
+- Mobile (~390px) and dark-theme visual pass on Pulse.
+- Inactive historical-author label spot-check if a safe fixture exists in staging.
+
+#### Post-MVP P2 backlog (non-blocking — do not implement under frozen MVP)
+
+- Possible duplicate inactive-author wording (SQL resolver suffix + UI “associação inativa”).
+- `keepPreviousData` brief stale-scope presentation on Apply (mitigated by “Atualizando…” copy).
+- Long one-scroll page / mobile table density.
+- Optional future Pulse chunk splitting beyond current lazy route.
+- Live chart tooltip hover regression.
+- Load-more error path fault injection.
+- Same-`created_at` keyset pagination tie fixture (SQL tie-break exists; DEV lacked sample).
+- Optional inactive historical-author browser fixture.
 
 ### Positioning and terminology
 
@@ -158,7 +235,8 @@ Pulse is **not**:
 - a second source of truth;
 - the complete operational universe of Actus;
 - a replacement for Flow;
-- an AI-generated interpretation layer.
+- an AI-generated interpretation layer;
+- a process-management replacement or employee productivity system (see WP-04C.3 MVP chain above).
 
 Future **ACTUS FLOW** may expose Pulse over the broader Actus operational universe (including demands originating outside Connect). Flow implementation is out of scope here.
 
@@ -198,6 +276,10 @@ The read contract covers **`webproc.processos`** and related Connect authorizati
 
 **Current `status`** (e.g. `CANCELADO`) is distinct from lifecycle event timestamps. Filtering by current status does **not** mean “cancelled in period.” A demand registered in a period remains in **registered** history even if current status later becomes `CANCELADO`.
 
+**Connect Pulse MVP UI (WP-04C.3):** The daily chart, user/client distribution tables, and demand drill-down use **`REGISTERED`** semantics (`created_at` in period). Summary KPIs additionally show **protocolled** and **imported** lifecycle-in-period counts and a **current-state snapshot** block — do **not** expect snapshot totals (e.g. “Total no escopo”) to reconcile with REGISTERED event totals; they answer different questions.
+
+Under identical applied filters, REGISTERED counts should reconcile across: summary `registered_count`, sum of daily `registered_count`, sum of by-user/by-client REGISTERED aggregates, and complete REGISTERED drill-down traversal (contract + fixture evidence on linked DEV; see residual gaps below).
+
 ### Snapshot semantics
 
 - Default summary snapshot: **`ALL_IN_SCOPE`** — current state of all demands visible in caller scope (after filters).
@@ -208,14 +290,17 @@ The read contract covers **`webproc.processos`** and related Connect authorizati
 
 **CLIENT**
 
-- Analytics restricted by RLS to authorized client scope.
-- Must not supply arbitrary `p_cliente_id` to switch identity (rejected at RPC layer).
-- User filters operate only within visible domain.
+- Analytics restricted to the caller’s **own authorized Connect universe** (RLS on `webproc.processos`).
+- Must not supply `p_cliente_id` / `clienteId` (rejected at RPC layer); no client switching via Pulse.
+- **No by-client projection** — frontend does not call `pulse_by_client` for CLIENT actors.
+- User filters operate only within the visible domain.
+- Detail navigation uses existing client-scoped **ProcessoDetail**; Pulse does not override authorization.
 
 **ACTUS**
 
-- Transversal supervisory analytical scope.
+- Transversal **supervisory analytical** view over Connect demands visible under Actus authorization.
 - Optional `p_cliente_id` is an **analytical filter only**; never changes actor identity; no synthetic `usuarios_clientes` membership (see AR-AC-AUTH-05 / AR-AC-AUTH-06).
+- Pulse introduces **no mutation authority** (read-only analytics + links to existing read-only supervisory detail).
 
 **ACTUS by-user identity:** **`(cliente_id, created_by)`** — do not treat `created_by` globally across clients.
 
@@ -223,7 +308,8 @@ Raw demand counts by user are **demand registration/activity volume**, not emplo
 
 ### Historical author attribution (Pulse resolver)
 
-- **Authorization membership ≠ historical actor attribution.**
+- **Current active authorization ≠ historical actor attribution.**
+- **Server-resolved** display labels (`pulse_author_identity`); frontend must not reconstruct historical authors from live membership lists alone.
 - Technical anchor: immutable **`created_by`** on `webproc.processos`.
 - Labels may reflect **inactive** membership when historically visible; email is **not** part of the default Analytics author display contract.
 
@@ -275,11 +361,12 @@ Linked DEV authenticated E2E **PASS** (no credentials or fixture UUIDs recorded 
 
 ### Residual non-blocking test coverage (regression gaps)
 
-Not implementation defects; do not block WP-04C.2:
+Not implementation defects; do not block WP-04C.2 / WP-04C.3 MVP release (see also Post-MVP P2 backlog under WP-04C.3):
 
 1. **Hidden foreign-process RLS** — CLIENT B had no `processos` rows; no runtime case where B has a process hidden from A by RLS.
 2. **Historical inactive author** — no safe inactive historical author fixture in DEV E2E.
 3. **Duplicate `created_at` pagination** — no DEV sample with shared `created_at` for explicit tie-break proof.
+4. **CLIENT process-detail browser smoke** — not re-exercised in final drill-down pass (ACTUS regression PASS).
 
 ### AR-ACTUS-PULSE-01 — Analytics as Intelligence Foundation
 
@@ -289,11 +376,11 @@ Pulse metrics and projections must have stable, traceable, **AI-independent** se
 
 Operational predictions derive from explicitly defined facts/models. Cortex may contextualize, explain, or communicate predictions; linguistic inference is **not** an operational fact. Do not introduce Cortex or forecasting into Connect MVP implementation.
 
-**OPA-style mapping (direction only):**
+**Deterministic architecture direction (future — not Connect MVP):**
 
-- **Observe** — Pulse / Analytics (deterministic; WP-04C.2 foundation).
-- **Predict / Interpret** — forecasting/model layer + Cortex (future).
-- **Act** — human decision or explicitly authorized operation.
+Operational facts → Pulse Analytics (deterministic) → statistical / forecast layer → Prediction Facts → Cortex explanation / context → human or explicitly authorized action.
+
+**Connect Pulse MVP remains deterministic.** Cortex / LLM is **not** operational fact authority and is **not** implemented in WP-04C.3.
 
 Core metrics must not depend on an LLM inventing or recalculating operational facts via arbitrary SQL.
 
@@ -301,7 +388,19 @@ Core metrics must not depend on an LLM inventing or recalculating operational fa
 
 ## Flow Discovery Ledger (WP-04C forward observations)
 
-Forward observations only — **no Flow tables or implementation** in Connect:
+Forward observations only — **no Flow tables or implementation** in Connect. The following are **explicitly deferred to Flow Discovery** (do not implement in Connect Pulse MVP):
+
+- Demand **origin / channel** and provenance beyond Connect intake
+- Manual Flow registration and **spreadsheet imports**
+- **Calculator assignment** and process **affinity**
+- **Protocol executor**, **transit logs**, internal operational **notes**
+- **Deadlines**, **cycle time**, **workforce / capacity**
+- **Cross-channel workload** and **procedure execution**
+- **DHE distribution**
+- **Flow → Connect lifecycle projection**
+- Broader **Flow Pulse** over the complete Actus operational universe
+
+Cross-cutting ledger items:
 
 1. **Flow Pulse** should eventually represent the complete Actus operational universe, not only Connect intake.
 2. **Flow Discovery** must model demand **origin/provenance** explicitly: origin/channel; requester/source actor; operator who manually registered/imported when applicable.
