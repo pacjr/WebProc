@@ -38,11 +38,13 @@ The following constraints apply to every environment (development, staging, prod
 
 7. **No account IDs, project refs, bucket identifiers, secrets, or administrative UUIDs may become application business logic.** Configuration belongs in environment variables and deployment docs; authorization belongs in RLS and membership data—not hard-coded identifiers in source code.
 
-## AR-AC-DASH-01 — Operational Projection Boundary (WP-04)
+## AR-AC-DASH-01 — Operational Projection Boundary (WP-04 / WP-04C)
 
-The Actus Connect Dashboard is a projection of the operational domain. It does not constitute a second source of truth and must not maintain parallel state to processes, timeline, situations, or other authoritative domain facts.
+Dashboard and **ACTUS PULSE** analytics are projections of the Connect operational domain. They do not constitute a second source of truth and must not maintain parallel state to processes, timeline, situations, or other authoritative domain facts.
 
-Implementation belongs to WP-04. Do not add dashboard analytics tables or materialized views for Step 2B.
+Analytics must derive from authoritative domain facts. The read layer must not redefine lifecycle or operational state.
+
+Do not add dashboard or Pulse analytics tables or materialized views that duplicate domain truth for Step 2B / WP-04C.2.
 
 ## TD-AC-LEGACY-FE-01 — Legacy public-schema frontend retired (Step 2B)
 
@@ -121,7 +123,7 @@ Actus internal users operate in transversal supervisory scope in Connect. Select
 1. Actus process-detail copy: replace client-oriented authorship/edit wording with supervision/read-only wording.
 2. `CLIENT_SELECTION_REQUIRED`: interactive client selector still required for identities with multiple active client memberships (safe blocking state only today).
 
-**Deferred (other workstreams):** Actus global operational dashboard (WP-04C); supervisory cancellation/reconciliation; Flow → Connect client-facing projections; communication/WhatsApp discovery.
+**Deferred (other workstreams):** supervisory cancellation/reconciliation; Flow → Connect client-facing projections; communication/WhatsApp discovery. (WP-04C read contract: **CLOSED** — see below; WP-04C.3 Pulse UI not started.)
 
 **Domain direction (not part of WP-04A.2d):** After Flow imports a demand, Flow governs operational execution; Connect must not duplicate Flow operations; Flow transit logs remain internal unless a client-facing projection is defined.
 
@@ -131,3 +133,177 @@ Actus internal users operate in transversal supervisory scope in Connect. Select
 - Operational display identity is resolved through `webproc.usuarios_clientes` (`nome`, `email`) linked by `user_id`.
 - Author names/emails are not duplicated on `webproc.processos`.
 - Reassignment and impersonation are out of scope; future actions by another authorized user use that user's own authentication identity without overwriting original authorship.
+
+---
+
+## WP-04C — ACTUS PULSE (Connect Read Contract)
+
+### Roadmap status
+
+| Work package | Status | Notes |
+|--------------|--------|--------|
+| WP-04C.1 — Pulse data audit | CLOSED / PASS | Connect demand facts on `webproc.processos` |
+| WP-04C.2a — Pulse read contract design | PASS | Five public RPCs + author resolver |
+| WP-04C.2b — Pulse read layer implementation | CLOSED / PASS | Commit `763a2c8` — `feat(pulse): add Connect Pulse read contract`; migration `20260329140000_wp04c_pulse_read_layer.sql` applied on linked DEV |
+| WP-04C.3 — ACTUS PULSE / Analytics UI | **Not started** | Next workstream after this closeout |
+
+### Positioning and terminology
+
+**ACTUS PULSE** is the operational intelligence / analytical experience being developed over Actus operational domains.
+
+For **Actus Connect**, Pulse projects facts from the Connect domain only. Connect remains: *Relacionamento e entrada digital de demandas.*
+
+Pulse is **not**:
+
+- a second source of truth;
+- the complete operational universe of Actus;
+- a replacement for Flow;
+- an AI-generated interpretation layer.
+
+Future **ACTUS FLOW** may expose Pulse over the broader Actus operational universe (including demands originating outside Connect). Flow implementation is out of scope here.
+
+**Terminology:**
+
+- **ACTUS PULSE** — operational intelligence / cockpit experience.
+- **Analytics** — metrics, trends, series, distributions, and analytical projections *inside* Pulse.
+- **Reports / Relatórios** — reserved for actual report/export capabilities (not WP-04C.2).
+- Do **not** use **Insight** as the Pulse UI label (collision with Insight AI Solutions institutional identity).
+
+### Connect Pulse universe (WP-04C.2)
+
+The read contract covers **`webproc.processos`** and related Connect authorization/identity context only. Connect Pulse measures the Connect universe.
+
+**Do not** add demand origin/provenance columns to Connect for Pulse. Equivalent metrics may eventually share semantic definitions with Flow Pulse while underlying data sources differ.
+
+**Implemented lifecycle dimensions (read layer):** registered (`created_at`), protocolled (`pendente_at`), imported (`importado_at`), plus **current `status`** for filtering and snapshot counts.
+
+**Deferred analytics (domain facts exist; not in WP-04C.2 RPC metrics):** concluded (`concluido_at`), cancelled-as-event (`cancelado_at`) as lifecycle-in-period series — document domain semantics below for future work; WP-04C.2 does not count cancellation *events* by `cancelado_at`.
+
+### Business time
+
+- Pulse business timezone: **`America/Sao_Paulo`**.
+- Database timestamps remain **`timestamptz`**.
+- Date periods use local business-day boundaries, half-open: **[start of local day, start of next local day)**.
+- Daily analytical buckets use the same business timezone.
+
+### Lifecycle and status semantics
+
+| Concept | Field | Role in WP-04C.2 |
+|---------|--------|-------------------|
+| Registered / Cadastrada | `created_at` | Lifecycle-in-period + REGISTERED drilldown basis |
+| Protocolled / Protocolada | `pendente_at` | Lifecycle-in-period + PROTOCOLLED basis |
+| Imported / Importada | `importado_at` | Lifecycle-in-period + IMPORTED basis |
+| Concluded / Concluída | `concluido_at` | Domain fact; **not** a WP-04C.2 aggregate axis |
+| Cancelled / Cancelada | `cancelado_at` | Domain fact; **not** a WP-04C.2 lifecycle counter |
+
+**Current `status`** (e.g. `CANCELADO`) is distinct from lifecycle event timestamps. Filtering by current status does **not** mean “cancelled in period.” A demand registered in a period remains in **registered** history even if current status later becomes `CANCELADO`.
+
+### Snapshot semantics
+
+- Default summary snapshot: **`ALL_IN_SCOPE`** — current state of all demands visible in caller scope (after filters).
+- Optional: **`REGISTERED_IN_PERIOD`** — current state restricted to demands **registered** in the selected period.
+- Do not interchange these modes silently.
+
+### Actor and scope
+
+**CLIENT**
+
+- Analytics restricted by RLS to authorized client scope.
+- Must not supply arbitrary `p_cliente_id` to switch identity (rejected at RPC layer).
+- User filters operate only within visible domain.
+
+**ACTUS**
+
+- Transversal supervisory analytical scope.
+- Optional `p_cliente_id` is an **analytical filter only**; never changes actor identity; no synthetic `usuarios_clientes` membership (see AR-AC-AUTH-05 / AR-AC-AUTH-06).
+
+**ACTUS by-user identity:** **`(cliente_id, created_by)`** — do not treat `created_by` globally across clients.
+
+Raw demand counts by user are **demand registration/activity volume**, not employee “productivity,” unless a future domain contract defines otherwise.
+
+### Historical author attribution (Pulse resolver)
+
+- **Authorization membership ≠ historical actor attribution.**
+- Technical anchor: immutable **`created_by`** on `webproc.processos`.
+- Labels may reflect **inactive** membership when historically visible; email is **not** part of the default Analytics author display contract.
+
+**Architecture (approved, do not redesign casually):**
+
+| Function | Security | Role |
+|----------|----------|------|
+| `pulse_caller_can_see_author_context` | INVOKER | Visibility gate on `webproc.processos` (RLS as session user) |
+| `pulse_author_identity` | DEFINER | Narrow label resolver after gate; not a cross-client directory |
+
+### Security / RPC boundary
+
+**Authenticated public Pulse API:**
+
+- `pulse_summary`, `pulse_daily_series`, `pulse_by_user`, `pulse_by_client`, `pulse_drilldown`
+
+**Not authenticated-facing RPC surface** (no direct `EXECUTE` for `authenticated`):
+
+- `pulse_period_bounds`, `pulse_assert_cliente_filter_allowed`, `pulse_filtered_processes`
+
+**PUBLIC / anonymous:** denied on Pulse RPCs.
+
+**Note:** `pulse_by_client` is exposed via PostgREST but **domain-authorized for ACTUS only** — exposed RPC ≠ actor authorization.
+
+Reference harness: `supabase/reference/wp04c_pulse_validation_harness.sql`.
+
+### Drilldown pagination
+
+Stable ordering: **`created_at DESC`, `id_proc DESC`**.
+
+| Cursor state | Behavior |
+|--------------|----------|
+| Both `NULL` | First page |
+| Both supplied | Keyset next page |
+| Exactly one supplied | `pulse_invalid_drilldown_cursor` (no silent restart) |
+
+### DEV validation evidence (authenticated E2E)
+
+Linked DEV authenticated E2E **PASS** (no credentials or fixture UUIDs recorded here):
+
+- **CLIENT:** own-scope visibility; summary, daily series, by-user, drilldown; foreign `cliente_id` rejection; `pulse_by_client` rejection.
+- **ACTUS:** global summary; Cliente A/B filters; by-user `(cliente_id, created_by)` grouping.
+- **Snapshot:** `ALL_IN_SCOPE` default; `REGISTERED_IN_PERIOD` callable.
+- **Lifecycle / status:** current `CANCELADO` filter behavior; registered counts stable vs status changes.
+- **Timezone:** single-day series under `America/Sao_Paulo`.
+- **Drilldown:** both-null, partial rejection, paired cursor.
+- **RPC exposure:** internal helpers denied; public RPCs callable per actor rules; anonymous denied.
+- **Author anti-directory:** CLIENT A invoked `pulse_author_identity` with controlled CLIENT B membership `user_id` input — result `display_name = "Usuário desconhecido"`, `membership_active = false`; no foreign name, email, or actual membership state exposed; no DB mutation.
+
+### Residual non-blocking test coverage (regression gaps)
+
+Not implementation defects; do not block WP-04C.2:
+
+1. **Hidden foreign-process RLS** — CLIENT B had no `processos` rows; no runtime case where B has a process hidden from A by RLS.
+2. **Historical inactive author** — no safe inactive historical author fixture in DEV E2E.
+3. **Duplicate `created_at` pagination** — no DEV sample with shared `created_at` for explicit tie-break proof.
+
+### AR-ACTUS-PULSE-01 — Analytics as Intelligence Foundation
+
+Pulse metrics and projections must have stable, traceable, **AI-independent** semantics so future prediction and Cortex layers can consume trusted facts.
+
+### AR-ACTUS-PULSE-02 — Prediction Authority Boundary
+
+Operational predictions derive from explicitly defined facts/models. Cortex may contextualize, explain, or communicate predictions; linguistic inference is **not** an operational fact. Do not introduce Cortex or forecasting into Connect MVP implementation.
+
+**OPA-style mapping (direction only):**
+
+- **Observe** — Pulse / Analytics (deterministic; WP-04C.2 foundation).
+- **Predict / Interpret** — forecasting/model layer + Cortex (future).
+- **Act** — human decision or explicitly authorized operation.
+
+Core metrics must not depend on an LLM inventing or recalculating operational facts via arbitrary SQL.
+
+---
+
+## Flow Discovery Ledger (WP-04C forward observations)
+
+Forward observations only — **no Flow tables or implementation** in Connect:
+
+1. **Flow Pulse** should eventually represent the complete Actus operational universe, not only Connect intake.
+2. **Flow Discovery** must model demand **origin/provenance** explicitly: origin/channel; requester/source actor; operator who manually registered/imported when applicable.
+3. Equivalent Connect/Flow analytical metrics should share **semantic definitions** where appropriate, even when data sources differ.
+4. Future forecasting may use richer Flow facts (demand arrivals, procedures, clients, distribution, calculators, deadlines, cycle times, etc.).
