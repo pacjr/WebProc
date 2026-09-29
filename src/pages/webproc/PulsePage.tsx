@@ -1,10 +1,14 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { AlertCircle } from "lucide-react";
 import { useWebProc } from "@/contexts/WebProcContext";
 import { PulseFilters } from "@/components/pulse/PulseFilters";
+import { PulseByClientTable } from "@/components/pulse/PulseByClientTable";
+import { PulseByUserTable } from "@/components/pulse/PulseByUserTable";
 import { PulseDailyChart } from "@/components/pulse/PulseDailyChart";
 import { PulseSummaryKpis } from "@/components/pulse/PulseSummaryKpis";
 import { usePulseFilters } from "@/hooks/usePulseFilters";
+import { usePulseByClientQuery } from "@/hooks/usePulseByClientQuery";
+import { usePulseByUserQuery } from "@/hooks/usePulseByUserQuery";
 import { usePulseDailySeriesQuery } from "@/hooks/usePulseDailySeriesQuery";
 import { usePulseSummaryQuery } from "@/hooks/usePulseSummaryQuery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,6 +17,7 @@ import {
   formatPeriodRangeLabel,
   pulseTimezoneParenthetical,
 } from "@/lib/pulse-dates";
+import { sumRegisteredAggregateCounts } from "@/lib/pulse-participation";
 
 export default function PulsePage() {
   const { connectAccess, membership } = useWebProc();
@@ -34,10 +39,48 @@ export default function PulsePage() {
 
   const summaryQuery = usePulseSummaryQuery(connectAccess, applied);
   const dailySeriesQuery = usePulseDailySeriesQuery(connectAccess, applied);
+  const byUserQuery = usePulseByUserQuery(connectAccess, applied);
+  const byClientQuery = usePulseByClientQuery(connectAccess, applied);
+
+  const clienteLabelById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const row of byClientQuery.data ?? []) {
+      const nome = row.cliente_nome?.trim();
+      if (nome) {
+        map.set(row.cliente_id, nome);
+      }
+    }
+    return map;
+  }, [byClientQuery.data]);
+
+  const byUserRegisteredTotal = useMemo(
+    () => sumRegisteredAggregateCounts(byUserQuery.data ?? []),
+    [byUserQuery.data],
+  );
+
+  const actusClienteLabelContext = useMemo((): "loading" | "ready" | "unavailable" | null => {
+    if (!isActus) return null;
+    if (byClientQuery.isError) return "unavailable";
+    if (byClientQuery.data !== undefined) return "ready";
+    if (byClientQuery.isLoading || byClientQuery.isFetching) return "loading";
+    return "ready";
+  }, [
+    isActus,
+    byClientQuery.data,
+    byClientQuery.isError,
+    byClientQuery.isLoading,
+    byClientQuery.isFetching,
+  ]);
 
   const handleApply = useCallback(() => {
     applyFilters();
   }, [applyFilters]);
+
+  const isApplying =
+    summaryQuery.isFetching ||
+    dailySeriesQuery.isFetching ||
+    byUserQuery.isFetching ||
+    (isActus && byClientQuery.isFetching);
 
   const periodLabel = formatPeriodRangeLabel(applied.periodStart, applied.periodEnd);
 
@@ -60,7 +103,7 @@ export default function PulsePage() {
         isActus={isActus}
         draft={draft}
         applyError={applyError}
-        isApplying={summaryQuery.isFetching || dailySeriesQuery.isFetching}
+        isApplying={isApplying}
         clientMembershipClienteId={
           isClient ? membership?.clienteId : undefined
         }
@@ -117,6 +160,31 @@ export default function PulsePage() {
         }
         onRetry={() => void dailySeriesQuery.refetch()}
       />
+
+      <PulseByUserTable
+        rows={byUserQuery.data}
+        isActus={isActus}
+        clienteLabelById={isActus ? clienteLabelById : undefined}
+        actusClienteLabelContext={
+          isActus && byUserRegisteredTotal > 0 ? actusClienteLabelContext : null
+        }
+        isLoading={byUserQuery.isLoading}
+        isFetching={byUserQuery.isFetching}
+        isError={byUserQuery.isError}
+        error={byUserQuery.error instanceof Error ? byUserQuery.error : null}
+        onRetry={() => void byUserQuery.refetch()}
+      />
+
+      {isActus ? (
+        <PulseByClientTable
+          rows={byClientQuery.data}
+          isLoading={byClientQuery.isLoading}
+          isFetching={byClientQuery.isFetching}
+          isError={byClientQuery.isError}
+          error={byClientQuery.error instanceof Error ? byClientQuery.error : null}
+          onRetry={() => void byClientQuery.refetch()}
+        />
+      ) : null}
     </div>
   );
 }
