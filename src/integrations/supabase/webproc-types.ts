@@ -282,6 +282,63 @@ export type WebProcDatabase = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      pulse_summary: {
+        Args: {
+          p_period_start: string;
+          p_period_end: string;
+          p_created_by?: string;
+          p_status?: string[];
+          p_cliente_id?: number;
+          p_snapshot_mode?: string;
+        };
+        Returns: Record<string, unknown>;
+      };
+      pulse_daily_series: {
+        Args: {
+          p_period_start: string;
+          p_period_end: string;
+          p_created_by?: string;
+          p_status?: string[];
+          p_cliente_id?: number;
+        };
+        Returns: Record<string, unknown>[];
+      };
+      pulse_by_user: {
+        Args: {
+          p_metric_basis: string;
+          p_period_start: string;
+          p_period_end: string;
+          p_created_by?: string;
+          p_status?: string[];
+          p_cliente_id?: number;
+        };
+        Returns: Record<string, unknown>[];
+      };
+      pulse_by_client: {
+        Args: {
+          p_metric_basis: string;
+          p_period_start: string;
+          p_period_end: string;
+          p_created_by?: string;
+          p_status?: string[];
+          p_cliente_id?: number;
+        };
+        Returns: Record<string, unknown>[];
+      };
+      pulse_drilldown: {
+        Args: {
+          p_period_start: string;
+          p_period_end: string;
+          p_created_by?: string;
+          p_status?: string[];
+          p_cliente_id?: number;
+          p_lifecycle_basis?: string;
+          p_limit?: number;
+          p_cursor_created_at?: string;
+          p_cursor_id_proc?: number;
+        };
+        Returns: Record<string, unknown>[];
+      };
       salvar_rascunho: {
         Args: {
           p_id_proc: number;
