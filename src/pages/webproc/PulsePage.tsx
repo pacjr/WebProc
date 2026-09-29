@@ -2,8 +2,10 @@ import { useCallback } from "react";
 import { AlertCircle } from "lucide-react";
 import { useWebProc } from "@/contexts/WebProcContext";
 import { PulseFilters } from "@/components/pulse/PulseFilters";
+import { PulseDailyChart } from "@/components/pulse/PulseDailyChart";
 import { PulseSummaryKpis } from "@/components/pulse/PulseSummaryKpis";
 import { usePulseFilters } from "@/hooks/usePulseFilters";
+import { usePulseDailySeriesQuery } from "@/hooks/usePulseDailySeriesQuery";
 import { usePulseSummaryQuery } from "@/hooks/usePulseSummaryQuery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ export default function PulsePage() {
   } = usePulseFilters();
 
   const summaryQuery = usePulseSummaryQuery(connectAccess, applied);
+  const dailySeriesQuery = usePulseDailySeriesQuery(connectAccess, applied);
 
   const handleApply = useCallback(() => {
     applyFilters();
@@ -57,7 +60,7 @@ export default function PulsePage() {
         isActus={isActus}
         draft={draft}
         applyError={applyError}
-        isApplying={summaryQuery.isFetching}
+        isApplying={summaryQuery.isFetching || dailySeriesQuery.isFetching}
         clientMembershipClienteId={
           isClient ? membership?.clienteId : undefined
         }
@@ -103,6 +106,17 @@ export default function PulsePage() {
           isFetching={summaryQuery.isFetching}
         />
       </section>
+
+      <PulseDailyChart
+        points={dailySeriesQuery.data}
+        isLoading={dailySeriesQuery.isLoading}
+        isFetching={dailySeriesQuery.isFetching}
+        isError={dailySeriesQuery.isError}
+        error={
+          dailySeriesQuery.error instanceof Error ? dailySeriesQuery.error : null
+        }
+        onRetry={() => void dailySeriesQuery.refetch()}
+      />
     </div>
   );
 }

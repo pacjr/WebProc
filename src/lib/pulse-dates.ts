@@ -18,8 +18,18 @@ export function businessDateDaysAgo(daysBack: number): string {
   return format(addDays(today, -daysBack), "yyyy-MM-dd");
 }
 
+/** Parse YYYY-MM-DD as local calendar date (avoids UTC day shift). */
+export function parseBusinessDateOnly(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function formatBusinessDateLabel(isoDate: string): string {
-  return format(parseISO(isoDate), "dd/MM/yyyy");
+  return format(parseBusinessDateOnly(isoDate), "dd/MM/yyyy");
+}
+
+export function formatBusinessDateShort(isoDate: string): string {
+  return format(parseBusinessDateOnly(isoDate), "dd/MM");
 }
 
 export function formatPeriodRangeLabel(start: string, end: string): string {
