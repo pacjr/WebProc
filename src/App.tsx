@@ -12,6 +12,7 @@ import WebProcShell from "@/components/webproc/WebProcShell";
 import ProcessosList from "@/pages/webproc/ProcessosList";
 import NovoProcesso from "@/pages/webproc/NovoProcesso";
 import ProcessoDetail from "@/pages/webproc/ProcessoDetail";
+import PulsePage from "@/pages/webproc/PulsePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ const App = () => {
               }
             >
               <Route index element={<Navigate to="processos" replace />} />
+              <Route path="pulse" element={<PulsePage />} />
               <Route path="processos" element={<ProcessosList />} />
               <Route path="processos/novo" element={<NovoProcesso />} />
               <Route path="processos/:idProc" element={<ProcessoDetail />} />

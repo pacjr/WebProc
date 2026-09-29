@@ -16,14 +16,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useWebProc } from "@/contexts/WebProcContext";
-
-const statusLabels: Record<string, string> = {
-  EM_PREENCHIMENTO: "Em preenchimento",
-  PENDENTE: "Pendente",
-  IMPORTADO: "Importado",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
+import { processoStatusLabel } from "@/lib/webproc-status-labels";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -119,7 +112,7 @@ export default function ProcessosList() {
                     <TableCell>{formatDate(processo.dt_fatal)}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {statusLabels[processo.status] ?? processo.status}
+                        {processoStatusLabel(processo.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>

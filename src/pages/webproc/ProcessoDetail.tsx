@@ -34,14 +34,7 @@ import type {
   WebProcProcessoLink,
 } from "@/integrations/supabase/webproc-types";
 import { toast } from "sonner";
-
-const statusLabels: Record<string, string> = {
-  EM_PREENCHIMENTO: "Em preenchimento",
-  PENDENTE: "Pendente",
-  IMPORTADO: "Importado",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
+import { processoStatusLabel } from "@/lib/webproc-status-labels";
 
 export default function ProcessoDetail() {
   const { idProc } = useParams();
@@ -364,7 +357,7 @@ export default function ProcessoDetail() {
             </p>
           </div>
           <Badge variant="secondary" className="w-fit">
-            {statusLabels[processo.status] ?? processo.status}
+            {processoStatusLabel(processo.status)}
           </Badge>
         </div>
 
