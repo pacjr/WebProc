@@ -94,21 +94,36 @@ Implementation notes:
 
 ## AR-AC-AUTH-05 — Internal Actor Precedence (WP-04A.2d)
 
-If an identity has both active Actus authorization (`usuarios_actus`) and active client membership (`usuarios_clientes` + active `clientes`), **Actus authorization takes precedence**. The frontend resolves `ConnectAccess.kind === 'ACTUS'` and does **not** attach a client membership for that session.
+If the same authenticated identity has active Actus authorization and active client membership, resolve it as **ACTUS**. The frontend sets `ConnectAccess.kind === 'ACTUS'` and does **not** attach a client membership for that session.
 
-## AR-AC-AUTH-06 — Actus Supervisory Scope (WP-04A.2d)
+## AR-AC-AUTH-06 — Actus Supervisory Operational Scope (WP-04A.2d)
 
-Internal Actus users operate in transversal/global supervisory scope in Connect. Future client selection or filtering is a **filter**, not identity switching, and must not fabricate `usuarios_clientes` membership. The global operational dashboard belongs to **WP-04C**.
+Actus internal users operate in transversal supervisory scope in Connect. Selecting or filtering a client does **not** change actor identity and must **never** create or emulate `usuarios_clientes` membership. The global operational dashboard belongs to **WP-04C** (separate workstream).
 
 ## TD-AC-AUTH-03 — Connect access resolution (WP-04A.2d)
 
-**Status:** IMPLEMENTED (pending migration apply on each Supabase environment)
+**Status:** CLOSED / PASS (manual E2E sign-off; implementation `8c33f35`)
 
-- Post-login access: `resolveConnectAccess()` — parallel `webproc.is_active_connect_actus_user()` + active client memberships (no silent `.limit(1)`).
-- **Migration required:** `supabase/migrations/20260329120000_wp04a_connect_actus_access_rpc.sql` (`webproc.is_active_connect_actus_user` wrapper). `webproc_private.is_active_actus_user()` is **not** PostgREST-callable (`PGRST106`).
-- **Deferred:** interactive multi-client picker ( `CLIENT_SELECTION_REQUIRED` safe state only); Actus global dashboard (WP-04C); supervisory cancellation/reconciliation; Flow → Connect client-facing projections; communication/WhatsApp discovery.
+**Implementation:** `resolveConnectAccess()` — parallel `webproc.is_active_connect_actus_user()` + all active client memberships (no silent `.limit(1)`). Discriminated access: `ACTUS` | `CLIENT` | `CLIENT_SELECTION_REQUIRED` | `UNAUTHORIZED`.
 
-**Domain direction (not implemented):** After Flow imports a demand, Flow governs operational execution; Connect must not duplicate Flow operations; Flow transit logs remain internal unless a client-facing projection is defined.
+**Migration:** `20260329120000_wp04a_connect_actus_access_rpc.sql` — **applied** on linked DEV Supabase project. Replicate on staging/production per environment. `webproc_private` remains outside PostgREST-exposed schemas; wrapper RPC returns boolean only.
+
+**Verified manual E2E (DEV):**
+
+*ACTUS actor:* login → ACTUS supervisory scope; header/banner identifies Actus supervision; global process visibility via existing RLS; client-only “Novo Processo” unavailable; process detail read-only for Actus; browser refresh reconstructs ACTUS access; no synthetic client membership.
+
+*CLIENT actor:* login → CLIENT scope; correct client context; client-scoped process list; “Novo Processo” available; existing client behavior intact.
+
+*Infrastructure / security:* `webproc.is_active_connect_actus_user()` works in DEV; no direct `usuarios_actus` table exposure; no service-role human authorization bypass.
+
+**Non-blocking follow-up:**
+
+1. Actus process-detail copy: replace client-oriented authorship/edit wording with supervision/read-only wording.
+2. `CLIENT_SELECTION_REQUIRED`: interactive client selector still required for identities with multiple active client memberships (safe blocking state only today).
+
+**Deferred (other workstreams):** Actus global operational dashboard (WP-04C); supervisory cancellation/reconciliation; Flow → Connect client-facing projections; communication/WhatsApp discovery.
+
+**Domain direction (not part of WP-04A.2d):** After Flow imports a demand, Flow governs operational execution; Connect must not duplicate Flow operations; Flow transit logs remain internal unless a client-facing projection is defined.
 
 ## Authorship Model (WP-01C)
 
