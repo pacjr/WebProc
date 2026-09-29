@@ -127,6 +127,44 @@ Actus internal users operate in transversal supervisory scope in Connect. Select
 
 **Domain direction (not part of WP-04A.2d):** After Flow imports a demand, Flow governs operational execution; Connect must not duplicate Flow operations; Flow transit logs remain internal unless a client-facing projection is defined.
 
+## AR-AC-AUTH-02 — Credential Ownership
+
+Supabase Auth is the **identity and credential authority** for Connect. Actus Connect domain tables store **authorization and operational identity context**, not user passwords. End users control their own credentials through Auth (login, recovery, future first-activation).
+
+## AR-AC-AUTH-03 — Flow-Driven Provisioning (future)
+
+Future **Actus Flow** is the intended long-term owner of client/user governance and cross-channel provisioning. Connect **transitional** administrative provisioning (WP-04A.3) exists only until Flow owns those workflows. Do not treat Connect admin APIs as permanent master-data authority.
+
+## AR-AC-PROV-01 — Transitional Administrative Provisioning
+
+Actus **ADMIN** (`webproc.usuarios_actus.papel = 'ADMIN'`, active) may administer Connect **clients** and **client memberships** through server-side RPCs (`webproc.admin_*`). **OPERADOR** retains existing supervisory **read** scope but is **not** authorized for provisioning mutations.
+
+Membership lifecycle is soft (`ativo`); rows are not deleted. Auth invite/link/send is a **separate** slice (WP-04A.3b-auth / WP-04A.3c).
+
+**Transitional one-active-client policy:** the schema remains multi-client capable, but admin create/reactivate enforces **at most one active client membership per normalized email / linked `user_id`** until client-selection UX exists. Error: `active_membership_other_client` (does not disclose the other client).
+
+Derived membership states (API, not persisted): `PENDING_AUTH` (`ativo` + `user_id` null), `ACTIVE` (`ativo` + `user_id` set), `INACTIVE` (`ativo = false`).
+
+Reference harness: `supabase/reference/wp04a3b_domain_admin_validation_harness.sql`.
+
+## AR-AC-PROV-02 — Legacy Customer Reference
+
+Connect client identity uses internal `webproc.clientes.id` and mandatory **`codigo_cliente`** (unique legacy/business reference). Provisioning must supply `codigo_cliente` explicitly; **`codigo_cliente` is immutable** after create in WP-04A.3b admin updates. Reconciliation with legacy Actus customer master is **TD-AC-MIG-01** — no MySQL/Delphi sync in Connect MVP.
+
+## TD-AC-MIG-01 — Customer Master Reconciliation (deferred)
+
+`webproc.clientes` remains a **temporary** Connect client master (TD-WP-01) until FlowProc / Flow canonical master. `codigo_cliente` anchors transitional reconciliation; full migration alignment is out of scope for WP-04A.3b.
+
+## WP-04A.3 — Connect Provisioning (roadmap)
+
+| Work package | Status | Notes |
+|--------------|--------|--------|
+| WP-04A.3a — Provisioning backend audit | CLOSED / PASS | Audit-only |
+| WP-04A.3b — Domain administration contract | PO review | Migration `20260329153000_wp04a3b_domain_admin_contract.sql` |
+| WP-04A.3b-auth — Auth Admin invite/link | Not started | Edge + service role |
+| WP-04A.3c — Activation / first-password | Not started | Separate from recovery gate |
+| WP-04B — Administrative UI | Not started | Consumes admin RPCs |
+
 ## Authorship Model (WP-01C)
 
 - `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).
