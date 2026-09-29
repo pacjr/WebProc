@@ -4,11 +4,13 @@ import { useWebProc } from "@/contexts/WebProcContext";
 import { PulseFilters } from "@/components/pulse/PulseFilters";
 import { PulseByClientTable } from "@/components/pulse/PulseByClientTable";
 import { PulseByUserTable } from "@/components/pulse/PulseByUserTable";
+import { PulseDrilldownTable } from "@/components/pulse/PulseDrilldownTable";
 import { PulseDailyChart } from "@/components/pulse/PulseDailyChart";
 import { PulseSummaryKpis } from "@/components/pulse/PulseSummaryKpis";
 import { usePulseFilters } from "@/hooks/usePulseFilters";
 import { usePulseByClientQuery } from "@/hooks/usePulseByClientQuery";
 import { usePulseByUserQuery } from "@/hooks/usePulseByUserQuery";
+import { usePulseDrilldownQuery } from "@/hooks/usePulseDrilldownQuery";
 import { usePulseDailySeriesQuery } from "@/hooks/usePulseDailySeriesQuery";
 import { usePulseSummaryQuery } from "@/hooks/usePulseSummaryQuery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -41,6 +43,12 @@ export default function PulsePage() {
   const dailySeriesQuery = usePulseDailySeriesQuery(connectAccess, applied);
   const byUserQuery = usePulseByUserQuery(connectAccess, applied);
   const byClientQuery = usePulseByClientQuery(connectAccess, applied);
+  const drilldownQuery = usePulseDrilldownQuery(connectAccess, applied);
+
+  const drilldownRows = useMemo(
+    () => drilldownQuery.data?.pages.flat() ?? [],
+    [drilldownQuery.data?.pages],
+  );
 
   const clienteLabelById = useMemo(() => {
     const map = new Map<number, string>();
@@ -80,7 +88,11 @@ export default function PulsePage() {
     summaryQuery.isFetching ||
     dailySeriesQuery.isFetching ||
     byUserQuery.isFetching ||
-    (isActus && byClientQuery.isFetching);
+    (isActus && byClientQuery.isFetching) ||
+    (drilldownQuery.isFetching && !drilldownQuery.isFetchingNextPage);
+
+  const drilldownRefetching =
+    drilldownQuery.isFetching && !drilldownQuery.isLoading && !drilldownQuery.isFetchingNextPage;
 
   const periodLabel = formatPeriodRangeLabel(applied.periodStart, applied.periodEnd);
 
@@ -185,6 +197,26 @@ export default function PulsePage() {
           onRetry={() => void byClientQuery.refetch()}
         />
       ) : null}
+
+      <PulseDrilldownTable
+        rows={drilldownRefetching ? [] : drilldownRows}
+        isActus={isActus}
+        isLoading={drilldownQuery.isLoading}
+        isRefetching={drilldownRefetching}
+        isError={drilldownQuery.isError}
+        error={drilldownQuery.error instanceof Error ? drilldownQuery.error : null}
+        onRetry={() => void drilldownQuery.refetch()}
+        hasNextPage={drilldownQuery.hasNextPage ?? false}
+        isFetchingNextPage={drilldownQuery.isFetchingNextPage}
+        isFetchNextPageError={drilldownQuery.isFetchNextPageError}
+        fetchNextPageError={
+          drilldownQuery.isFetchNextPageError && drilldownQuery.error instanceof Error
+            ? drilldownQuery.error
+            : null
+        }
+        onLoadMore={() => void drilldownQuery.fetchNextPage()}
+        onRetryLoadMore={() => void drilldownQuery.fetchNextPage()}
+      />
     </div>
   );
 }
