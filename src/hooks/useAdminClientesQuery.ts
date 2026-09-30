@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminClientes } from "@/integrations/supabase/admin-api";
 
+export const adminClientesQueryKey = ["admin", "clientes"] as const;
+
 export function useAdminClientesQuery(adminCapabilityConfirmed: boolean) {
   return useQuery({
-    queryKey: ["admin", "clientes"] as const,
+    queryKey: adminClientesQueryKey,
     queryFn: async () => {
       const { clientes, error } = await fetchAdminClientes();
       if (error) {

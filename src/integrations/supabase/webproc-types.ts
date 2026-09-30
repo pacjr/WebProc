@@ -297,6 +297,35 @@ export type WebProcDatabase = {
           updated_at: string;
         }[];
       };
+      admin_create_cliente: {
+        Args: {
+          p_codigo_cliente: number;
+          p_nome: string;
+        };
+        Returns: {
+          id: number;
+          codigo_cliente: number;
+          nome: string;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
+      admin_update_cliente: {
+        Args: {
+          p_cliente_id: number;
+          p_nome?: string;
+          p_ativo?: boolean;
+        };
+        Returns: {
+          id: number;
+          codigo_cliente: number;
+          nome: string;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
       pulse_summary: {
         Args: {
           p_period_start: string;

@@ -30,3 +30,48 @@ export async function fetchAdminClientes(): Promise<{
 
   return { clientes: (data ?? []) as AdminCliente[], error: null };
 }
+
+function firstClienteRow(data: unknown): AdminCliente {
+  const rows = data as AdminCliente[] | null;
+  const row = rows?.[0];
+  if (!row) {
+    throw new Error("empty_admin_cliente_response");
+  }
+  return row;
+}
+
+export async function adminCreateCliente(
+  codigoCliente: number,
+  nome: string,
+): Promise<AdminCliente> {
+  const { data, error } = await webprocDb().rpc("admin_create_cliente", {
+    p_codigo_cliente: codigoCliente,
+    p_nome: nome.trim(),
+  });
+
+  if (error) {
+    console.error("admin_create_cliente failed", error.message);
+    throw new Error(error.message);
+  }
+
+  return firstClienteRow(data);
+}
+
+export async function adminUpdateCliente(input: {
+  clienteId: number;
+  nome?: string;
+  ativo?: boolean;
+}): Promise<AdminCliente> {
+  const { data, error } = await webprocDb().rpc("admin_update_cliente", {
+    p_cliente_id: input.clienteId,
+    p_nome: input.nome ?? undefined,
+    p_ativo: input.ativo ?? undefined,
+  });
+
+  if (error) {
+    console.error("admin_update_cliente failed", error.message);
+    throw new Error(error.message);
+  }
+
+  return firstClienteRow(data);
+}
