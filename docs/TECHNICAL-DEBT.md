@@ -153,6 +153,8 @@ Reference harnesses: `supabase/reference/wp04a3b_domain_admin_validation_harness
 
 **WP-04A.3c.2 DEV validation (linked DEV):** Edge authz matrix exercised (anonymous / CLIENT / OPERADOR denied; ADMIN path provision + idempotent retry). Auth Admin invite operation succeeded and provisioning returned **`INVITED_AND_LINKED`**; **email delivery was not independently verified**. Intentional retained Auth artifact: invite-probe user for `wp04a3c2.edge.probe.*@insightaisolutions.com.br` (not deleted). After Edge probe, restore human DEV Auth passwords via Auth Admin (local shell + service role only); optional `ACTUS_CONNECT_DEV_ACTUS_PASSWORD` / `ACTUS_CONNECT_DEV_CLIENT_PASSWORD` env overrides, else operator-local `docs/dev-seed/auth-credentials.local.json` (**gitignored**, never commit).
 
+**WP-04A.3c.3 Activation contract:** **Provisioning ≠ Activation ≠ Recovery.** Provisioning (3c.2) links Auth identity to membership; **activation does not authorize Connect** — after invite validation and password establishment, **`resolveConnectAccess()`** remains authoritative (active `usuarios_clientes` + active `cliente`, CLIENT/ACTUS precedence unchanged). **Authority boundary:** a valid Supabase Auth identity/session does **not** by itself grant Connect access; inactive membership removes Connect authorization while Auth may remain valid. Route: **`/auth/activate`** with tab-scoped activation grant (separate from recovery grant on **`/nova-senha`**). Invitation validation: hash `type=invite|signup` and/or `verifyOtp` for `token_hash`; fail closed without invite context (consumed replay and bare `/auth/activate` → invalid). Password: `supabase.auth.updateUser({ password })` only; no membership mutation from activation UI. Recovery semantics unchanged. Edge invite `redirectTo`: **`CONNECT_AUTH_INVITE_REDIRECT_URL`** or `CONNECT_PUBLIC_APP_URL` + **`/auth/activate`**. Legacy invites on `/auth` with invite hash redirect to `/auth/activate` (gate still required). **No DB migration** for 3c.3. **DEV E2E (WP-04A.3c.3a, PO sign-off):** Actus ADMIN → `provision-client-membership` → **`INVITED_AND_LINKED`** → real invite → `/auth/activate` → password → authenticated session → **`resolveConnectAccess()`** → CLIENT → **`/app/processos`**; recovery separation; inactive membership blocks Connect; CLIENT/ACTUS regressions PASS.
+
 ## AR-AC-PROV-02 — Legacy Customer Reference
 
 Connect client identity uses internal `webproc.clientes.id` and mandatory **`codigo_cliente`** (unique legacy/business reference). Provisioning must supply `codigo_cliente` explicitly; **`codigo_cliente` is immutable** after create in WP-04A.3b admin updates. Reconciliation with legacy Actus customer master is **TD-AC-MIG-01** — no MySQL/Delphi sync in Connect MVP.
@@ -167,10 +169,10 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 |--------------|--------|--------|
 | WP-04A.3a — Provisioning backend audit | CLOSED / PASS | Audit-only |
 | WP-04A.3b — Domain administration contract | CLOSED / PASS | Migration `20260329153000_wp04a3b_domain_admin_contract.sql` |
-| WP-04A.3c — Auth provisioning (umbrella) | In progress | See sub-slices below |
+| WP-04A.3c — Auth provisioning (umbrella) | CLOSED / PASS | 3c.1 server contract + 3c.2 Edge orchestration + 3c.3 activation + DEV E2E |
 | WP-04A.3c.1 — DB server contract | CLOSED / PASS | Migration `20260329160000_wp04a3c1_auth_provision_server_contract.sql` |
 | WP-04A.3c.2 — Edge provisioning | CLOSED / PASS | Edge `provision-client-membership` (JWT → prepare → Auth Admin → link) |
-| WP-04A.3c.3 — Activation UI | Not started | Separate from password recovery gate |
+| WP-04A.3c.3 — Activation UI | CLOSED / PASS | `/auth/activate` gate + password establishment; DEV E2E WP-04A.3c.3a |
 | WP-04B — Administrative UI | Not started | Consumes admin RPCs + Edge provision |
 
 ## Authorship Model (WP-01C)

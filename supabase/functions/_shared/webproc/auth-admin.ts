@@ -132,7 +132,7 @@ export function getAuthInviteRedirectUrl(): string {
 
   const base = Deno.env.get('CONNECT_PUBLIC_APP_URL')?.trim();
   if (base) {
-    return base.replace(/\/+$/, '') + '/auth';
+    return base.replace(/\/+$/, '') + '/auth/activate';
   }
 
   throw new HttpError(

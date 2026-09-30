@@ -8,6 +8,7 @@ import { WebProcProvider } from "@/contexts/WebProcContext";
 import Auth from "@/pages/Auth";
 import RecuperarSenha from "@/pages/RecuperarSenha";
 import NovaSenha from "@/pages/NovaSenha";
+import AuthActivate from "@/pages/AuthActivate";
 import NotFound from "@/pages/NotFound";
 import WebProcShell from "@/components/webproc/WebProcShell";
 import ProcessosList from "@/pages/webproc/ProcessosList";
@@ -51,6 +52,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/activate" element={<AuthActivate />} />
             <Route
               path="/app"
               element={

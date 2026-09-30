@@ -30,8 +30,17 @@ export const ACTUS_AUTH_CARD = {
     authDescription: "Sua senha foi redefinida com sucesso.",
   },
   activation: {
-    authTitle: "Ativação",
-    authDescription: "Defina sua senha para ativar sua conta.",
+    authTitle: "Ativar acesso",
+    authDescription: "Conclua a ativação do seu acesso ao Connect.",
+  },
+  activationInvalid: {
+    authTitle: "Convite inválido ou expirado",
+    authDescription:
+      "Este link de ativação não é válido ou já expirou. Solicite um novo convite à Actus.",
+  },
+  activationNoAccess: {
+    authTitle: "Acesso ao Connect indisponível",
+    authDescription: "Não foi possível concluir o acesso ao Connect com esta conta.",
   },
 } as const;
 
