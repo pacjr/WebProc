@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { AlertCircle, Pencil, Plus } from "lucide-react";
+import { AdminClientAcessosSection } from "@/components/admin/AdminClientAcessosSection";
+import { AlertCircle, Pencil, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -66,6 +67,8 @@ export function AdminClientesSection() {
 
   const [ativoTarget, setAtivoTarget] = useState<AdminCliente | null>(null);
   const [ativoError, setAtivoError] = useState<string | null>(null);
+
+  const [acessosCliente, setAcessosCliente] = useState<AdminCliente | null>(null);
 
   const resetCreateForm = () => {
     setCreateCodigo("");
@@ -142,6 +145,17 @@ export function AdminClientesSection() {
   const ativoPending = setAtivo.isPending;
   const ativoIsDeactivate = ativoTarget?.ativo === true;
 
+  if (acessosCliente) {
+    const refreshed =
+      clientesQuery.data?.find((row) => row.id === acessosCliente.id) ?? acessosCliente;
+    return (
+      <AdminClientAcessosSection
+        cliente={refreshed}
+        onBack={() => setAcessosCliente(null)}
+      />
+    );
+  }
+
   return (
     <section className="space-y-4" aria-labelledby="admin-clientes-heading">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -210,6 +224,16 @@ export function AdminClientesSection() {
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       <div className="flex flex-wrap justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAcessosCliente(cliente)}
+                          aria-label={`Gerenciar acessos de ${cliente.nome}`}
+                        >
+                          <Users className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Gerenciar acessos</span>
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"

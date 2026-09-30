@@ -326,6 +326,74 @@ export type WebProcDatabase = {
           updated_at: string;
         }[];
       };
+      admin_list_client_memberships: {
+        Args: {
+          p_cliente_id: number;
+        };
+        Returns: {
+          id: number;
+          cliente_id: number;
+          email: string;
+          nome: string | null;
+          user_id: string | null;
+          ativo: boolean;
+          provisioning_state: string;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
+      admin_create_client_membership: {
+        Args: {
+          p_cliente_id: number;
+          p_email: string;
+          p_nome?: string | null;
+        };
+        Returns: {
+          id: number;
+          cliente_id: number;
+          email: string;
+          nome: string | null;
+          user_id: string | null;
+          ativo: boolean;
+          provisioning_state: string;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
+      admin_update_client_membership: {
+        Args: {
+          p_membership_id: number;
+          p_nome: string;
+        };
+        Returns: {
+          id: number;
+          cliente_id: number;
+          email: string;
+          nome: string | null;
+          user_id: string | null;
+          ativo: boolean;
+          provisioning_state: string;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
+      admin_set_client_membership_active: {
+        Args: {
+          p_membership_id: number;
+          p_ativo: boolean;
+        };
+        Returns: {
+          id: number;
+          cliente_id: number;
+          email: string;
+          nome: string | null;
+          user_id: string | null;
+          ativo: boolean;
+          provisioning_state: string;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
       pulse_summary: {
         Args: {
           p_period_start: string;
