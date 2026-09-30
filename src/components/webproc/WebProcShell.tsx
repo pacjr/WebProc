@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Activity, FileText, LogOut, Menu, Plus } from "lucide-react";
+import { Activity, Building2, FileText, LogOut, Menu, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWebProc } from "@/contexts/WebProcContext";
+import { useActusAdminCapabilityQuery } from "@/hooks/useActusAdminCapabilityQuery";
 import { canEnterProtectedApp } from "@/lib/connect-access";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,13 @@ const actusNavItems = [
   { to: "/app/processos", label: "Processos", icon: FileText, end: true },
   { to: "/app/pulse", label: "Pulse", icon: Activity, end: true },
 ] as const;
+
+const actusAdminNavItem = {
+  to: "/app/admin",
+  label: "Administração",
+  icon: Building2,
+  end: true,
+} as const;
 
 function NavLinks({
   items,
@@ -59,7 +67,16 @@ export default function WebProcShell() {
 
   const isActus = connectAccess.kind === "ACTUS";
   const isClient = connectAccess.kind === "CLIENT";
-  const navItems = isActus ? actusNavItems : isClient ? clientNavItems : [];
+  const adminCapability = useActusAdminCapabilityQuery(connectAccess, user?.id);
+  const showAdminNav =
+    isActus && adminCapability.isSuccess && adminCapability.data === true;
+  const navItems = isActus
+    ? showAdminNav
+      ? [...actusNavItems, actusAdminNavItem]
+      : [...actusNavItems]
+    : isClient
+      ? clientNavItems
+      : [];
 
   useEffect(() => {
     if (!loading && !user) {

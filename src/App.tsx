@@ -17,6 +17,18 @@ import ProcessoDetail from "@/pages/webproc/ProcessoDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PulsePage = lazy(() => import("@/pages/webproc/PulsePage"));
+const AdminRouteGate = lazy(() => import("@/components/admin/AdminRouteGate"));
+
+function AdminRouteFallback() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-live="polite">
+      <Skeleton className="h-9 w-56" />
+      <Skeleton className="h-4 w-full max-w-xl" />
+      <Skeleton className="h-48 w-full rounded-lg" />
+      <p className="text-sm text-muted-foreground">Carregando administração…</p>
+    </div>
+  );
+}
 
 function PulseRouteFallback() {
   return (
@@ -73,6 +85,14 @@ const App = () => {
               <Route path="processos" element={<ProcessosList />} />
               <Route path="processos/novo" element={<NovoProcesso />} />
               <Route path="processos/:idProc" element={<ProcessoDetail />} />
+              <Route
+                path="admin"
+                element={
+                  <Suspense fallback={<AdminRouteFallback />}>
+                    <AdminRouteGate />
+                  </Suspense>
+                }
+              />
             </Route>
             {/* Reserved for WP-04 native Connect Dashboard; temporary redirect */}
             <Route path="/dashboard" element={<Navigate to="/app/processos" replace />} />

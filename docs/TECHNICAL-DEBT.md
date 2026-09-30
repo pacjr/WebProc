@@ -173,8 +173,9 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 | WP-04A.3c.1 — DB server contract | CLOSED / PASS | Migration `20260329160000_wp04a3c1_auth_provision_server_contract.sql` |
 | WP-04A.3c.2 — Edge provisioning | CLOSED / PASS | Edge `provision-client-membership` (JWT → prepare → Auth Admin → link) |
 | WP-04A.3c.3 — Activation UI | CLOSED / PASS | `/auth/activate` gate + password establishment; DEV E2E WP-04A.3c.3a |
-| WP-04B — Administrative UI | Not started | Consumes admin RPCs + Edge provision |
-| WP-04B.0 — ADMIN capability probe | CLOSED / PASS | Migration `20260930160000_wp04b0_actus_admin_capability_probe.sql` — `is_active_connect_actus_admin()` + `fetchActusAdminCapability()` for **navigation/gating only**; **not** administrative authorization (`assert_actus_admin()` on `admin_*` / Edge unchanged). **Next slice:** WP-04B.1. |
+| WP-04B — Administrative UI | In progress | Admin UX on `admin_*` RPCs + Edge provision |
+| WP-04B.0 — ADMIN capability probe | CLOSED / PASS | Migration `20260930160000_wp04b0_actus_admin_capability_probe.sql` — `is_active_connect_actus_admin()` + `fetchActusAdminCapability()` for **navigation/gating only**; **not** administrative authorization (`assert_actus_admin()` on `admin_*` / Edge unchanged). |
+| WP-04B.1 — Admin foundation / client list | CLOSED / PASS | `/app/admin` + ADMIN-only nav; read-only `admin_list_clientes()`; capability probe is UX only; **no** client mutations / memberships / provisioning. **Next:** WP-04B.2 client lifecycle. |
 
 ## Authorship Model (WP-01C)
 

@@ -286,6 +286,17 @@ export type WebProcDatabase = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      admin_list_clientes: {
+        Args: Record<string, never>;
+        Returns: {
+          id: number;
+          codigo_cliente: number;
+          nome: string;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
       pulse_summary: {
         Args: {
           p_period_start: string;
