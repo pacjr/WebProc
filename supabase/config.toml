@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.webproc-document-download-prepare]
 verify_jwt = true
+
+[functions.provision-client-membership]
+verify_jwt = true
