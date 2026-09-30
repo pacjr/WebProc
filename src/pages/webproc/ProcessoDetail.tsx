@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Paperclip, Trash2 } from "lucide-react";
 import ProcessoFormFields, {
   emptyProcessoForm,
   formStateToDraftUpdate,
@@ -28,6 +28,7 @@ import {
   getFirstValidationMessage,
   validateLinkUrl,
   validateProtocolFields,
+  validateProtocoloDraftFields,
 } from "@/integrations/supabase/webproc-validation";
 import type {
   WebProcProcessoDetail,
@@ -49,6 +50,7 @@ export default function ProcessoDetail() {
   const [linkUrl, setLinkUrl] = useState("");
   const [linkUrlError, setLinkUrlError] = useState<string | null>(null);
   const [dtFatalError, setDtFatalError] = useState<string | null>(null);
+  const [identificacaoError, setIdentificacaoError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [linkSaving, setLinkSaving] = useState(false);
@@ -75,7 +77,7 @@ export default function ProcessoDetail() {
       ]);
 
     if (error) {
-      toast.error("Erro ao carregar processo: " + error.message);
+      toast.error("Erro ao carregar protocolo: " + error.message);
       setProcesso(null);
       setLinks([]);
     } else if (!loadedProcesso) {
@@ -87,7 +89,7 @@ export default function ProcessoDetail() {
     }
 
     if (linksError) {
-      toast.error("Erro ao carregar links: " + linksError.message);
+      toast.error("Erro ao carregar documentos: " + linksError.message);
       setLinks([]);
     } else {
       setLinks(loadedLinks);
@@ -105,19 +107,31 @@ export default function ProcessoDetail() {
     if (field === "dt_fatal" && dtFatalError) {
       setDtFatalError(null);
     }
+    if ((field === "n_processo" || field === "exec_prov") && identificacaoError) {
+      setIdentificacaoError(null);
+    }
   };
 
   const protocolRequirements = useMemo(
     () => getProtocolRequirements(form, links.length),
-    [form, links.length]
+    [form, links.length],
   );
 
   const persistDraft = async () => {
     if (!processo) {
-      throw new Error("Processo indisponível.");
+      throw new Error("Protocolo indisponível.");
+    }
+
+    const draftValidation = validateProtocoloDraftFields(form);
+    const draftMessage = getFirstValidationMessage(draftValidation);
+    if (draftMessage) {
+      setDtFatalError(draftValidation.dt_fatal ?? null);
+      setIdentificacaoError(draftValidation.processo_ou_execucao ?? null);
+      throw new Error(draftMessage);
     }
 
     setDtFatalError(null);
+    setIdentificacaoError(null);
 
     const draftUpdate = formStateToDraftUpdate(form);
     const { result, error, message } = await saveProcessoDraft(processo.id_proc, {
@@ -142,11 +156,11 @@ export default function ProcessoDetail() {
     }
 
     const { processo: refreshed, error: refreshError } = await getProcessoDetail(
-      processo.id_proc
+      processo.id_proc,
     );
 
     if (refreshError || !refreshed) {
-      throw refreshError ?? new Error("Erro ao recarregar processo.");
+      throw refreshError ?? new Error("Erro ao recarregar protocolo.");
     }
 
     setProcesso(refreshed);
@@ -197,7 +211,7 @@ export default function ProcessoDetail() {
       setLinkUrlError(null);
 
       const { data: refreshedLinks, error: linksError } = await listProcessoLinks(
-        processo.id_proc
+        processo.id_proc,
       );
 
       if (linksError) {
@@ -205,10 +219,10 @@ export default function ProcessoDetail() {
       }
 
       setLinks(refreshedLinks);
-      toast.success("Link adicionado.");
+      toast.success("Documento adicionado.");
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro desconhecido ao adicionar link.";
+        error instanceof Error ? error.message : "Erro desconhecido ao adicionar documento.";
       toast.error(message);
     } finally {
       setLinkSaving(false);
@@ -226,10 +240,10 @@ export default function ProcessoDetail() {
       }
 
       setLinks((current) => current.filter((link) => link.id !== linkId));
-      toast.success("Link removido.");
+      toast.success("Documento removido.");
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro desconhecido ao remover link.";
+        error instanceof Error ? error.message : "Erro desconhecido ao remover documento.";
       toast.error(message);
     } finally {
       setLinkSaving(false);
@@ -247,6 +261,7 @@ export default function ProcessoDetail() {
       const protocolMessage = getFirstValidationMessage(protocolErrors);
       if (protocolMessage) {
         setDtFatalError(protocolErrors.dt_fatal ?? null);
+        setIdentificacaoError(protocolErrors.processo_ou_execucao ?? null);
         throw new Error(protocolMessage);
       }
 
@@ -264,8 +279,8 @@ export default function ProcessoDetail() {
       await loadDetail();
       toast.success(
         result.already_protocolado
-          ? "Processo já estava protocolado."
-          : "Processo protocolado com sucesso."
+          ? "Protocolo já estava protocolado."
+          : "Protocolo protocolado com sucesso.",
       );
     } catch (error) {
       const text =
@@ -284,14 +299,14 @@ export default function ProcessoDetail() {
       const { result, error, message } = await reabrirProcesso(processo.id_proc);
 
       if (error || !result) {
-        throw new Error(message ?? error?.message ?? "Erro ao reabrir processo.");
+        throw new Error(message ?? error?.message ?? "Erro ao reabrir protocolo.");
       }
 
       await loadDetail();
       toast.success(
         result.already_open
-          ? "Processo já estava em preenchimento."
-          : "Processo reaberto para correção."
+          ? "Protocolo já estava em preenchimento."
+          : "Protocolo reaberto para correção.",
       );
     } catch (error) {
       const text =
@@ -305,9 +320,9 @@ export default function ProcessoDetail() {
   if (!Number.isFinite(parsedId)) {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <p className="text-muted-foreground mb-4">Processo inválido.</p>
+        <p className="text-muted-foreground mb-4">Protocolo inválido.</p>
         <Button variant="outline" asChild>
-          <Link to="/app/processos">Voltar para processos</Link>
+          <Link to="/app/processos">Voltar para protocolos</Link>
         </Button>
       </div>
     );
@@ -315,8 +330,11 @@ export default function ProcessoDetail() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        Carregando processo...
+      <div
+        className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground"
+        aria-busy="true"
+      >
+        Carregando protocolo...
       </div>
     );
   }
@@ -325,10 +343,10 @@ export default function ProcessoDetail() {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center">
         <p className="text-muted-foreground mb-4">
-          Processo não encontrado ou sem permissão de acesso.
+          Protocolo não encontrado ou sem permissão de acesso.
         </p>
         <Button variant="outline" asChild>
-          <Link to="/app/processos">Voltar para processos</Link>
+          <Link to="/app/processos">Voltar para protocolos</Link>
         </Button>
       </div>
     );
@@ -342,14 +360,14 @@ export default function ProcessoDetail() {
         <Button variant="ghost" className="w-fit px-0" asChild>
           <Link to="/app/processos">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para processos
+            Voltar para protocolos
           </Link>
         </Button>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary">
-              Processo #{processo.id_proc}
+              Protocolo #{processo.id_proc}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Cadastrado por {author.primary}
@@ -364,8 +382,7 @@ export default function ProcessoDetail() {
         {canReopen ? (
           <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
-              Processo protocolado e aguardando importação. Para corrigir, reabra o
-              rascunho.
+              Protocolo protocolado e aguardando importação. Para corrigir, reabra o rascunho.
             </p>
             <Button
               type="button"
@@ -380,55 +397,60 @@ export default function ProcessoDetail() {
 
         {!canEdit && !canReopen && isCreator ? (
           <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
-            Este processo não pode mais ser editado neste fluxo.
+            Este protocolo não pode mais ser editado neste fluxo.
           </p>
         ) : null}
 
         {!isCreator ? (
           <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
-            Somente o autor original pode editar este processo.
+            Somente o autor original pode editar este protocolo.
           </p>
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4 sm:p-6 shadow-card space-y-6">
+      <div className="rounded-lg border border-border bg-card p-4 sm:p-6 shadow-card space-y-8">
         <ProcessoFormFields
           form={form}
           clienteNome={processo.cliente.nome}
           dtEntrada={processo.dt_entrada}
           disabled={!canEdit}
           dtFatalError={dtFatalError}
+          processoOuExecucaoError={identificacaoError}
+          layout="sectioned"
           onChange={updateField}
         />
 
-        <div className="space-y-4 border-t border-border pt-6">
+        <section className="space-y-4 border-t border-border pt-8" aria-labelledby="documentos-heading">
           <div>
-            <h2 className="font-serif text-lg font-semibold text-primary">Links</h2>
+            <h2
+              id="documentos-heading"
+              className="font-serif text-lg font-semibold text-primary"
+            >
+              Documentos
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Adicione links externos necessários para protocolização.
+              Adicione links ou arquivos necessários para protocolização.
             </p>
           </div>
 
           {links.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum link cadastrado.</p>
+            <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
           ) : (
-            <div className="space-y-3">
+            <ul className="space-y-3">
               {links.map((link) => (
-                <div
+                <li
                   key={link.id}
                   className="flex flex-col gap-3 rounded-md border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium truncate">
-                      {link.nome || "Link externo"}
-                    </p>
+                    <p className="font-medium truncate">{link.nome || "Documento externo"}</p>
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noreferrer"
                       className="text-sm text-primary hover:underline inline-flex items-center gap-1 break-all"
                     >
-                      {link.url}
+                      Abrir
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
                   </div>
@@ -444,73 +466,93 @@ export default function ProcessoDetail() {
                       Remover
                     </Button>
                   ) : null}
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
 
           {canEdit ? (
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
-              <div className="space-y-2">
-                <Label htmlFor="link_nome">Nome do link</Label>
-                <Input
-                  id="link_nome"
-                  value={linkNome}
-                  onChange={(e) => setLinkNome(e.target.value)}
-                  placeholder="Ex.: Sentença"
-                />
+            <div className="space-y-4 rounded-md border border-dashed border-border p-4">
+              <p className="text-sm font-medium">Adicionar link</p>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="link_nome">Descrição (opcional)</Label>
+                  <Input
+                    id="link_nome"
+                    value={linkNome}
+                    onChange={(e) => setLinkNome(e.target.value)}
+                    placeholder="Ex.: Sentença"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="link_url">Endereço (URL)</Label>
+                  <Input
+                    id="link_url"
+                    value={linkUrl}
+                    onChange={(e) => {
+                      setLinkUrl(e.target.value);
+                      if (linkUrlError) {
+                        setLinkUrlError(null);
+                      }
+                    }}
+                    placeholder="https://..."
+                  />
+                  {linkUrlError ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      {linkUrlError}
+                    </p>
+                  ) : null}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={linkSaving}
+                  onClick={() => void handleAddLink()}
+                >
+                  Adicionar link
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="link_url">URL</Label>
-                <Input
-                  id="link_url"
-                  value={linkUrl}
-                  onChange={(e) => {
-                    setLinkUrl(e.target.value);
-                    if (linkUrlError) {
-                      setLinkUrlError(null);
-                    }
-                  }}
-                  placeholder="https://..."
-                />
-                {linkUrlError ? (
-                  <p className="text-sm text-destructive">{linkUrlError}</p>
-                ) : null}
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md bg-muted/40 px-4 py-3">
+                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <Paperclip className="h-4 w-4 mt-0.5 shrink-0" aria-hidden />
+                  <p>
+                    <span className="font-medium text-foreground">Anexar arquivo</span> — em
+                    breve nesta seção (upload será habilitado na próxima entrega).
+                  </p>
+                </div>
+                <Button type="button" variant="outline" size="sm" disabled>
+                  Anexar arquivo
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={linkSaving}
-                onClick={() => void handleAddLink()}
-              >
-                Adicionar link
-              </Button>
             </div>
           ) : null}
-        </div>
+        </section>
 
         {canEdit ? (
-          <div className="space-y-4 border-t border-border pt-6">
+          <section
+            className="space-y-4 border-t border-border pt-8"
+            aria-labelledby="protocolizacao-heading"
+          >
             <div>
-              <h2 className="font-serif text-lg font-semibold text-primary">
+              <h2
+                id="protocolizacao-heading"
+                className="font-serif text-lg font-semibold text-primary"
+              >
                 Protocolização
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Revise os requisitos antes de protocolar. O rascunho será salvo
-                automaticamente e a validação final ocorre no servidor.
+                Revise os requisitos antes de protocolar. O rascunho será salvo automaticamente e
+                a validação final ocorre no servidor.
               </p>
             </div>
 
             <ul className="space-y-2">
               {protocolRequirements.map((requirement) => (
-                <li
-                  key={requirement.id}
-                  className="flex items-center gap-2 text-sm"
-                >
+                <li key={requirement.id} className="flex items-center gap-2 text-sm">
                   <span
-                    className={
-                      requirement.met ? "text-green-600" : "text-muted-foreground"
-                    }
+                    className={requirement.met ? "text-green-600 dark:text-green-500" : "text-muted-foreground"}
+                    aria-hidden
                   >
                     {requirement.met ? "✓" : "○"}
                   </span>
@@ -539,16 +581,16 @@ export default function ProcessoDetail() {
                 {protocolando ? "Protocolando..." : "Protocolar"}
               </Button>
             </div>
-          </div>
+          </section>
         ) : (
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end border-t border-border pt-6">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end border-t border-border pt-8">
             {processo.pendente_at ? (
               <p className="text-sm text-muted-foreground sm:mr-auto">
                 Protocolado em {format(new Date(processo.pendente_at), "dd/MM/yyyy HH:mm")}
               </p>
             ) : null}
             <Button variant="outline" asChild>
-              <Link to="/app/processos">Voltar para processos</Link>
+              <Link to="/app/processos">Voltar para protocolos</Link>
             </Button>
           </div>
         )}

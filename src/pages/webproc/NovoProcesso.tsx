@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWebProc } from "@/contexts/WebProcContext";
 import { insertProcesso } from "@/integrations/supabase/webproc-api";
-import { validateDraftFields, getFirstValidationMessage } from "@/integrations/supabase/webproc-validation";
+import {
+  getFirstValidationMessage,
+  validateProtocoloDraftFields,
+} from "@/integrations/supabase/webproc-validation";
 import ProcessoFormFields, {
   emptyProcessoForm,
   formStateToDraftUpdate,
@@ -20,14 +23,21 @@ export default function NovoProcesso() {
       navigate("/app/processos", { replace: true });
     }
   }, [connectAccess.kind, loading, navigate]);
+
   const [form, setForm] = useState<ProcessoFormState>(emptyProcessoForm);
   const [saving, setSaving] = useState(false);
   const [dtFatalError, setDtFatalError] = useState<string | null>(null);
+  const [processoOuExecucaoError, setProcessoOuExecucaoError] = useState<string | null>(
+    null,
+  );
 
   const updateField = (field: keyof ProcessoFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
     if (field === "dt_fatal" && dtFatalError) {
       setDtFatalError(null);
+    }
+    if ((field === "n_processo" || field === "exec_prov") && processoOuExecucaoError) {
+      setProcessoOuExecucaoError(null);
     }
   };
 
@@ -37,15 +47,17 @@ export default function NovoProcesso() {
       return;
     }
 
-    const draftErrors = validateDraftFields(form);
+    const draftErrors = validateProtocoloDraftFields(form);
     const draftMessage = getFirstValidationMessage(draftErrors);
     if (draftMessage) {
       setDtFatalError(draftErrors.dt_fatal ?? null);
+      setProcessoOuExecucaoError(draftErrors.processo_ou_execucao ?? null);
       toast.error(draftMessage);
       return;
     }
 
     setDtFatalError(null);
+    setProcessoOuExecucaoError(null);
     setSaving(true);
     try {
       const draftFields = formStateToDraftUpdate(form);
@@ -58,15 +70,15 @@ export default function NovoProcesso() {
       });
 
       if (error || !data) {
-        throw error ?? new Error("Processo não retornado após criação.");
+        throw error ?? new Error("Protocolo não retornado após criação.");
       }
 
-      toast.success("Processo salvo como rascunho.");
+      toast.success("Protocolo salvo como rascunho.");
       navigate(`/app/processos/${data.id_proc}`);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro desconhecido ao salvar.";
-      toast.error("Erro ao salvar processo: " + message);
+      toast.error("Erro ao salvar protocolo: " + message);
     } finally {
       setSaving(false);
     }
@@ -76,10 +88,10 @@ export default function NovoProcesso() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary">
-          Novo Processo
+          Novo protocolo
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Salve um rascunho incompleto. O status inicial será{" "}
+          Informe a identificação inicial e salve um rascunho. O status inicial será{" "}
           <span className="font-medium">Em preenchimento</span>.
         </p>
       </div>
@@ -90,10 +102,12 @@ export default function NovoProcesso() {
           clienteNome={membership?.cliente.nome ?? "—"}
           dtEntrada={new Date().toISOString()}
           dtFatalError={dtFatalError}
+          processoOuExecucaoError={processoOuExecucaoError}
+          layout="sectioned"
           onChange={updateField}
         />
 
-        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end border-t border-border pt-6">
           <Button
             type="button"
             variant="outline"

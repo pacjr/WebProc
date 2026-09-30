@@ -12,14 +12,14 @@ import AccessDenied from "@/pages/webproc/AccessDenied";
 import ClientSelectionRequired from "@/pages/webproc/ClientSelectionRequired";
 
 const clientNavItems = [
-  { to: "/app/processos", label: "Processos", icon: FileText, end: true },
   { to: "/app/pulse", label: "Pulse", icon: Activity, end: true },
-  { to: "/app/processos/novo", label: "Novo Processo", icon: Plus, end: false },
+  { to: "/app/processos", label: "Protocolos", icon: FileText, end: true },
+  { to: "/app/processos/novo", label: "Novo protocolo", icon: Plus, end: false },
 ] as const;
 
 const actusNavItems = [
-  { to: "/app/processos", label: "Processos", icon: FileText, end: true },
   { to: "/app/pulse", label: "Pulse", icon: Activity, end: true },
+  { to: "/app/processos", label: "Protocolos", icon: FileText, end: true },
 ] as const;
 
 const actusAdminNavItem = {

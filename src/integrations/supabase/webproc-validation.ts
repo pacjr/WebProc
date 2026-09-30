@@ -50,8 +50,44 @@ export function validateLinkUrl(url: string) {
   return { valid: true as const, normalizedUrl: trimmed };
 }
 
+/** PO: exactly one of n_processo or exec_prov (XOR), including on initial save. */
+export const IDENTIFICACAO_XOR_REQUIRED =
+  "Informe o Nº do Processo ou a Execução Provisória.";
+
+export const IDENTIFICACAO_XOR_EXCLUSIVE =
+  "Informe somente o Nº do Processo ou a Execução Provisória, não os dois.";
+
+export type IdentificacaoModo = "n_processo" | "exec_prov";
+
 export interface DraftFieldErrors {
   dt_fatal?: string;
+  processo_ou_execucao?: string;
+}
+
+export function validateIdentificacaoXor(form: {
+  n_processo: string;
+  exec_prov: string;
+}): Pick<DraftFieldErrors, "processo_ou_execucao"> {
+  const hasN = Boolean(form.n_processo.trim());
+  const hasE = Boolean(form.exec_prov.trim());
+
+  if (!hasN && !hasE) {
+    return { processo_ou_execucao: IDENTIFICACAO_XOR_REQUIRED };
+  }
+
+  if (hasN && hasE) {
+    return { processo_ou_execucao: IDENTIFICACAO_XOR_EXCLUSIVE };
+  }
+
+  return {};
+}
+
+/** @deprecated Use validateIdentificacaoXor */
+export function validateProcessoOuExecucao(form: {
+  n_processo: string;
+  exec_prov: string;
+}) {
+  return validateIdentificacaoXor(form);
 }
 
 export function validateDraftFields(form: { dt_fatal: string }): DraftFieldErrors {
@@ -63,6 +99,26 @@ export function validateDraftFields(form: { dt_fatal: string }): DraftFieldError
   }
 
   return errors;
+}
+
+export function validateProtocoloDraftFields(form: {
+  n_processo: string;
+  exec_prov: string;
+  dt_fatal: string;
+}): DraftFieldErrors {
+  return {
+    ...validateDraftFields(form),
+    ...validateIdentificacaoXor(form),
+  };
+}
+
+/** @deprecated Use validateProtocoloDraftFields */
+export function validateNovoProtocoloDraftFields(form: {
+  n_processo: string;
+  exec_prov: string;
+  dt_fatal: string;
+}): DraftFieldErrors {
+  return validateProtocoloDraftFields(form);
 }
 
 export interface ProtocolFieldErrors {
@@ -82,13 +138,9 @@ export function validateProtocolFields(
   savedDocumentCount: number
 ): ProtocolFieldErrors {
   const errors: ProtocolFieldErrors = {};
-  const hasProcessoOuExecucao = Boolean(
-    form.n_processo.trim() || form.exec_prov.trim()
-  );
-
-  if (!hasProcessoOuExecucao) {
-    errors.processo_ou_execucao =
-      "Informe o número do processo ou a execução provisória.";
+  const identificacao = validateIdentificacaoXor(form);
+  if (identificacao.processo_ou_execucao) {
+    errors.processo_ou_execucao = identificacao.processo_ou_execucao;
   }
 
   if (!form.dt_fatal) {

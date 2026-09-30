@@ -48,7 +48,9 @@ const LIFECYCLE_ERROR_MESSAGES: Record<string, string> = {
   invalid_status_for_reabrir:
     "Este processo não está pendente e não pode ser reaberto.",
   missing_processo_ou_execucao:
-    "Informe o número do processo ou a execução provisória.",
+    "Informe o Nº do Processo ou a Execução Provisória.",
+  identificacao_xor_violation:
+    "Informe exatamente uma forma de identificação: Nº do Processo ou Execução Provisória, não ambos e não deixe os dois vazios.",
   missing_dt_fatal: "Informe a data fatal.",
   invalid_dt_fatal_past:
     "A data fatal informada é anterior à data de hoje. Datas passadas não são aceitas na protocolização.",
@@ -395,7 +397,7 @@ export function getProtocolRequirements(
   return [
     {
       id: "processo_ou_execucao",
-      label: "Número do processo ou execução provisória",
+      label: "Exatamente um: Nº do Processo ou Execução Provisória",
       met: !validation.processo_ou_execucao,
     },
     {
@@ -410,7 +412,7 @@ export function getProtocolRequirements(
     },
     {
       id: "documento",
-      label: "Ao menos um link salvo",
+      label: "Ao menos um documento (link ou arquivo)",
       met: !validation.documento,
     },
   ];

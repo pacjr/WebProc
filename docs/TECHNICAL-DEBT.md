@@ -223,6 +223,101 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 
 **Next macro direction (handoff only — not started by WP-04B closeout):** after production-readiness gates, **Product / UI-UX Readiness** for operational routines. Established language decision: use **“Protocolos”** as primary user-facing terminology where that is user-known vocabulary; do **not** impose **“Demandas”** as the main operational label. Pulse keeps its analytic semantics. **Does not authorize** renaming Processos/routes/components in a documentation-only closeout.
 
+## AR-AC-UX-PROTO-01 — Protocolos operational UX (PO source of truth)
+
+**Status:** APPROVED (PO decisions after UX-01 discovery). **Scope:** Product/UI-UX Readiness for Connect operational registration — **not** Pulse redesign, **not** domain schema rename.
+
+**Intent:** Preserve legacy **data and operational mental model**, not legacy **layout**.
+
+### Operational core (user-facing MVP)
+
+| Field / concept | In MVP UX | Notes |
+|-----------------|-----------|--------|
+| Nº do Processo | Yes | |
+| Reclamante | Yes | |
+| Reclamado | Yes | |
+| Data de Entrada | Yes | |
+| Data Fatal | Yes | |
+| Status | Yes | Existing controlled lifecycle |
+| Instrução | Yes | |
+| Observações | Yes | |
+| Documentos | Yes | Single section; see below |
+| Execução Provisória | Yes | Approved domain extension; keep cadastro simple (e.g. alternate to nº processo at protocolar) |
+
+### Identificação XOR (PO final — 2026-09-30)
+
+Each protocol has **exactly one** business identifier:
+
+- **A)** `n_processo` (Nº do Processo), **or**
+- **B)** `exec_prov` (Execução Provisória)
+
+| n_processo | exec_prov | Valid |
+|------------|-----------|-------|
+| set | empty | yes |
+| empty | set | yes |
+| empty | empty | no |
+| set | set | no |
+
+Applies from **initial create / draft save** onward (frontend enforced).
+
+**Domain enforcement (PROTO-DOM.1 — CLOSED/PASS on DEV, end-to-end):** Migration `20260930180000_proto_dom1_identificacao_xor` (immutable once applied). `processo_identificacao_xor_ok`, CHECK `processos_identificacao_xor_check`, `identificacao_xor_violation` in `salvar_rascunho` / `protocolar_processo`. **PROTO-DOM.1a** (`20260930200000_proto_dom1a_xor_check_authenticated_execute`): `GRANT EXECUTE` on the XOR helper to `authenticated` so Data API INSERT/UPDATE can evaluate the CHECK (root cause: helper had `REVOKE FROM PUBLIC` without role grant; superuser harness did not reproduce PostgREST role). Harness: `supabase/reference/proto_dom1_identificacao_xor_harness.sql` (uses `SET LOCAL ROLE authenticated` / `anon`).
+
+### `instituicao`
+
+- **Out of MVP operational UX** — legacy screen presented by PO has no such field.
+- **Do not expose** in Protocolos UI.
+- **Do not drop or alter** `webproc.processos.instituicao` (technical column may remain unused in UX).
+
+### Documentos (functional requirement)
+
+- MVP Protocolos UX **must** support both:
+  1. attach a **file**;
+  2. provide a **link** to download/document.
+- Present both under one user concept: **“Documentos”**.
+- **Do not** expose technical types **LINK** / **ARQUIVO** in product copy.
+- Backend: existing `processo_documentos` + Edge upload/download path (`webproc-document-upload-*`, etc.) **must be reflected in UX specification**.
+- File-upload UX **may ship in a dedicated implementation slice**, but is **required for Product/UI-UX Readiness** — not optional P2.
+
+### Terminology (unchanged)
+
+- Operational UX: **Protocolos** (primary user language).
+- Technical domain: **`processo` / `id_proc` / RPC names** — no requirement to rename tables/types for MVP UX.
+- Pulse: analytic **Demandas** semantics remain; do not replace operational “Protocolos” with “Demandas”.
+
+**Next documentation slice:** UX-02 — Protocol Registration UX Specification (incorporates this AR).
+
+### UX-02 — Protocolos Operational UX Specification
+
+**Status:** PO REVIEW (2026-09-30). **Artifact:** [`docs/UX-02-Protocolos-Operational-UX-Specification.md`](./UX-02-Protocolos-Operational-UX-Specification.md).
+
+### PROTO-UI.1 — Protocolos operational UI foundation
+
+**Status:** **CLOSED/PASS** (2026-09-30). CLIENT DEV browser gate A–G PASS on `localhost:8080` after AUTH-DEV-01b credential restore and PROTO-DOM.1a ACL fix.
+
+**Delivered:** Protocolos copy/nav (Pulse → Protocolos → Novo protocolo); list cards; detail sections; Documentos placeholder + links; XOR radio + `validateIdentificacaoXor`; draft save + protocolization smoke PASS.
+
+### PROTO-DOM.1 / PROTO-DOM.1a — Identification XOR domain
+
+**Status:** **CLOSED/PASS** on DEV (structural invariant + authenticated write path). Migrations `20260930180000` + `20260930200000` applied; harness PASS under `authenticated`/`anon` roles; Data API insert regression PASS.
+
+**PO gaps documented (not in PROTO-UI.1 scope):**
+
+| Topic | PO expectation | Current domain/UI | Next slice |
+|-------|----------------|-------------------|------------|
+| Cancelamento | Allowed only `EM_PREENCHIMENTO` / `PENDENTE`; not delete | `cancelar_processo` RPC exists; **no UI** | PO decision + UX slice |
+| Data de Entrada | Default now, immutable | Matches (`dt_entrada` on insert) | — |
+| Data Fatal | PO notes “default now, editable” | **No default on create** in UI; editable when set; past-date rules enforced | PROTO-UI.2+ UX gap |
+
+**Remaining implementation gaps (post UI.1):**
+
+| Gap | Class |
+|-----|--------|
+| Documentos: file upload + unified list + `remover_documento` RPC | PROTO-DOC.* |
+| Detail view/edit IA | PROTO-UI.3 |
+| List server-side search | optional backend |
+
+**Product/UI-UX Readiness:** NOT closed — PROTO-DOC + PROTO-UI.2/3 + PROTO-UX.GATE remain (PROTO-UI.1 operational foundation closed).
+
 ## Authorship Model (WP-01C)
 
 - `webproc.processos.created_by` is the immutable technical author (`auth.users.id`).
