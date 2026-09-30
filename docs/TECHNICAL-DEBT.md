@@ -174,6 +174,7 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 | WP-04A.3c.2 — Edge provisioning | CLOSED / PASS | Edge `provision-client-membership` (JWT → prepare → Auth Admin → link) |
 | WP-04A.3c.3 — Activation UI | CLOSED / PASS | `/auth/activate` gate + password establishment; DEV E2E WP-04A.3c.3a |
 | WP-04B — Administrative UI | Not started | Consumes admin RPCs + Edge provision |
+| WP-04B.0 — ADMIN capability probe | CLOSED / PASS | Migration `20260930160000_wp04b0_actus_admin_capability_probe.sql` — `is_active_connect_actus_admin()` + `fetchActusAdminCapability()` for **navigation/gating only**; **not** administrative authorization (`assert_actus_admin()` on `admin_*` / Edge unchanged). **Next slice:** WP-04B.1. |
 
 ## Authorship Model (WP-01C)
 

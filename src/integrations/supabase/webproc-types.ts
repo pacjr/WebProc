@@ -282,6 +282,10 @@ export type WebProcDatabase = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      is_active_connect_actus_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       pulse_summary: {
         Args: {
           p_period_start: string;
