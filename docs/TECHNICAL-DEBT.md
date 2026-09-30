@@ -139,13 +139,15 @@ Future **Actus Flow** is the intended long-term owner of client/user governance 
 
 Actus **ADMIN** (`webproc.usuarios_actus.papel = 'ADMIN'`, active) may administer Connect **clients** and **client memberships** through server-side RPCs (`webproc.admin_*`). **OPERADOR** retains existing supervisory **read** scope but is **not** authorized for provisioning mutations.
 
-Membership lifecycle is soft (`ativo`); rows are not deleted. Auth invite/link/send is a **separate** slice (WP-04A.3b-auth / WP-04A.3c).
+Membership lifecycle is soft (`ativo`); rows are not deleted. Supabase Auth invite/link is **WP-04A.3c** (umbrella); domain-only admin remains **WP-04A.3b**.
 
 **Transitional one-active-client policy:** the schema remains multi-client capable, but admin create/reactivate enforces **at most one active client membership per normalized email / linked `user_id`** until client-selection UX exists. Error: `active_membership_other_client` (does not disclose the other client).
 
-Derived membership states (API, not persisted): `PENDING_AUTH` (`ativo` + `user_id` null), `ACTIVE` (`ativo` + `user_id` set), `INACTIVE` (`ativo = false`).
+Derived membership states (API, not persisted): `PENDING_AUTH` (`ativo` + `user_id` null), `ACTIVE` (`ativo` + `user_id` set), `INACTIVE` (`ativo = false`). **`ACTIVE` does not mean password/activation completed** — first-login activation is WP-04A.3c.3.
 
-Reference harness: `supabase/reference/wp04a3b_domain_admin_validation_harness.sql`.
+**WP-04A.3c auth provisioning (current phase):** dual-hat is **not** allowed — an active `usuarios_actus` identity (by `user_id` or normalized email) must not link to a client membership (`actus_identity_conflict`). Auth email must match membership email via strict `lower(trim())` normalization only (no provider alias rules). **`webproc.server_prepare_client_membership_auth`** and **`webproc.server_link_client_membership_auth`** are **service_role only** (Edge + JWT actor); no browser `service_role`. Forward-only migrations after `20260329153000`; applied slices are immutable.
+
+Reference harnesses: `supabase/reference/wp04a3b_domain_admin_validation_harness.sql`, `supabase/reference/wp04a3c1_auth_provision_db_validation_harness.sql`.
 
 ## AR-AC-PROV-02 — Legacy Customer Reference
 
@@ -160,10 +162,12 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 | Work package | Status | Notes |
 |--------------|--------|--------|
 | WP-04A.3a — Provisioning backend audit | CLOSED / PASS | Audit-only |
-| WP-04A.3b — Domain administration contract | PO review | Migration `20260329153000_wp04a3b_domain_admin_contract.sql` |
-| WP-04A.3b-auth — Auth Admin invite/link | Not started | Edge + service role |
-| WP-04A.3c — Activation / first-password | Not started | Separate from recovery gate |
-| WP-04B — Administrative UI | Not started | Consumes admin RPCs |
+| WP-04A.3b — Domain administration contract | CLOSED / PASS | Migration `20260329153000_wp04a3b_domain_admin_contract.sql` |
+| WP-04A.3c — Auth provisioning (umbrella) | In progress | See sub-slices below |
+| WP-04A.3c.1 — DB server contract | CLOSED / PASS | Migration `20260329160000_wp04a3c1_auth_provision_server_contract.sql` |
+| WP-04A.3c.2 — Edge provisioning | Not started | Auth Admin + server RPCs |
+| WP-04A.3c.3 — Activation UI | Not started | Separate from password recovery gate |
+| WP-04B — Administrative UI | Not started | Consumes admin RPCs + Edge provision |
 
 ## Authorship Model (WP-01C)
 
