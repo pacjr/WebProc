@@ -173,11 +173,55 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 | WP-04A.3c.1 — DB server contract | CLOSED / PASS | Migration `20260329160000_wp04a3c1_auth_provision_server_contract.sql` |
 | WP-04A.3c.2 — Edge provisioning | CLOSED / PASS | Edge `provision-client-membership` (JWT → prepare → Auth Admin → link) |
 | WP-04A.3c.3 — Activation UI | CLOSED / PASS | `/auth/activate` gate + password establishment; DEV E2E WP-04A.3c.3a |
-| WP-04B — Administrative UI | In progress | Admin UX on `admin_*` RPCs + Edge provision |
+| WP-04B — Actus ADMIN MVP (Administrative UI) | **CLOSED / PASS — MVP FROZEN** | Readiness WP-04B.4: **Recommendation A** — close/freeze; **no active ADMIN feature WP**. See closeout below. |
 | WP-04B.0 — ADMIN capability probe | CLOSED / PASS | Migration `20260930160000_wp04b0_actus_admin_capability_probe.sql` — `is_active_connect_actus_admin()` + `fetchActusAdminCapability()` for **navigation/gating only**; **not** administrative authorization (`assert_actus_admin()` on `admin_*` / Edge unchanged). |
-| WP-04B.1 — Admin foundation / client list | CLOSED / PASS | `/app/admin` + ADMIN-only nav; read-only `admin_list_clientes()`; capability probe is UX only; **no** client mutations / memberships / provisioning. |
+| WP-04B.1 — Admin foundation / client list | CLOSED / PASS | `/app/admin` + ADMIN-only nav; read-only `admin_list_clientes()`; capability probe is UX only. |
 | WP-04B.2 — Client lifecycle | CLOSED / PASS | ADMIN create/rename/activate/deactivate via `admin_create_cliente` / `admin_update_cliente`; `codigo_cliente` immutable; soft lifecycle only (no DELETE). |
-| WP-04B.3 — Membership lifecycle + provisioning UI | CLOSED / PASS | DEV gate WP-04B.3a PASS (RPC + Edge contract; optional manual browser sign-off). `/app/admin` → **Gerenciar acessos**; list/create/edit/activate/deactivate via `admin_*` membership RPCs; provision via Edge `provision-client-membership` with body `{ membership_id }` only; Edge non-2xx `code` parsed for product errors. **Capability probe = UX only**; **admin_* RPCs = domain authority**; **Edge = Auth orchestration** (no `service_role` / `auth.admin` in frontend). Provisioning state semantics: `PENDING_AUTH` = awaiting activation link; `ACTIVE` = active membership with linked Auth user (not “logged in now”); `INACTIVE` = inactive membership path. **Email:** invite send ≠ delivery; avoid fictitious addresses on DEV (Supabase bounce risk). WP-04B umbrella remains open until explicitly closed. |
+| WP-04B.3 — Membership lifecycle + provisioning UI | CLOSED / PASS | `/app/admin` → **Gerenciar acessos**; membership RPCs + Edge `provision-client-membership` (`{ membership_id }` only); DEV gate WP-04B.3a PASS. |
+| WP-04B.4 — ADMIN MVP readiness review | CLOSED | Audit-only — **Recommendation A**: ADMIN MVP functionally complete; freeze feature development. |
+| WP-04B.4a — ADMIN MVP documentation closeout | PO review | Documentation-only — records closure, boundaries, production handoff (this section). |
+
+**No active ADMIN feature work package.** ADMIN MVP feature development is **frozen** unless PO explicitly reopens scope.
+
+### WP-04B — Actus ADMIN MVP (implementation closeout)
+
+**Status:** CLOSED / PASS — **MVP FROZEN** (baseline commit `b65a953` — membership lifecycle + provisioning UI).
+
+**PO decision (WP-04B.4):** **A — CLOSE / FREEZE WP-04B ADMIN MVP.**
+
+**Delivered chain (end-to-end product path):** Actus authentication → ACTUS Connect resolution → ADMIN capability → `/app/admin` → **Clientes** → client lifecycle → **Acessos** → access lifecycle → provisioning → invite → `/auth/activate` → password establishment → Connect CLIENT resolution → `/app/processos`.
+
+**ADMIN MVP operations (no DELETE in product):** cadastrar cliente; editar nome; ativar/desativar cliente; cadastrar acesso; editar nome do acesso; ativar/desativar acesso (soft-disable); iniciar provisioning/convite; bloquear acesso por desativação de membership/cliente.
+
+**Authority boundaries (unchanged):**
+
+- **Frontend capability probe:** UX/gating only (`is_active_connect_actus_admin` / nav / route gate). UI route/nav visibility is **never** authorization.
+- **Admin domain authority:** `webproc.admin_*` RPCs + `assert_actus_admin()`.
+- **Provisioning authority:** Edge `provision-client-membership` + server-side `service_role` + `server_prepare_client_membership_auth` / `server_link_client_membership_auth` (actor from JWT).
+- **Activation authority:** Supabase Auth establishes identity/session (`/auth/activate`, password).
+- **Application authority:** `resolveConnectAccess()` determines ACTUS vs CLIENT Connect access after Auth.
+
+**Out of scope for closed ADMIN MVP (P2 / future — no new WPs opened here):** resend-invite UX; Auth identity deletion/revocation UI; membership email change; `codigo_cliente` change; audit log; bulk operations; search/pagination; `/app/admin/clientes/:id`; provisioning reconciliation UI; broader ADMIN user-management UI in Connect.
+
+**Functional closure ≠ production release.** Before production:
+
+| MUST | |
+|------|---|
+| 1 | Migrations applied to target environment (incl. WP-04B.0 probe) |
+| 2 | Edge `provision-client-membership` deployed |
+| 3 | Edge redirect env vars (`CONNECT_AUTH_INVITE_REDIRECT_URL` / `CONNECT_PUBLIC_APP_URL`) |
+| 4 | Auth redirect allowlist for app + `/auth/activate` |
+| 5 | Production email deliverability strategy / custom SMTP as appropriate |
+| 6 | Production Actus ADMIN bootstrap (`usuarios_actus.papel = 'ADMIN'`) |
+| 7 | Staging ADMIN smoke |
+| 8 | Staging provision → activation → CLIENT smoke |
+| 9 | RPC grants / exposed `webproc` schema / RLS verification |
+
+**SHOULD:** ADMIN operator guidance; staging fixture hygiene; monitoring/reconciliation procedure for link failures; final browser visual walkthrough of `/app/admin`.
+
+**Email boundary:** “Convite enviado” (product copy) does **not** certify email delivery. DEV Supabase bounce alerts imply: avoid fictitious addresses in real invite tests; use controlled addresses; treat deliverability/SMTP as **production-readiness**, not ADMIN MVP feature work.
+
+**Next macro direction (handoff only — not started by WP-04B closeout):** after production-readiness gates, **Product / UI-UX Readiness** for operational routines. Established language decision: use **“Protocolos”** as primary user-facing terminology where that is user-known vocabulary; do **not** impose **“Demandas”** as the main operational label. Pulse keeps its analytic semantics. **Does not authorize** renaming Processos/routes/components in a documentation-only closeout.
 
 ## Authorship Model (WP-01C)
 
