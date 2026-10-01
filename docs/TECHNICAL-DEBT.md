@@ -509,11 +509,11 @@ The system may **observe and inform**; it must **not** automatically decide admi
 | WP-04C.3c — Pulse MVP readiness review | CLOSED | Recommendation **A**: PULSE MVP FUNCTIONALLY COMPLETE — STOP FEATURE DEVELOPMENT |
 | WP-04C.3d — Pulse MVP closeout + pre-prod gate | PO review | Documentation / validation only (no feature WP) |
 
-**PO reopened:** **PULSE-DOM.1** + **PULSE-DOM.1a** (active-status alignment) — **READY FOR PO REVIEW** (2026-10-01). **PULSE-UI.1a** (presentation) remains **not started**.
+**PULSE-DOM.1 / DOM.1a** — **CLOSED / PASS** (commit `0fbe901`). **PULSE-UI.1a / UI.1b** — **CLOSED / PASS** (PO visual approval 2026-10-01).
 
 ### PULSE-DOM.1 / DOM.1a — Data Fatal operational attention contract
 
-**Status:** **READY FOR PO REVIEW** (2026-10-01). **Counts only** — no attention list RPC, no Pulse UI redesign.
+**Status:** **CLOSED / PASS** (2026-10-01). **Counts only** — no attention list RPC beyond snapshot fields.
 
 **Migrations:**
 
@@ -540,9 +540,25 @@ The system may **observe and inform**; it must **not** automatically decide admi
 
 **Index:** **None added.** Existing partial `processos_temporal_worker_candidates_idx` covers worker slice only. **PULSE-PERF-01 (deferred):** composite on `(status, (dt_fatal AT TIME ZONE 'America/Sao_Paulo')::date)` if attention queries lag at scale — PO approval required.
 
-**Drill-through (PULSE-UI.1a):** Protocolos URLs `/app/processos?fatal=hoje` and `/app/processos?fatal=vencidas` (optional `status=…`). ACTUS Pulse **cliente** analytical filter has **no** matching Protocolos URL param today — preserve via future slice or ACTUS navigation context only.
+**Drill-through (UI.1a):** Attention and status KPIs link to `/app/processos?fatal=hoje|vencidas` and `/app/processos?status=…`. ACTUS Pulse **cliente** analytical filter still has **no** Protocolos URL param — UI shows explicit note when `p_cliente_id` is applied.
 
-**No active Pulse feature work beyond DOM.1 / pending UI.1a** until PO closes next gate.
+### PULSE-UI.1a — Operational cockpit (presentation)
+
+**Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01. **No migration / RPC / RLS change.**
+
+**IA:** Attention-first (`fatal_overdue_count`, `fatal_today_count`) → current snapshot → period flow → compact user distribution (Recharts donut, top 5 + Outros) → explore Protocolos → optional lazy “Demandas cadastradas no período” (existing `pulse_drilldown`).
+
+**Filters:** Compact query toolbar (Grid violet band grammar); mobile sheet.
+
+**Deferred:** Sidebar/menu; Protocolos grid `cliente` URL filter for ACTUS Pulse scope parity.
+
+### PULSE-UI.1b — Cockpit visual refinement
+
+**Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01.
+
+**Scope:** Period presets — Este mês · Últimos 7 dias · Personalizado (removed 30-day preset). Period flow — lifecycle KPIs + daily cadastro series as **one** visual unit. Snapshot vs period copy clarified in UI.
+
+**No further Pulse UI slices** unless PO reopens scope.
 
 ### WP-04C.3 — ACTUS PULSE MVP (implementation closeout)
 

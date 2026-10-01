@@ -7,7 +7,7 @@ import {
   todayBusinessDate,
 } from "@/lib/pulse-dates";
 
-export type PulsePeriodPreset = "month" | "7d" | "30d" | "custom";
+export type PulsePeriodPreset = "month" | "7d" | "custom";
 
 export interface PulseFilterDraft {
   preset: PulsePeriodPreset;
@@ -41,8 +41,6 @@ function draftFromPreset(preset: PulsePeriodPreset, current: PulseFilterDraft): 
       };
     case "7d":
       return { ...current, preset, periodStart: businessDateDaysAgo(6), periodEnd: end };
-    case "30d":
-      return { ...current, preset, periodStart: businessDateDaysAgo(29), periodEnd: end };
     case "custom":
       return { ...current, preset };
     default:

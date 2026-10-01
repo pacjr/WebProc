@@ -58,6 +58,31 @@ Do not introduce additional display fonts without PO approval.
 - **Sticky operational panels** (desktop only when appropriate) — e.g. deadlines/progression column; offset accounts for sticky app header (`scroll-pt` / `scroll-mt` on shell and workspace).
 - **Whitespace** is intentional for readability; avoid both cramped fields and excessive vertical gaps between every micro-section.
 
+### Pulse operational cockpit (PULSE-UI.1a / 1b)
+
+Third validated composition (after entity workspace and Protocolos collection). **Attention-first** — Pulse **signals and aggregates**; Protocolos **investigates and executes** (drill-through, not a second grid by default).
+
+**Information order (desktop and mobile collapse):**
+
+1. Context header
+2. Query / filter band
+3. Attention (Data Fatal operational counts)
+4. **Current operational state** — snapshot now; **not** period-bound
+5. Distribution (workload composition in period)
+6. **Period flow** — events in selected interval; **not** current snapshot
+7. Explore / drill-through to Protocolos
+8. Optional analytical detail (lazy, e.g. period-registered demand list)
+
+**Period flow (UI.1b):** Lifecycle summary KPIs (cadastradas / protocoladas / importadas) and the daily cadastro series must read as **one conceptual unit** — single card/section with shared header, summary row, then chart + “Ver dados” in a continuous surface (not two stacked independent cards).
+
+**Period presets (UI.1b):** Este mês (calendar) · Últimos 7 dias (rolling window) · Personalizado — no separate 30-day preset.
+
+- **Attention strip:** Two link cards — overdue uses **destructive/cancelamento** grammar; today uses **amber/protocolizacao** grammar; zero counts stay neutral (not alarmist).
+- **Query band:** Same **violet `informacoes`** toolbar as Protocolos Grid (`operationalCollectionQueryToolbar*`).
+- **Analytics blocks:** Neutral / primary tint (`operationalAnalyticsAccent`) for period flow and distribution — must not compete visually with attention.
+- **Workspace width:** `protocoloWorkspaceClassName` (`max-w-6xl`).
+- **Code:** `operationalAttentionOverdueAccent`, `operationalAttentionTodayAccent`, `operationalAnalyticsAccent`, `operationalCockpitMetricGridClassName` in `operational-visual-language.ts`.
+
 ### Operational collection / scanning surface
 
 Second validated surface type (after entity workspace on Novo/Detail):
@@ -206,7 +231,7 @@ Normative doc path for future slices: this file (v0.1+).
 | Artifact | Label | Notes |
 |----------|--------|--------|
 | `docs/design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md` | **Actus-shared** | This baseline |
-| `src/lib/operational-visual-language.ts` | **Shared candidate** (WebProc-local path today) | Accent roles; `operationalCollection*` shell classes; `protocoloWorkspaceClassName` is Protocolos-named |
+| `src/lib/operational-visual-language.ts` | **Shared candidate** (WebProc-local path today) | Accent roles; `operationalCollection*`; Pulse cockpit attention/analytics accents; `protocoloWorkspaceClassName` |
 | `ProtocoloSectionCard` | **Shared candidate** (WebProc-local) | Generic card grammar + `accentRole` |
 | `ProtocoloContextHeader` | **WebProc-local** (pattern reusable) | Entity context header; rename/generalize when second surface needs it |
 | `webproc-field-styles.ts` | **Shared candidate** (WebProc-local name) | Scoped focus classes |

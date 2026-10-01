@@ -491,11 +491,24 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### PULSE-DOM.1 / DOM.1a — Data Fatal operational attention (Pulse read contract)
 
-- **Status:** **READY FOR PO REVIEW** (2026-10-01). **Not** PULSE-UI.1a (presentation deferred).
+- **Status:** **CLOSED / PASS** (2026-10-01).
 - **Contract:** `pulse_summary.snapshot.fatal_today_count` / `fatal_overdue_count` — **operational attention** (not historical volume), America/Sao_Paulo business dates, scope filters only (not Pulse period); explicit `status` filter composes with attention predicates.
 - **Temporal vs operational:** Grid/list may still show a **“Hoje”** badge when the stored Data Fatal falls on today (**temporal fact**). **Operational attention** (Pulse counts, `fatal=hoje`, `fatal=vencidas`) requires status **Em preenchimento** or **Pendente** plus the date rule.
 - **Definitions (aligned Pulse + PROTO-GRID):** **hoje:** active status and business date of `dt_fatal` = today; **vencida:** active status and business date &lt; today.
-- **Drill-through target (UI.1a):** `/app/processos?fatal=hoje` | `fatal=vencidas` (+ optional `status`).
+- **Drill-through (implemented UI.1a):** `/app/processos?fatal=hoje` | `fatal=vencidas` (+ optional `status`).
+
+### PULSE-UI.1a — Operational cockpit
+
+- **Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01. Presentation only — DOM.1/1a semantics unchanged.
+- **Hierarchy:** Page context → compact filters → Data Fatal attention cards → current status snapshot → user distribution → period flow (unified card: lifecycle KPIs + daily chart) → ACTUS by-client when applicable → explore Protocolos → collapsible period demand list (lazy RPC).
+- **Boundary:** Pulse aggregates/signals; Protocolos executes. No second full grid by default.
+- **ACTUS cliente gap:** Pulse `clienteId` filter does not map to Protocolos list URL; attention links show scope disclaimer when cliente filter is active.
+- **Responsive mobile order:** Context → filters → attention → situation → period → distribution → explore.
+
+### PULSE-UI.1b — Cockpit visual refinement
+
+- **Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01.
+- **Scope:** Period presets (month / last 7 days / custom); period flow as single conceptual surface; snapshot vs period semantics in copy.
 
 ### PROTO-DOC.1 — Unified Documentos (links)
 

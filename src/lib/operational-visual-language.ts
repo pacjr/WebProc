@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  AlertTriangle,
   CalendarClock,
+  Clock,
   FileText,
   FolderOpen,
   ListChecks,
@@ -132,3 +134,34 @@ export const operationalCollectionDataPanelClassName = [
 /** Neutral pagination footer integrated with the data panel. */
 export const operationalCollectionPaginationFooterClassName =
   "flex flex-col gap-3 border-t border-border/80 bg-muted/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between";
+
+/** Pulse / cockpit: immediate operational attention — Data Fatal overdue. */
+export const operationalAttentionOverdueAccent = {
+  topBorder: operationalAccentByRole.cancelamento.topBorder,
+  headerTint: operationalAccentByRole.cancelamento.headerTint,
+  titleAccent: operationalAccentByRole.cancelamento.titleAccent,
+  icon: ShieldAlert,
+  iconWrap: operationalAccentByRole.cancelamento.iconWrap,
+} as const;
+
+/** Pulse / cockpit: readiness-style attention — Data Fatal today. */
+export const operationalAttentionTodayAccent = {
+  topBorder: operationalAccentByRole.protocolizacao.topBorder,
+  headerTint: operationalAccentByRole.protocolizacao.headerTint,
+  titleAccent: operationalAccentByRole.protocolizacao.titleAccent,
+  icon: Clock,
+  iconWrap: operationalAccentByRole.protocolizacao.iconWrap,
+} as const;
+
+/** Pulse / cockpit: neutral analytical surfaces (period flow, distribution). */
+export const operationalAnalyticsAccent = {
+  topBorder: operationalAccentByRole.identificacao.topBorder,
+  headerTint: "bg-muted/30 dark:bg-muted/20",
+  titleAccent: "text-foreground",
+  icon: AlertTriangle,
+  iconWrap: "bg-muted text-muted-foreground",
+} as const;
+
+/** Compact metric group inside a cockpit panel body. */
+export const operationalCockpitMetricGridClassName =
+  "grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3";

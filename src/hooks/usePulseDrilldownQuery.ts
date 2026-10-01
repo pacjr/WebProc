@@ -17,6 +17,7 @@ export type PulseDrilldownCursor = {
 export function usePulseDrilldownQuery(
   connectAccess: ConnectAccess,
   applied: PulseFilterDraft,
+  options?: { enabled?: boolean },
 ) {
   const actor =
     connectAccess.kind === "CLIENT" || connectAccess.kind === "ACTUS"
@@ -27,7 +28,7 @@ export function usePulseDrilldownQuery(
 
   return useInfiniteQuery({
     queryKey: ["pulse", "drilldown", actor, applied] as const,
-    enabled: actor != null,
+    enabled: actor != null && (options?.enabled ?? true),
     initialPageParam: null as PulseDrilldownCursor | null,
     queryFn: async ({ pageParam }) => {
       if (!filter) {

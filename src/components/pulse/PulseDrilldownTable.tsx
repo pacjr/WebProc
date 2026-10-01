@@ -63,6 +63,7 @@ export function PulseDrilldownTable({
   fetchNextPageError,
   onLoadMore,
   onRetryLoadMore,
+  compact = false,
 }: {
   rows: PulseDrilldownRow[];
   isActus: boolean;
@@ -77,13 +78,18 @@ export function PulseDrilldownTable({
   fetchNextPageError: Error | null;
   onLoadMore: () => void;
   onRetryLoadMore: () => void;
+  compact?: boolean;
 }) {
+  const sectionHeading = compact ? null : (
+    <h2 id="pulse-drilldown-heading" className="mb-4 text-lg font-semibold">
+      Demandas
+    </h2>
+  );
+
   if (isLoading && rows.length === 0) {
     return (
-      <section aria-labelledby="pulse-drilldown-heading">
-        <h2 id="pulse-drilldown-heading" className="mb-4 text-lg font-semibold">
-          Demandas
-        </h2>
+      <section aria-labelledby={compact ? undefined : "pulse-drilldown-heading"}>
+        {sectionHeading}
         <TableSkeleton />
       </section>
     );
@@ -91,10 +97,8 @@ export function PulseDrilldownTable({
 
   if (isError && rows.length === 0) {
     return (
-      <section aria-labelledby="pulse-drilldown-heading">
-        <h2 id="pulse-drilldown-heading" className="mb-4 text-lg font-semibold">
-          Demandas
-        </h2>
+      <section aria-labelledby={compact ? undefined : "pulse-drilldown-heading"}>
+        {sectionHeading}
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Não foi possível carregar as demandas</AlertTitle>
@@ -110,20 +114,22 @@ export function PulseDrilldownTable({
   }
 
   return (
-    <section aria-labelledby="pulse-drilldown-heading">
-      <h2 id="pulse-drilldown-heading" className="mb-4 text-lg font-semibold">
-        Demandas
-      </h2>
+    <section aria-labelledby={compact ? undefined : "pulse-drilldown-heading"}>
+      {sectionHeading}
 
-      <Card className="shadow-card">
-        <CardHeader className="p-4 sm:p-6 pb-2">
-          <CardTitle className="text-base font-semibold">
-            Demandas no escopo analítico aplicado
-          </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
-            Demandas que compõem o universo analítico atual (cadastro no período e filtros
-            aplicados). Para operação completa, abra o detalhe do processo.
-          </p>
+      <Card className={compact ? "shadow-sm" : "shadow-card"}>
+        <CardHeader className={compact ? "p-3 pb-1" : "p-4 sm:p-6 pb-2"}>
+          {compact ? null : (
+            <CardTitle className="text-base font-semibold">
+              Demandas no escopo analítico aplicado
+            </CardTitle>
+          )}
+          {compact ? null : (
+            <p className="text-xs text-muted-foreground mt-1">
+              Demandas que compõem o universo analítico atual (cadastro no período e filtros
+              aplicados). Para operação completa, abra o detalhe do processo.
+            </p>
+          )}
           {isRefetching && rows.length === 0 ? (
             <p className="text-xs text-muted-foreground mt-1" aria-live="polite">
               Atualizando lista…
