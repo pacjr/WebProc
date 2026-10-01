@@ -1,4 +1,7 @@
+import { supabase } from "@/integrations/supabase/client";
 import { webprocDb } from "@/integrations/supabase/webproc-client";
+import { mapDocumentEdgeError } from "@/lib/webproc-document-edge-errors";
+import { validateWebprocUploadFile } from "@/lib/webproc-file-policy";
 import {
   getBusinessDateToday,
   validateProtocolFields,
@@ -303,7 +306,9 @@ export async function saveProcessoDraft(
 export async function listProcessoDocuments(idProc: number) {
   const { data, error } = await webprocDb()
     .from("processo_documentos")
-    .select("id, id_proc, tipo, nome, url, nome_arquivo, storage_state, created_at")
+    .select(
+      "id, id_proc, tipo, nome, url, nome_arquivo, storage_state, tamanho, content_type, created_at",
+    )
     .eq("id_proc", idProc)
     .order("created_at", { ascending: true });
 
@@ -372,6 +377,123 @@ export async function removerDocumento(documentId: string) {
     error: null,
     message: null as string | null,
   };
+}
+
+type WebprocEdgeFailure = {
+  success: false;
+  error?: string;
+  code?: string | null;
+};
+
+type PrepareDocumentUploadSuccess = {
+  success: true;
+  document_id: string;
+  upload_url: string;
+  upload_capability: string;
+  expires_at: string;
+  upload_headers: Record<string, string>;
+};
+
+type ConfirmDocumentUploadSuccess = {
+  success: true;
+  document_id: string;
+  id_proc: number;
+  tipo: "ARQUIVO";
+  storage_state: string;
+  already_registered?: boolean;
+};
+
+type PrepareDocumentDownloadSuccess = {
+  success: true;
+  document_id: string;
+  download_url: string;
+  expires_in: number;
+  nome_arquivo: string;
+};
+
+function edgeFailureMessage(payload: WebprocEdgeFailure) {
+  return mapDocumentEdgeError(payload.code ?? payload.error ?? null);
+}
+
+async function invokeWebprocDocumentEdge<T extends { success: true }>(
+  functionName: string,
+  body: Record<string, unknown>,
+): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(functionName, { body });
+
+  if (data && typeof data === "object" && "success" in data && data.success === false) {
+    throw new Error(edgeFailureMessage(data as WebprocEdgeFailure));
+  }
+
+  if (error) {
+    throw new Error(mapDocumentEdgeError(error.message));
+  }
+
+  if (!data || typeof data !== "object" || !("success" in data) || data.success !== true) {
+    throw new Error(mapDocumentEdgeError("invalid_response"));
+  }
+
+  return data as T;
+}
+
+export async function uploadProcessoDocumentFile(
+  idProc: number,
+  file: File,
+  options?: { nome?: string | null },
+) {
+  const validation = validateWebprocUploadFile(file);
+  if (validation.ok === false) {
+    throw new Error(validation.message);
+  }
+
+  const prepared = await invokeWebprocDocumentEdge<PrepareDocumentUploadSuccess>(
+    "webproc-document-upload-prepare",
+    {
+      id_proc: idProc,
+      filename: validation.filename,
+      content_type: validation.contentType,
+      size: validation.size,
+      ...(options?.nome?.trim() ? { nome: options.nome.trim() } : {}),
+    },
+  );
+
+  const uploadResponse = await fetch(prepared.upload_url, {
+    method: "PUT",
+    headers: prepared.upload_headers,
+    body: file,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error(
+      "Falha ao enviar o arquivo. Verifique sua conexão e tente novamente.",
+    );
+  }
+
+  const confirmed = await invokeWebprocDocumentEdge<ConfirmDocumentUploadSuccess>(
+    "webproc-document-upload-confirm",
+    {
+      document_id: prepared.document_id,
+      upload_capability: prepared.upload_capability,
+    },
+  );
+
+  return confirmed;
+}
+
+export async function downloadProcessoDocumentFile(documentId: string) {
+  const prepared = await invokeWebprocDocumentEdge<PrepareDocumentDownloadSuccess>(
+    "webproc-document-download-prepare",
+    { document_id: documentId },
+  );
+
+  const anchor = document.createElement("a");
+  anchor.href = prepared.download_url;
+  anchor.rel = "noopener noreferrer";
+  anchor.download = prepared.nome_arquivo || "documento";
+  anchor.target = "_blank";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
 }
 
 export async function protocolarProcesso(idProc: number) {

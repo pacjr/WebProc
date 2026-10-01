@@ -30,6 +30,7 @@ import {
   addProcessoLink,
   cancelarProcesso,
   countActiveProcessoDocumentsForProtocol,
+  downloadProcessoDocumentFile,
   formatAuthorDisplay,
   getProcessoDetail,
   getProtocolRequirements,
@@ -39,7 +40,9 @@ import {
   reabrirProcesso,
   removerDocumento,
   saveProcessoDraft,
+  uploadProcessoDocumentFile,
 } from "@/integrations/supabase/webproc-api";
+import { validateWebprocUploadFile } from "@/lib/webproc-file-policy";
 import {
   collectProtocolizationBlockers,
   getFirstValidationMessage,
@@ -72,6 +75,10 @@ export default function ProcessoDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [linkSaving, setLinkSaving] = useState(false);
+  const [pendingUploadFile, setPendingUploadFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [fileBusy, setFileBusy] = useState(false);
+  const [downloadBusyId, setDownloadBusyId] = useState<string | null>(null);
   const [protocolando, setProtocolando] = useState(false);
   const [reabrindo, setReabrindo] = useState(false);
   const [protocolBlockerOpen, setProtocolBlockerOpen] = useState(false);
@@ -289,6 +296,63 @@ export default function ProcessoDetail() {
       toast.error(message);
     } finally {
       setLinkSaving(false);
+    }
+  };
+
+  const handlePickUploadFile = (file: File | null) => {
+    setPendingUploadFile(file);
+    setFileError(null);
+    if (!file) {
+      return;
+    }
+    const validation = validateWebprocUploadFile(file);
+    if (validation.ok === false) {
+      setFileError(validation.message);
+      setPendingUploadFile(null);
+    }
+  };
+
+  const handleAttachFile = async () => {
+    if (!canEdit || !processo || !pendingUploadFile || fileBusy) return;
+
+    setFileError(null);
+    setFileBusy(true);
+    try {
+      await uploadProcessoDocumentFile(processo.id_proc, pendingUploadFile);
+      setPendingUploadFile(null);
+
+      const { data: refreshedDocuments, error: documentsError } = await listProcessoDocuments(
+        processo.id_proc,
+      );
+
+      if (documentsError) {
+        throw documentsError;
+      }
+
+      setDocuments(refreshedDocuments);
+      toast.success("Arquivo anexado.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Não foi possível anexar o arquivo.";
+      setFileError(message);
+      toast.error(message);
+    } finally {
+      setFileBusy(false);
+    }
+  };
+
+  const handleDownloadFile = async (document: WebProcProcessoDocument) => {
+    if (downloadBusyId) return;
+
+    setDownloadBusyId(document.id);
+    try {
+      await downloadProcessoDocumentFile(document.id);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Não foi possível baixar o arquivo.";
+      toast.error(message);
+    } finally {
+      setDownloadBusyId(null);
     }
   };
 
@@ -587,6 +651,10 @@ export default function ProcessoDetail() {
           linkUrl={linkUrl}
           linkUrlError={linkUrlError}
           linkSaving={linkSaving}
+          pendingUploadFile={pendingUploadFile}
+          fileError={fileError}
+          fileBusy={fileBusy}
+          downloadBusyId={downloadBusyId}
           pendingRemoveDocument={pendingRemoveDocument}
           onLinkNomeChange={setLinkNome}
           onLinkUrlChange={(value) => {
@@ -596,6 +664,9 @@ export default function ProcessoDetail() {
             }
           }}
           onAddLink={() => void handleAddLink()}
+          onPickUploadFile={handlePickUploadFile}
+          onAttachFile={() => void handleAttachFile()}
+          onDownloadFile={(doc) => void handleDownloadFile(doc)}
           onRequestRemove={setPendingRemoveDocument}
           onCancelRemove={() => setPendingRemoveDocument(null)}
           onConfirmRemove={() => void handleConfirmRemoveDocument()}

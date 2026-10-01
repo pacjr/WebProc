@@ -332,22 +332,67 @@ Applies from **initial create / draft save** onward (frontend enforced).
 - Link create unchanged: direct INSERT via `addProcessoLink` (draft creator, `EM_PREENCHIMENTO`).
 - Link remove: **`remover_documento` RPC** (`removerDocumento` helper); confirmation dialog; authoritative list refresh (no direct DELETE, no optimistic-only removal).
 - Checklist / client validation: **`countActiveProcessoDocuments`** / `activeDocumentCount` (not `links.length`).
-- Product copy: Nome do documento, Endereço do documento, Adicionar, Abrir, Remover; restrained file-attachment “em breve” note (no fake upload).
+- Product copy: Nome do documento, Endereço do documento, Adicionar, Abrir, Remover (file attach deferred to PROTO-DOC.2).
 - Domain error mapping: `documento_not_found`, `invalid_status_for_document_mutation`, `arquivo_removal_requires_coordination`.
 
 **Validation (DEV):** `npm run typecheck` PASS; `npm run build` PASS; `git diff --check` PASS; CLIENT smoke A–J on `localhost:8080` (see UX-02 § PROTO-DOC.1 evidence).
 
 **DB migration:** **None** (existing WP-03 contract sufficient).
 
-**Remaining implementation gaps (post DOC.1):**
+### PROTO-DOC.2 — File upload/download (Documentos)
+
+**Status:** **CLOSED / PASS** (2026-10-01). Committed on `main` after PO manual smoke on DEV (`cxrnptygbzqzobtdxpwo`).
+
+**Delivered:**
+
+- `uploadProcessoDocumentFile`: `webproc-document-upload-prepare` → browser **PUT** (presigned URL + `upload_headers`) → `webproc-document-upload-confirm`.
+- `downloadProcessoDocumentFile`: `webproc-document-download-prepare` → short-lived download (no permanent storage URLs in UI).
+- Client pre-validation: `src/lib/webproc-file-policy.ts` (pdf/doc/docx/xls/xlsx/csv; max **104_857_600** bytes; server authoritative).
+- Unified **Documentos** UX: file picker + **Anexar arquivo**; name + size; **Baixar**; **Remover** links only (no ARQUIVO Remover — deferred to PROTO-DOC.3).
+- Novo: `ensureDraftPersisted()` before first upload; single `id_proc` on subsequent **Salvar rascunho**.
+- Active readiness: `isActiveProcessoDocument` / `countActiveProcessoDocumentsForProtocol` — ARQUIVO only when `storage_state` is `STORED` or `PERSISTED`; unconfirmed uploads excluded from list.
+
+**PO manual smoke (DEV, 2026-10-01) — PASS:** valid PDF upload; unified list; filename + human size; **Baixar**; unsupported type blocked with inline product error; Documentos presentation approved.
+
+**PO lifecycle smoke — PASS:** `PENDENTE` → **Editar/Reabrir** (formal transition to `EM_PREENCHIMENTO`) → add document → **Protocolar** → `PENDENTE`. **No separate “edit document while pending” lifecycle** — existing **Editar/Reabrir** is authoritative.
+
+**Document mutability (approved direction; RPCs unchanged in DOC.2):**
+
+| Status | CLIENT document mutation |
+|--------|---------------------------|
+| `EM_PREENCHIMENTO` | Add documents; future coordinated file removal/replacement (PROTO-DOC.3). |
+| `PENDENTE` | Read-only; use **Editar/Reabrir** → `EM_PREENCHIMENTO` before document/data mutation. |
+| `IMPORTADO` | No document mutation. |
+| `CONCLUIDO` | No document mutation. |
+| `CANCELADO` | Read-only; physical retention/cleanup via future coordinated work (below). |
+
+**DEV Edge:** No deploy in slice — `webproc-document-upload-prepare` (v11), `webproc-document-upload-confirm` (v14), `webproc-document-download-prepare` (v3) already **ACTIVE** on DEV.
+
+**DB migration:** **None.**
+
+**Validation:** `npm run typecheck` PASS; `npm run build` PASS; `git diff --check` PASS.
+
+### PROTO-DOC.3 — Coordinated file removal & retention
+
+**Status:** **DEFINED / NOT STARTED** (2026-10-01). Follow-up; does **not** block PROTO-DOC.2.
+
+**Scope (approved direction — implement only after domain discovery):**
+
+**A. Manual file removal** — For `EM_PREENCHIMENTO` only (after reopen from `PENDENTE` if applicable): coordinate storage object deletion, document domain state, audit/evidence, UI refresh/readiness. **Never** ARQUIVO removal as direct DB DELETE only. Inspect existing `remover_documento` / `storage_state` model before naming new states (conceptual labels like REMOVAL_PENDING/REMOVED are not authoritative until discovery).
+
+**B. Cancellation cleanup** — On `CANCELADO`: governance evidence and document metadata remain auditable; uploaded physical objects must not be retained indefinitely without operational purpose. Direction: persist cancellation → mark/schedule physical file cleanup → delete storage object → confirm/document cleanup. **Successful storage deletion is not a synchronous prerequisite** for `cancelar_processo`; failed cleanup must be retryable without invalidating cancellation. Links need no physical storage cleanup.
+
+**Audit principle:** Physical file deletion ≠ deletion of historical evidence. DOC.3 must inspect existing audit/domain structures and preserve safe metadata (document id, filename, size, content type, creator, timestamps, removal/cleanup actor/time where applicable). **No new schema in DOC.2/DOC.2a.** Ordinary removal in `EM_PREENCHIMENTO` should not be unnecessarily bureaucratic; for protocols reopened from `PENDENTE`, inspect whether existing lifecycle/audit evidence suffices before requiring extra removal-reason fields.
+
+**Remaining Product/UI-UX gaps (post DOC.2):**
 
 | Gap | Class |
 |-----|--------|
-| Documentos: upload prepare, PUT, confirm, download; ARQUIVO in unified list; file-removal coordination; stored-file checklist | **PROTO-DOC.2 (pending)** |
+| Coordinated ARQUIVO removal + cancellation storage cleanup | **PROTO-DOC.3** |
 | Detail view/edit IA | PROTO-UI.3 |
 | List server-side search | optional backend |
 
-**Product/UI-UX Readiness:** NOT closed — PROTO-DOC.2 + PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-DOC.1 link foundation closed).
+**Product/UI-UX Readiness:** NOT closed — PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-DOC.1 + PROTO-DOC.2 closed).
 
 ---
 
@@ -399,7 +444,7 @@ The system may **observe and inform**; it must **not** automatically decide admi
 
 **Delivered:** When **Protocolar** is blocked by incomplete mandatory requirements, a central **AlertDialog** lists blockers derived from `validateProtocolFields` / `collectProtocolizationBlockers` (same rules as checklist). **No `protocolar_processo` RPC** on client-known incomplete state. Server readiness domain codes map to the same dialog; other failures remain toast. After close, protocolization checklist section receives restrained ring/background emphasis and focus.
 
-**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, PROTO-DOC.2, PROTO-UI.3, visual redesign.
+**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, PROTO-DOC.3 (retention/cleanup), PROTO-UI.3, visual redesign.
 
 ## Authorship Model (WP-01C)
 

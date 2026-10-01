@@ -433,10 +433,10 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 | Status | RPC lifecycle | Checklist says “link” not documento | PROTO-UI.3 | UI wiring |
 | Detail | Combined form | Section IA | PROTO-UI.3 | UI wiring |
 | Documents — link | **PROTO-DOC.1 CLOSED/PASS** | RPC remove + product copy; create via existing INSERT | — | Closed |
-| Documents — file | Edge only | No React upload/download | PROTO-DOC.2 | Edge wiring |
-| Document open/download | Links: Abrir (URL) | Files need download-prepare | PROTO-DOC.2 | Edge wiring |
-| Unified document list | **PROTO-DOC.1** | Query all types; UI shows LINK + future ARQUIVO | PROTO-DOC.2 | Partial (files) |
-| Protocol doc count | **PROTO-DOC.1** active helper | Must include stored files when wired | PROTO-DOC.2 | Partial |
+| Documents — file | **PROTO-DOC.2 CLOSED/PASS** | Upload/download wired | — | Closed |
+| Document open/download | Links: Abrir; files: **Baixar** | — | — | Closed |
+| Unified document list | **PROTO-DOC.1 + DOC.2** | LINK + stored ARQUIVO | — | Closed |
+| Protocol doc count | Active helper incl. stored files | — | — | Closed |
 | Execução Provisória | On form | Placement vs spec | PROTO-UI.2 | UI wiring |
 | Responsive | Partial table scroll | Card list | PROTO-UI.1 | UI wiring |
 | CLIENT/ACTUS | Implemented | Label/banner only | PROTO-UI.1 | UI wiring |
@@ -483,11 +483,17 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### PROTO-DOC.2 — File upload/download
 
-- **Status:** **Pending** (not started).
-- **Scope:** Upload prepare; PUT; confirm; download; ARQUIVO rendering in unified **Documentos**; file-removal coordination; stored-file checklist participation; progress/errors.
-- **Non-scope:** File removal beyond governed coordination, R2 admin.
+- **Status:** **CLOSED / PASS** (2026-10-01). PO manual smoke PASS on DEV (upload, list, size, **Baixar**, invalid type blocked; lifecycle: PENDENTE → Editar/Reabrir → add document → Protocolar → PENDENTE).
+- **Scope:** Prepare / PUT / confirm / download-prepare in unified **Documentos**; client validation; readiness integration; Novo ensure-draft.
+- **Non-scope:** ARQUIVO **Remover**, cancellation storage cleanup — **PROTO-DOC.3** (see TECHNICAL-DEBT).
 - **Deps:** PROTO-DOC.1 (closed).
-- **Gate:** Upload pdf + protocol; ACTUS download read.
+- **Document mutability:** See TECHNICAL-DEBT (PENDENTE read-only until **Editar/Reabrir**; no separate pending-document edit path).
+
+### PROTO-DOC.3 — Coordinated file removal & retention
+
+- **Status:** **DEFINED / NOT STARTED** (2026-10-01).
+- **Scope:** Coordinated manual file removal; post-cancel physical cleanup; audit vs physical deletion — full direction in **TECHNICAL-DEBT** § PROTO-DOC.3.
+- **Non-scope:** PROTO-DOC.2 upload/download (closed).
 
 ### PROTO-UX.GATE — Readiness regression
 
@@ -511,7 +517,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 - Lifecycle RPCs enforce protocol rules including documents via `process_has_active_documents`.  
 - Link removal: UI uses **`remover_documento`** (PROTO-DOC.1); direct DELETE removed from frontend path.
-- File pipeline complete at Edge; React not wired.  
+- File pipeline: **PROTO-DOC.2 CLOSED/PASS**; ARQUIVO removal/retention → **PROTO-DOC.3**.
 - `getProtocolRequirements` / checklist text understates arquivo requirement.  
 - ACTUS read-only cross-client; CLIENT creator-only mutations.  
 - `cancelar_processo` exposed in PROTO-UI.2 (detail, draft/pending creator).
@@ -521,7 +527,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete). **PROTO-GOV.1 / AR-PROTO-GOV-01:** mandatory cancellation reason enforced server-side; motivo + `status_antes_cancelamento` persisted on `processos`. **PROTO-GOV.1b:** cancellation evidence read-only in list (motivo column/card) and detail (**Cancelamento** section).
 2. **List search at scale:** Client-side filter sufficient for MVP or prioritize server-side search RPC?  
-3. **ARQUIVO remove:** Defer entirely vs later Edge-coordinated removal UX?
+3. **ARQUIVO remove / cancel cleanup:** **PROTO-DOC.3** defined (TECHNICAL-DEBT); not started.
 
 ### AR-PROTO-GOV-01 — Protocol temporal & decision governance (approved)
 

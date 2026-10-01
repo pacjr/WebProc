@@ -1,4 +1,5 @@
 import type { WebProcProcessoDocument } from "@/integrations/supabase/webproc-types";
+import { formatBytes } from "@/lib/webproc-file-policy";
 
 /** Mirrors webproc_private.is_active_documento (LINK always; ARQUIVO when stored). */
 export function isActiveProcessoDocument(
@@ -22,6 +23,13 @@ export function getDocumentoDisplayName(doc: WebProcProcessoDocument) {
     return doc.nome?.trim() || "Link do documento";
   }
   return doc.nome?.trim() || doc.nome_arquivo?.trim() || "Arquivo";
+}
+
+export function getDocumentoFileMeta(doc: WebProcProcessoDocument) {
+  if (doc.tipo !== "ARQUIVO" || doc.tamanho == null) {
+    return null;
+  }
+  return formatBytes(doc.tamanho);
 }
 
 export function getLinkHostname(url: string) {

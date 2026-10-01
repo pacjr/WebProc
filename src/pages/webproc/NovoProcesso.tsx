@@ -10,12 +10,15 @@ import { Button } from "@/components/ui/button";
 import { useWebProc } from "@/contexts/WebProcContext";
 import {
   addProcessoLink,
+  downloadProcessoDocumentFile,
   insertProcesso,
   listProcessoDocuments,
   mapWebprocDomainError,
   removerDocumento,
   saveProcessoDraft,
+  uploadProcessoDocumentFile,
 } from "@/integrations/supabase/webproc-api";
+import { validateWebprocUploadFile } from "@/lib/webproc-file-policy";
 import type { WebProcProcessoDocument } from "@/integrations/supabase/webproc-types";
 import {
   getFirstValidationMessage,
@@ -54,6 +57,10 @@ export default function NovoProcesso() {
     useState<WebProcProcessoDocument | null>(null);
   const [saving, setSaving] = useState(false);
   const [linkSaving, setLinkSaving] = useState(false);
+  const [pendingUploadFile, setPendingUploadFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [fileBusy, setFileBusy] = useState(false);
+  const [downloadBusyId, setDownloadBusyId] = useState<string | null>(null);
   const [dtFatalError, setDtFatalError] = useState<string | null>(null);
   const [processoOuExecucaoError, setProcessoOuExecucaoError] = useState<string | null>(
     null,
@@ -210,6 +217,55 @@ export default function NovoProcesso() {
     }
   };
 
+  const handlePickUploadFile = (file: File | null) => {
+    setPendingUploadFile(file);
+    setFileError(null);
+    if (!file) {
+      return;
+    }
+    const validation = validateWebprocUploadFile(file);
+    if (validation.ok === false) {
+      setFileError(validation.message);
+      setPendingUploadFile(null);
+    }
+  };
+
+  const handleAttachFile = async () => {
+    if (!pendingUploadFile || fileBusy) return;
+
+    setFileError(null);
+    setFileBusy(true);
+    try {
+      const idProc = await ensureDraftPersisted();
+      await uploadProcessoDocumentFile(idProc, pendingUploadFile);
+      setPendingUploadFile(null);
+      await refreshDocuments(idProc);
+      toast.success("Arquivo anexado.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Não foi possível anexar o arquivo.";
+      setFileError(message);
+      toast.error(message);
+    } finally {
+      setFileBusy(false);
+    }
+  };
+
+  const handleDownloadFile = async (document: WebProcProcessoDocument) => {
+    if (downloadBusyId) return;
+
+    setDownloadBusyId(document.id);
+    try {
+      await downloadProcessoDocumentFile(document.id);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Não foi possível baixar o arquivo.";
+      toast.error(message);
+    } finally {
+      setDownloadBusyId(null);
+    }
+  };
+
   const handleConfirmRemoveDocument = async () => {
     if (!pendingRemoveDocument || draftIdProc === null) return;
 
@@ -268,6 +324,10 @@ export default function NovoProcesso() {
           linkUrl={linkUrl}
           linkUrlError={linkUrlError}
           linkSaving={linkSaving}
+          pendingUploadFile={pendingUploadFile}
+          fileError={fileError}
+          fileBusy={fileBusy}
+          downloadBusyId={downloadBusyId}
           pendingRemoveDocument={pendingRemoveDocument}
           onLinkNomeChange={setLinkNome}
           onLinkUrlChange={(value) => {
@@ -277,6 +337,9 @@ export default function NovoProcesso() {
             }
           }}
           onAddLink={() => void handleAddLink()}
+          onPickUploadFile={handlePickUploadFile}
+          onAttachFile={() => void handleAttachFile()}
+          onDownloadFile={(doc) => void handleDownloadFile(doc)}
           onRequestRemove={setPendingRemoveDocument}
           onCancelRemove={() => setPendingRemoveDocument(null)}
           onConfirmRemove={() => void handleConfirmRemoveDocument()}
@@ -287,7 +350,7 @@ export default function NovoProcesso() {
             type="button"
             variant="outline"
             onClick={() => navigate("/app/processos")}
-            disabled={saving || linkSaving}
+            disabled={saving || linkSaving || fileBusy}
           >
             Cancelar
           </Button>
@@ -295,7 +358,7 @@ export default function NovoProcesso() {
             type="button"
             variant="legal"
             onClick={() => void handleSave()}
-            disabled={saving || linkSaving}
+            disabled={saving || linkSaving || fileBusy}
           >
             {saving ? "Salvando..." : "Salvar rascunho"}
           </Button>
