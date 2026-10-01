@@ -58,6 +58,19 @@ Do not introduce additional display fonts without PO approval.
 - **Sticky operational panels** (desktop only when appropriate) — e.g. deadlines/progression column; offset accounts for sticky app header (`scroll-pt` / `scroll-mt` on shell and workspace).
 - **Whitespace** is intentional for readability; avoid both cramped fields and excessive vertical gaps between every micro-section.
 
+### Operational collection / scanning surface
+
+Second validated surface type (after entity workspace on Novo/Detail):
+
+- **Primary control:** dense **table or list** for comparability and fast scanning — not a stack of large section cards.
+- **Chrome:** restrained page header (brand accent edge), compact **filter toolbar** integrated with the grid (not a separate dashboard).
+- **Collection identity (primary / legal):** thin **top or side** primary accent on page header and data panel; table body rows stay neutral; optional light primary tint on table header row only.
+- **Query band (`informacoes` role):** filter/search toolbar uses violet family top border + header tint — “context/query”, not status or deadline semantics.
+- **Pagination:** explicit footer with total count and page navigation — **server-side** range loading; no infinite scroll; footer surface stays neutral (`bg-muted/10`).
+- **State in URL:** filters/page preserved where reasonable (e.g. return from detail).
+- **Mobile:** card rows acceptable when table would force horizontal scroll; same data, same pagination rules.
+- **Scale principle:** historical volume must not determine the cost of the current page load (see PROTO-GRID.1).
+
 ---
 
 ## 5. Operational cards
@@ -193,12 +206,14 @@ Normative doc path for future slices: this file (v0.1+).
 | Artifact | Label | Notes |
 |----------|--------|--------|
 | `docs/design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md` | **Actus-shared** | This baseline |
-| `src/lib/operational-visual-language.ts` | **Shared candidate** (WebProc-local path today) | Accent role tokens; `protocoloWorkspaceClassName` is Protocolos-named |
+| `src/lib/operational-visual-language.ts` | **Shared candidate** (WebProc-local path today) | Accent roles; `operationalCollection*` shell classes; `protocoloWorkspaceClassName` is Protocolos-named |
 | `ProtocoloSectionCard` | **Shared candidate** (WebProc-local) | Generic card grammar + `accentRole` |
 | `ProtocoloContextHeader` | **WebProc-local** (pattern reusable) | Entity context header; rename/generalize when second surface needs it |
 | `webproc-field-styles.ts` | **Shared candidate** (WebProc-local name) | Scoped focus classes |
 | `ProcessoFormFields` workspace grid | **WebProc-local** | XOR, fields, read mode — domain-specific |
 | `WebProcShell` `scroll-pt-[5.5rem]` | **Actus Connect shell** | Prevents sticky header overlap |
+| `webproc-processos-list-query.ts` | **WebProc-local** (pattern reusable) | URL state + dt_fatal filter bounds for grid |
+| `listProcessosPaginated` (API) | **WebProc-local** | Server range + exact count |
 | Global CSS (`index.css`, login theme) | **Actus-shared** | `--primary`, `--destructive`, `--radius`, shadows |
 
 **This task does not move or rename files.** Promotion to `@/components/connect/*` or similar waits on demonstrated reuse (§15).

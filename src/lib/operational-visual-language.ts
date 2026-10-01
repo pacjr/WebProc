@@ -73,3 +73,62 @@ export const operationalAccentByRole: Record<OperationalAccentRole, AccentDefini
 /** Shared page workspace width aligned with WebProc shell content column. */
 export const protocoloWorkspaceClassName =
   "mx-auto w-full max-w-6xl space-y-4 pb-10 scroll-mt-24";
+
+/** Base card shell for operational sections and collection panels. */
+export const operationalCardShellClassName =
+  "overflow-hidden rounded-lg border border-border bg-card shadow-sm";
+
+/**
+ * Primary / legal brand identity for operational collection surfaces (lists, grids).
+ * Same hue family as `identificacao` — structural navigation, not lifecycle status.
+ */
+export const operationalCollectionIdentityAccent = {
+  topBorder: operationalAccentByRole.identificacao.topBorder,
+  sideBorder: "border-l-[3px] border-l-primary",
+  headerTint: operationalAccentByRole.identificacao.headerTint,
+  titleAccent: operationalAccentByRole.identificacao.titleAccent,
+  tableHeadTint: "bg-primary/[0.045] dark:bg-primary/[0.08]",
+} as const;
+
+/**
+ * Query / filter band within a collection — `informacoes` role (complementary context).
+ * Not for status, deadlines, or destructive semantics.
+ */
+export const operationalCollectionQueryAccent = {
+  topBorder: operationalAccentByRole.informacoes.topBorder,
+  headerTint: operationalAccentByRole.informacoes.headerTint,
+  titleAccent: operationalAccentByRole.informacoes.titleAccent,
+} as const;
+
+/** List route page context header (title + primary actions). */
+export const operationalCollectionPageHeaderClassName = [
+  operationalCardShellClassName,
+  operationalCollectionIdentityAccent.sideBorder,
+  "bg-card/95 backdrop-blur-sm",
+].join(" ");
+
+export const operationalCollectionPageHeaderBandClassName = [
+  "border-b border-border/80 px-4 py-4 sm:px-5",
+  operationalCollectionIdentityAccent.headerTint,
+].join(" ");
+
+/** Compact filter/search toolbar attached to the collection. */
+export const operationalCollectionQueryToolbarClassName = [
+  operationalCardShellClassName,
+  operationalCollectionQueryAccent.topBorder,
+].join(" ");
+
+export const operationalCollectionQueryToolbarBandClassName = [
+  "border-b border-border/70 px-3 py-2 sm:px-4",
+  operationalCollectionQueryAccent.headerTint,
+].join(" ");
+
+/** Table / result set container — primary collection identity on top edge. */
+export const operationalCollectionDataPanelClassName = [
+  operationalCardShellClassName,
+  operationalCollectionIdentityAccent.topBorder,
+].join(" ");
+
+/** Neutral pagination footer integrated with the data panel. */
+export const operationalCollectionPaginationFooterClassName =
+  "flex flex-col gap-3 border-t border-border/80 bg-muted/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between";

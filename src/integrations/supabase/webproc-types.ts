@@ -539,6 +539,23 @@ export type WebProcProcessoListItem = Pick<
   author: WebProcAuthorIdentity | null;
 };
 
+export type WebProcProcessosListParams = {
+  page: number;
+  pageSize: number;
+  status?: ProcessoStatus | null;
+  fatal?: "todas" | "hoje" | "vencidas" | "futuras";
+  search?: string;
+  sort?: "recent" | "dt_fatal";
+};
+
+export type WebProcProcessosListResult = {
+  items: WebProcProcessoListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+};
+
 export interface WebProcProcessoDetail extends WebProcProcesso {
   author: WebProcAuthorIdentity | null;
   canceladoPor: WebProcAuthorIdentity | null;

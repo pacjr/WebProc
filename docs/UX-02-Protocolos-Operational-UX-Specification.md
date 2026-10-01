@@ -268,21 +268,22 @@ See §10–11.
 
 ## 8. List / search
 
-### 8.A Current backend
+### 8.A Current backend (PROTO-GRID.1)
 
-- `listProcessos()`: select all visible via RLS, order `created_at DESC`.
-- **No** server-side text search, status filter, or pagination API in React layer.
+- `listProcessosPaginated(params)`: RLS-scoped select with `.range(from, to)` and `{ count: 'exact' }`; server filters (status, Data Fatal hoje/vencidas/futuras, ilike search on nº/exec/reclamante/reclamado); sort `recent` (`created_at`, `id_proc`) or `dt_fatal` ascending; batched author identities per page.
+- URL state: React Router search params (`page`, `pageSize`, `status`, `fatal`, `q`, `sort`).
 
-### 8.B Proposed UX (MVP)
+### 8.B Grid UX (PROTO-GRID.1 — PO review)
 
 | Element | Spec |
 |---------|------|
 | Columns | Protocolo (`id_proc`), Nº do Processo, Reclamante, Reclamado (add), Data Entrada, Data Fatal, Status; Execução Provisória column optional/narrow; ACTUS: Cliente column |
 | Row action | Tap row → detail |
 | CLIENT CTA | Novo protocolo |
-| Search | **Client-side** filter on nº, parties, `id_proc` until backend exists — mark gap if PO wants server search at scale |
-| Status filter | Client-side chip/filter — gap class: UI-only for current dataset |
-| Ordering | Default newest first; optional user sort on Data Fatal (client-side) |
+| Search | Server-side ilike (debounced); resets page 1 |
+| Status filter | Server-side; resets page 1 |
+| Ordering | Server-side: recent (default) or Data Fatal |
+| Pagination | 10 / 20 / 50; footer range + Anterior/Próxima |
 | Overdue | Visual badge on Data Fatal when &lt; today and status ∈ {Em preenchimento, Pendente} |
 | Empty | “Nenhum protocolo cadastrado.” + CTA (CLIENT) |
 | No results | Clear filters message |
@@ -427,7 +428,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 | UX capability | Current support | Gap | Required slice | Gap class |
 |---------------|-----------------|-----|----------------|-----------|
-| List/search | Basic list, no search | Product term Processos; no mobile cards; no overdue | PROTO-UI.1 | UI wiring |
+| List/search | Server page + filters + URL state | — | **PROTO-GRID.1 CLOSED/PASS** | Closed |
 | Create | Works | Copy/IA; exec on create heavy | PROTO-UI.2 | UI wiring |
 | Edit | Operational workspace + read blocks | — | **PROTO-UI.3 CLOSED/PASS** | Closed |
 | Status | Badge + Prazos operational panel | — | **PROTO-UI.3** | Closed |
@@ -443,7 +444,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 | Link remove | **`remover_documento` RPC** | — | — | Closed |
 | Cancel protocol | `cancelar_processo` RPC | **PROTO-UI.2** detail action (draft/pending creator) | — | Closed |
 | Operational history | DB events | No UI | Post-MVP | — |
-| Server list search | — | Not in API | Future | DB/domain if scale |
+| Server list search | Paginated API + ilike | — | **PROTO-GRID.1 CLOSED/PASS** | Closed |
 
 ---
 
@@ -474,6 +475,19 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 - **Scope delivered:** Desktop workspace grid; semantic accent cards; context header; read/edit modes; focus scoping; Documentos/Protocolização/Cancelamento presentation; mobile collapse; shell scroll padding.
 - **Illustrative reference:** `docs/design/actus-connect-operational-ui-reference.png` (not a functional spec).
 - **Non-scope (unchanged domain):** PROTO-DOC.3; Pulse/list/grid redesign; D0/D+1 UI; image-only chrome (search, sidebar, extra actions).
+
+### PROTO-GRID.1 — Protocolos grid + server pagination
+
+- **Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01.
+- **Principle:** *Historical volume must not determine the cost of the current operational interaction.* Server-side page/range + exact total; URL-preserved filters; operational scanning surface (see [`ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md`](./design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md)).
+- **Scope:** Filters (status, Data Fatal, search, sort); pagination 10/20/50; CLIENT/ACTUS columns unchanged; mobile cards; back-from-detail context.
+- **Non-scope:** Pulse; menu; RPC/migration; D0/D+1 governance UI.
+- **Gate:** PO manual gate + DEV smoke (2026-10-01).
+
+### PROTO-GRID.1a — Collection visual inheritance
+
+- **Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01 (CLIENT desktop).
+- **Scope:** Primary collection chrome + violet query band via shared `operationalCollection*` tokens; no API/behavior change.
 
 ### PROTO-DOC.1 — Unified Documentos (links)
 

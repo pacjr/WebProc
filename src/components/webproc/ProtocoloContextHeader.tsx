@@ -13,6 +13,8 @@ type ProtocoloContextHeaderProps = {
   modeHint?: ReactNode;
   actions?: ReactNode;
   banners?: ReactNode;
+  /** Defaults to /app/processos — pass list query string to preserve grid state. */
+  backTo?: string;
   className?: string;
 };
 
@@ -24,6 +26,7 @@ export default function ProtocoloContextHeader({
   modeHint,
   actions,
   banners,
+  backTo = "/app/processos",
   className,
 }: ProtocoloContextHeaderProps) {
   return (
@@ -35,7 +38,7 @@ export default function ProtocoloContextHeader({
     >
       <div className="border-b border-border/80 px-4 py-3 sm:px-5">
         <Button variant="ghost" className="h-auto w-fit px-0 -ml-1 mb-2" asChild>
-          <Link to="/app/processos">
+          <Link to={backTo}>
             <ArrowLeft className="h-4 w-4 mr-2" aria-hidden />
             Voltar para protocolos
           </Link>

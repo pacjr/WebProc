@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import ProcessoDocumentosSection from "@/components/webproc/ProcessoDocumentosSection";
 import ProtocoloContextHeader from "@/components/webproc/ProtocoloContextHeader";
@@ -57,9 +57,15 @@ import type { WebProcProcessoDetail, WebProcProcessoDocument } from "@/integrati
 import { toast } from "sonner";
 import { processoStatusLabel } from "@/lib/webproc-status-labels";
 
+type ProcessoDetailLocationState = {
+  listSearch?: string;
+};
+
 export default function ProcessoDetail() {
   const { idProc } = useParams();
+  const location = useLocation();
   const { user, connectAccess } = useWebProc();
+  const listBackTo = `/app/processos${(location.state as ProcessoDetailLocationState | null)?.listSearch ?? ""}`;
   const canMutateAsClient = connectAccess.kind === "CLIENT";
   const parsedId = Number(idProc);
 
@@ -520,7 +526,7 @@ export default function ProcessoDetail() {
       <div className="rounded-lg border border-border bg-card p-8 text-center">
         <p className="text-muted-foreground mb-4">Protocolo inválido.</p>
         <Button variant="outline" asChild>
-          <Link to="/app/processos">Voltar para protocolos</Link>
+          <Link to={listBackTo}>Voltar para protocolos</Link>
         </Button>
       </div>
     );
@@ -544,7 +550,7 @@ export default function ProcessoDetail() {
           Protocolo não encontrado ou sem permissão de acesso.
         </p>
         <Button variant="outline" asChild>
-          <Link to="/app/processos">Voltar para protocolos</Link>
+          <Link to={listBackTo}>Voltar para protocolos</Link>
         </Button>
       </div>
     );
@@ -603,6 +609,7 @@ export default function ProcessoDetail() {
       <ProtocoloContextHeader
         title={`Protocolo #${processo.id_proc}`}
         clienteNome={processo.cliente.nome}
+        backTo={listBackTo}
         statusLabel={statusLabel}
         metaLine={
           <>
@@ -772,7 +779,7 @@ export default function ProcessoDetail() {
             </p>
           ) : null}
           <Button variant="outline" asChild>
-            <Link to="/app/processos">Voltar para protocolos</Link>
+            <Link to={listBackTo}>Voltar para protocolos</Link>
           </Button>
         </div>
       )}

@@ -389,7 +389,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 | Gap | Class |
 |-----|--------|
 | Coordinated ARQUIVO removal + cancellation storage cleanup | **PROTO-DOC.3** |
-| List server-side search | optional backend |
+| Processos grid server pagination/filters | **Closed — PROTO-GRID.1 / 1a** |
 
 ### PROTO-UI.3 / PROTO-UI.3b — Protocolos operational UX + visual language
 
@@ -405,7 +405,35 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **DB migration:** **None.** No domain, RPC, Edge, auth, Pulse list, or FlowProc changes in this slice.
 
-**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; suite-wide readiness still requires **PROTO-UX.GATE**, Processos grid visual slice, Pulse visual slice, and remaining gaps (PROTO-DOC.3, etc.) per roadmap.
+**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; Processos grid **PROTO-GRID.1 / 1a closed**; suite-wide readiness still requires **PROTO-UX.GATE**, Pulse visual slice, and **PROTO-DOC.3** per roadmap.
+
+### PROTO-GRID.1 — Protocolos operational grid + server-side pagination
+
+**Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01 (functional gate + CLIENT desktop review). Presentation + read contract only — **no schema/RPC/Edge/RLS changes**.
+
+**Architectural principle (PO):** *Historical volume must not determine the cost of the current operational interaction.* Grid loads one server page at a time; Pulse (future) uses aggregates, not full history.
+
+**Delivered:**
+
+- `listProcessosPaginated` — PostgREST `.range(from, to)` + `{ count: 'exact' }`; filters (status, Data Fatal hoje/vencidas/futuras, ilike search on n_processo/exec/reclamante/reclamado); sort `recent` (created_at, id_proc) or `dt_fatal` ascending; one batched author identity lookup per page (no N+1 per row).
+- URL state via **React Router** `useSearchParams`: `page`, `pageSize` (10/20/50, default 20), `status`, `fatal`, `q`, `sort`.
+- Grid UX: operational header, compact filter toolbar, table (desktop) / cards (mobile), footer **Anterior/Próxima**, range label `1–20 de N protocolos`.
+- Detail → **Voltar** preserves list query via `location.state.listSearch`.
+- Visual language: scanning surface pattern documented in **Operational Visual Language v0.1** § Operational collection.
+
+**Count strategy:** `count: 'exact'` on the same filtered query — correct totals for operational grid; monitor at scale.
+
+**Indexes (discovery):** `processos` has partial `processos_temporal_worker_candidates_idx` on `dt_fatal` (SP date) for worker candidates only. **No new migration in this slice.** If list latency grows: **PROTO-GRID-PERF-01** — candidate `(created_at DESC, id_proc DESC)` and/or `(status, created_at DESC)` after PO approval.
+
+**DB migration:** **None.**
+
+### PROTO-GRID.1a — Operational collection visual inheritance
+
+**Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01 (CLIENT desktop).
+
+**Delivered:** Shared `operationalCollection*` shell classes in `operational-visual-language.ts` — primary/legal page + data panel identity, violet query toolbar (`informacoes` role), neutral rows/pagination; no behavior change to pagination/filters/API.
+
+**DB migration:** **None.**
 
 ---
 

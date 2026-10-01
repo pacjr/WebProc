@@ -10,6 +10,10 @@ import {
   countActiveProcessoDocuments,
   isActiveProcessoDocument,
 } from "@/lib/webproc-documents";
+import {
+  escapePostgrestIlikePattern,
+  getDtFatalFilterBounds,
+} from "@/lib/webproc-processos-list-query";
 import type {
   WebProcAuthorIdentity,
   WebProcMembership,
@@ -19,6 +23,9 @@ import type {
   WebProcProcessoDocument,
   WebProcRemoverDocumentoResult,
   WebProcProcessoListItem,
+  WebProcProcessosListParams,
+  WebProcProcessosListResult,
+  ProcessoStatus,
   WebProcProtocolRequirement,
   WebProcProtocolarResult,
   WebProcReabrirResult,
@@ -171,28 +178,21 @@ async function fetchAuthorIdentities(userIds: string[]) {
   return { identities, error: null };
 }
 
-export async function listProcessos() {
-  const { data: processos, error } = await webprocDb()
-    .from("processos")
-    .select(
-      "id_proc, n_processo, exec_prov, reclamante, dt_entrada, dt_fatal, status, created_by, motivo_cancelamento"
-    )
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return { data: [] as WebProcProcessoListItem[], error };
-  }
-
-  const rows = processos ?? [];
-  const { identities, error: identityError } = await fetchAuthorIdentities(
-    rows.map((processo) => processo.created_by)
-  );
-
-  if (identityError) {
-    return { data: [] as WebProcProcessoListItem[], error: identityError };
-  }
-
-  const data = rows.map((processo) => ({
+function mapProcessoListRows(
+  rows: {
+    id_proc: number;
+    n_processo: string | null;
+    exec_prov: string | null;
+    reclamante: string | null;
+    dt_entrada: string;
+    dt_fatal: string | null;
+    status: ProcessoStatus;
+    created_by: string;
+    motivo_cancelamento: string | null;
+  }[],
+  identities: Map<string, WebProcAuthorIdentity>,
+): WebProcProcessoListItem[] {
+  return rows.map((processo) => ({
     id_proc: processo.id_proc,
     n_processo: processo.n_processo,
     exec_prov: processo.exec_prov,
@@ -202,9 +202,89 @@ export async function listProcessos() {
     status: processo.status,
     motivo_cancelamento: processo.motivo_cancelamento,
     author: identities.get(processo.created_by) ?? null,
-  })) satisfies WebProcProcessoListItem[];
+  }));
+}
 
-  return { data, error: null };
+export async function listProcessosPaginated(
+  params: WebProcProcessosListParams,
+): Promise<{ result: WebProcProcessosListResult | null; error: Error | null }> {
+  const page = Math.max(1, Math.trunc(params.page));
+  const pageSizeRaw = Math.trunc(params.pageSize);
+  const pageSize = pageSizeRaw === 10 || pageSizeRaw === 20 || pageSizeRaw === 50 ? pageSizeRaw : 20;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  const fatal = params.fatal ?? "todas";
+  const sort = params.sort ?? "recent";
+  const search = (params.search ?? "").trim();
+
+  let query = webprocDb()
+    .from("processos")
+    .select(
+      "id_proc, n_processo, exec_prov, reclamante, dt_entrada, dt_fatal, status, created_by, motivo_cancelamento",
+      { count: "exact" },
+    );
+
+  if (params.status) {
+    query = query.eq("status", params.status);
+  }
+
+  if (fatal === "hoje") {
+    const { start, endExclusive } = getDtFatalFilterBounds("hoje");
+    query = query.gte("dt_fatal", start).lt("dt_fatal", endExclusive);
+  } else if (fatal === "vencidas") {
+    const { start } = getDtFatalFilterBounds("vencidas");
+    query = query
+      .in("status", ["EM_PREENCHIMENTO", "PENDENTE"])
+      .not("dt_fatal", "is", null)
+      .lt("dt_fatal", start);
+  } else if (fatal === "futuras") {
+    const { endExclusive } = getDtFatalFilterBounds("futuras");
+    query = query.not("dt_fatal", "is", null).gte("dt_fatal", endExclusive);
+  }
+
+  if (search.length > 0) {
+    const term = escapePostgrestIlikePattern(search.slice(0, 120));
+    query = query.or(
+      `n_processo.ilike.%${term}%,exec_prov.ilike.%${term}%,reclamante.ilike.%${term}%,reclamado.ilike.%${term}%`,
+    );
+  }
+
+  if (sort === "dt_fatal") {
+    query = query
+      .order("dt_fatal", { ascending: true, nullsFirst: false })
+      .order("id_proc", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false }).order("id_proc", { ascending: false });
+  }
+
+  const { data: processos, error, count } = await query.range(from, to);
+
+  if (error) {
+    return { result: null, error };
+  }
+
+  const rows = processos ?? [];
+  const total = count ?? 0;
+  const pageCount = total <= 0 ? 0 : Math.ceil(total / pageSize);
+
+  const { identities, error: identityError } = await fetchAuthorIdentities(
+    rows.map((processo) => processo.created_by),
+  );
+
+  if (identityError) {
+    return { result: null, error: identityError };
+  }
+
+  return {
+    result: {
+      items: mapProcessoListRows(rows, identities),
+      total,
+      page,
+      pageSize,
+      pageCount,
+    },
+    error: null,
+  };
 }
 
 interface ProcessoDetailRow extends WebProcProcesso {
