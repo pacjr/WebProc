@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
 import ProcessoDocumentosSection from "@/components/webproc/ProcessoDocumentosSection";
+import ProtocoloContextHeader from "@/components/webproc/ProtocoloContextHeader";
+import ProtocoloSectionCard from "@/components/webproc/ProtocoloSectionCard";
+import { protocoloWorkspaceClassName } from "@/lib/operational-visual-language";
 import ProtocolizationBlockerDialog from "@/components/webproc/ProtocolizationBlockerDialog";
 import ProcessoCancelamentoSection from "@/components/webproc/ProcessoCancelamentoSection";
 import ProcessoFormFields, {
@@ -21,7 +23,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -551,100 +552,110 @@ export default function ProcessoDetail() {
 
   const author = formatAuthorDisplay(processo.author);
 
+  const statusLabel = processoStatusLabel(processo.status);
+
+  const headerActions = canReopen ? (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        className="border-destructive/40 text-destructive hover:bg-destructive/10"
+        disabled={reabrindo || cancelando}
+        onClick={() => setCancelDialogOpen(true)}
+      >
+        Cancelar protocolo
+      </Button>
+      <Button
+        type="button"
+        variant="legal"
+        disabled={reabrindo || cancelando}
+        onClick={() => void handleReabrir()}
+      >
+        {reabrindo ? "Reabrindo..." : "Editar"}
+      </Button>
+    </>
+  ) : null;
+
+  const headerBanners = (
+    <>
+      {canReopen ? (
+        <p className="text-sm text-muted-foreground">
+          Protocolo protocolado e aguardando importação. Use{" "}
+          <span className="font-medium text-foreground">Editar</span> para reabrir o rascunho
+          antes de alterar dados ou documentos.
+        </p>
+      ) : null}
+      {!canEdit && !canReopen && isCreator && processo.status !== "CANCELADO" ? (
+        <p className="text-sm text-muted-foreground">
+          Este protocolo não pode mais ser editado neste fluxo.
+        </p>
+      ) : null}
+      {!isCreator ? (
+        <p className="text-sm text-muted-foreground">
+          Somente o autor original pode editar este protocolo.
+        </p>
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <Button variant="ghost" className="w-fit px-0" asChild>
-          <Link to="/app/processos">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para protocolos
-          </Link>
-        </Button>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary">
-              Protocolo #{processo.id_proc}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Cadastrado por {author.primary}
-              {author.secondary ? ` (${author.secondary})` : ""}
+    <div className={protocoloWorkspaceClassName}>
+      <ProtocoloContextHeader
+        title={`Protocolo #${processo.id_proc}`}
+        clienteNome={processo.cliente.nome}
+        statusLabel={statusLabel}
+        metaLine={
+          <>
+            Cadastrado por {author.primary}
+            {author.secondary ? ` (${author.secondary})` : ""}
+          </>
+        }
+        modeHint={
+          canEdit ? (
+            <p className="font-medium text-primary" role="status">
+              Modo edição — rascunho em preenchimento
             </p>
-          </div>
-          <Badge variant="secondary" className="w-fit">
-            {processoStatusLabel(processo.status)}
-          </Badge>
-        </div>
-
-        {canReopen ? (
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Protocolo protocolado e aguardando importação. Para corrigir, reabra o rascunho.
+          ) : (
+            <p className="text-muted-foreground" role="status">
+              Visualização — alterações exigem reabrir o protocolo quando permitido
             </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={reabrindo || cancelando}
-                onClick={() => setCancelDialogOpen(true)}
-              >
-                Cancelar protocolo
-              </Button>
-              <Button
-                type="button"
-                variant="legal"
-                disabled={reabrindo || cancelando}
-                onClick={() => void handleReabrir()}
-              >
-                {reabrindo ? "Reabrindo..." : "Editar"}
-              </Button>
-            </div>
-          </div>
-        ) : null}
+          )
+        }
+        actions={headerActions}
+        banners={
+          canReopen ||
+          (!canEdit && !canReopen && isCreator && processo.status !== "CANCELADO") ||
+          !isCreator
+            ? headerBanners
+            : undefined
+        }
+      />
 
-        {canCancel && canEdit ? (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={saving || protocolando || cancelando}
-              onClick={() => setCancelDialogOpen(true)}
-            >
-              Cancelar protocolo
-            </Button>
-          </div>
-        ) : null}
+      <ProcessoFormFields
+        form={form}
+        clienteNome={processo.cliente.nome}
+        dtEntrada={processo.dt_entrada}
+        disabled={!canEdit}
+        dtFatalError={dtFatalError}
+        processoOuExecucaoError={identificacaoError}
+        layout="cards"
+        clientePresentation="context"
+        statusLabel={statusLabel}
+        onChange={updateField}
+      />
 
-        {processo.status === "CANCELADO" ? (
-          <ProcessoCancelamentoSection processo={processo} />
-        ) : null}
-
-        {!canEdit && !canReopen && isCreator && processo.status !== "CANCELADO" ? (
-          <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
-            Este protocolo não pode mais ser editado neste fluxo.
-          </p>
-        ) : null}
-
-        {!isCreator ? (
-          <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
-            Somente o autor original pode editar este protocolo.
-          </p>
-        ) : null}
-      </div>
-
-      <div className="rounded-lg border border-border bg-card p-4 sm:p-6 shadow-card space-y-8">
-        <ProcessoFormFields
-          form={form}
-          clienteNome={processo.cliente.nome}
-          dtEntrada={processo.dt_entrada}
-          disabled={!canEdit}
-          dtFatalError={dtFatalError}
-          processoOuExecucaoError={identificacaoError}
-          layout="sectioned"
-          onChange={updateField}
-        />
-
+      <ProtocoloSectionCard
+        headingId="documentos-heading"
+        title="Documentos"
+        accentRole="documentos"
+        description={
+          canEdit
+            ? "Links ou arquivos necessários para protocolização."
+            : "Documentos vinculados a este protocolo."
+        }
+      >
         <ProcessoDocumentosSection
+          embedded
           documents={documents}
           canEdit={canEdit}
           linkNome={linkNome}
@@ -671,78 +682,100 @@ export default function ProcessoDetail() {
           onCancelRemove={() => setPendingRemoveDocument(null)}
           onConfirmRemove={() => void handleConfirmRemoveDocument()}
         />
+      </ProtocoloSectionCard>
 
-        {canEdit ? (
-          <section
-            ref={protocolSectionRef}
-            tabIndex={-1}
-            className={cn(
-              "space-y-4 border-t border-border pt-8 outline-none transition-colors",
-              requirementsHighlighted && "rounded-lg ring-2 ring-primary/40 bg-muted/40 p-4 -mx-1 sm:mx-0",
-            )}
-            aria-labelledby="protocolizacao-heading"
-          >
-            <div>
-              <h2
-                id="protocolizacao-heading"
-                className="font-serif text-lg font-semibold text-primary"
-              >
-                Protocolização
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Revise os requisitos antes de protocolar. O rascunho será salvo automaticamente e
-                a validação final ocorre no servidor.
-              </p>
-            </div>
+      {processo.status === "CANCELADO" ? (
+        <ProcessoCancelamentoSection processo={processo} />
+      ) : null}
 
-            <ul className="space-y-2">
-              {protocolRequirements.map((requirement) => (
-                <li key={requirement.id} className="flex items-center gap-2 text-sm">
-                  <span
-                    className={requirement.met ? "text-green-600 dark:text-green-500" : "text-muted-foreground"}
-                    aria-hidden
-                  >
-                    {requirement.met ? "✓" : "○"}
-                  </span>
-                  <span className={requirement.met ? "" : "text-muted-foreground"}>
-                    {requirement.label}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+      {canEdit ? (
+        <>
+          {canCancel ? (
+            <div className="flex justify-end border-t border-border pt-4">
               <Button
                 type="button"
                 variant="outline"
-                disabled={saving || protocolando}
-                onClick={() => void handleSaveDraft()}
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                disabled={saving || protocolando || cancelando || fileBusy || linkSaving}
+                onClick={() => setCancelDialogOpen(true)}
               >
-                {saving ? "Salvando..." : "Salvar rascunho"}
-              </Button>
-              <Button
-                type="button"
-                variant="legal"
-                disabled={saving || protocolando || linkSaving}
-                onClick={() => void handleProtocolar()}
-              >
-                {protocolando ? "Protocolando..." : "Protocolar"}
+                Cancelar protocolo
               </Button>
             </div>
-          </section>
-        ) : (
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end border-t border-border pt-8">
-            {processo.pendente_at ? (
-              <p className="text-sm text-muted-foreground sm:mr-auto">
-                Protocolado em {format(new Date(processo.pendente_at), "dd/MM/yyyy HH:mm")}
-              </p>
-            ) : null}
-            <Button variant="outline" asChild>
-              <Link to="/app/processos">Voltar para protocolos</Link>
-            </Button>
-          </div>
-        )}
-      </div>
+          ) : null}
+
+          <ProtocoloSectionCard
+            headingId="protocolizacao-heading"
+            title="Protocolização"
+            accentRole="protocolizacao"
+            description="Revise os requisitos antes de protocolar. O rascunho será salvo automaticamente; a validação final ocorre no servidor."
+            className={cn(
+              "outline-none transition-shadow",
+              requirementsHighlighted && "ring-2 ring-primary/40",
+            )}
+          >
+            <section ref={protocolSectionRef} tabIndex={-1} className="space-y-4 outline-none">
+              <ul className="space-y-2 rounded-md border border-border bg-muted/20 px-3 py-3">
+                {protocolRequirements.map((requirement) => (
+                  <li key={requirement.id} className="flex items-start gap-2 text-sm">
+                    <span
+                      className={
+                        requirement.met
+                          ? "text-green-600 dark:text-green-500"
+                          : "text-muted-foreground"
+                      }
+                      aria-hidden
+                    >
+                      {requirement.met ? "✓" : "○"}
+                    </span>
+                    <span className={requirement.met ? "" : "text-muted-foreground"}>
+                      {requirement.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div
+                className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"
+                role="group"
+                aria-label="Ações de protocolização"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={saving || protocolando || fileBusy || linkSaving}
+                  onClick={() => void handleSaveDraft()}
+                >
+                  {saving ? "Salvando..." : "Salvar rascunho"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="legal"
+                  disabled={saving || protocolando || linkSaving || fileBusy}
+                  onClick={() => void handleProtocolar()}
+                >
+                  {protocolando ? "Protocolando..." : "Protocolar"}
+                </Button>
+              </div>
+            </section>
+          </ProtocoloSectionCard>
+        </>
+      ) : (
+        <div
+          className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-end"
+          role="group"
+          aria-label="Navegação"
+        >
+          {processo.pendente_at ? (
+            <p className="text-sm text-muted-foreground sm:mr-auto">
+              Protocolado em {format(new Date(processo.pendente_at), "dd/MM/yyyy HH:mm")}
+            </p>
+          ) : null}
+          <Button variant="outline" asChild>
+            <Link to="/app/processos">Voltar para protocolos</Link>
+          </Button>
+        </div>
+      )}
 
       <ProtocolizationBlockerDialog
         open={protocolBlockerOpen}

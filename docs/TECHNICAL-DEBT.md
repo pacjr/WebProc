@@ -389,10 +389,23 @@ Applies from **initial create / draft save** onward (frontend enforced).
 | Gap | Class |
 |-----|--------|
 | Coordinated ARQUIVO removal + cancellation storage cleanup | **PROTO-DOC.3** |
-| Detail view/edit IA | PROTO-UI.3 |
 | List server-side search | optional backend |
 
-**Product/UI-UX Readiness:** NOT closed — PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-DOC.1 + PROTO-DOC.2 closed).
+### PROTO-UI.3 / PROTO-UI.3b — Protocolos operational UX + visual language
+
+**Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01 (revision 2 — operational workspace + accents).
+
+**Normative visual baseline:** [`docs/design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md`](./design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md) **v0.1** — Actus Connect suite identity (WebProc first; FlowProc / Grid / Pulse inherit in future slices, not in this closeout).
+
+**Delivered:**
+
+- Revision 1: card grouping, read vs edit, focus scoping, action hierarchy, Documentos integration unchanged (PROTO-DOC.2).
+- Revision 2 (UI.3b): desktop ~62/38 workspace grid; semantic accent cards; `ProtocoloContextHeader`; mobile column collapse; shell `scroll-pt` overlap fix.
+- Illustrative reference retained: `docs/design/actus-connect-operational-ui-reference.png` (non-functional).
+
+**DB migration:** **None.** No domain, RPC, Edge, auth, Pulse list, or FlowProc changes in this slice.
+
+**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; suite-wide readiness still requires **PROTO-UX.GATE**, Processos grid visual slice, Pulse visual slice, and remaining gaps (PROTO-DOC.3, etc.) per roadmap.
 
 ---
 
@@ -444,7 +457,7 @@ The system may **observe and inform**; it must **not** automatically decide admi
 
 **Delivered:** When **Protocolar** is blocked by incomplete mandatory requirements, a central **AlertDialog** lists blockers derived from `validateProtocolFields` / `collectProtocolizationBlockers` (same rules as checklist). **No `protocolar_processo` RPC** on client-known incomplete state. Server readiness domain codes map to the same dialog; other failures remain toast. After close, protocolization checklist section receives restrained ring/background emphasis and focus.
 
-**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, PROTO-DOC.3 (retention/cleanup), PROTO-UI.3, visual redesign.
+**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, PROTO-DOC.3 (retention/cleanup), broad visual redesign beyond PROTO-UI.3 scope.
 
 ## Authorship Model (WP-01C)
 

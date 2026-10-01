@@ -20,8 +20,12 @@ import {
   getDocumentoFileMeta,
   getLinkHostname,
 } from "@/lib/webproc-documents";
+import { webprocEditableFieldClassName } from "@/lib/webproc-field-styles";
+import { cn } from "@/lib/utils";
 
 type ProcessoDocumentosSectionProps = {
+  /** When true, parent card supplies the section title (Protocolos workspace). */
+  embedded?: boolean;
   documents: WebProcProcessoDocument[];
   canEdit: boolean;
   linkNome: string;
@@ -45,6 +49,7 @@ type ProcessoDocumentosSectionProps = {
 };
 
 export default function ProcessoDocumentosSection({
+  embedded = false,
   documents,
   canEdit,
   linkNome,
@@ -69,16 +74,26 @@ export default function ProcessoDocumentosSection({
   const fileInputId = useId();
   const actionBusy = linkSaving || fileBusy;
 
+  const Wrapper = embedded ? "div" : "section";
+  const wrapperProps = embedded
+    ? { className: "space-y-4" }
+    : {
+        className: "space-y-4 border-t border-border pt-8",
+        "aria-labelledby": "documentos-heading",
+      };
+
   return (
-    <section className="space-y-4 border-t border-border pt-8" aria-labelledby="documentos-heading">
-      <div>
-        <h2 id="documentos-heading" className="font-serif text-lg font-semibold text-primary">
-          Documentos
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Adicione links ou arquivos necessários para protocolização.
-        </p>
-      </div>
+    <Wrapper {...wrapperProps}>
+      {!embedded ? (
+        <div>
+          <h2 id="documentos-heading" className="font-serif text-lg font-semibold text-primary">
+            Documentos
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Adicione links ou arquivos necessários para protocolização.
+          </p>
+        </div>
+      ) : null}
 
       {documents.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
@@ -161,6 +176,7 @@ export default function ProcessoDocumentosSection({
                   onChange={(e) => onLinkNomeChange(e.target.value)}
                   placeholder="Ex.: Sentença"
                   disabled={actionBusy}
+                  className={webprocEditableFieldClassName}
                 />
               </div>
               <div className="space-y-2">
@@ -171,6 +187,7 @@ export default function ProcessoDocumentosSection({
                   onChange={(e) => onLinkUrlChange(e.target.value)}
                   placeholder="https://..."
                   disabled={actionBusy}
+                  className={cn(webprocEditableFieldClassName, linkUrlError && "border-destructive")}
                   aria-invalid={linkUrlError ? true : undefined}
                   aria-describedby={linkUrlError ? "link_url_error" : undefined}
                 />
@@ -282,6 +299,6 @@ export default function ProcessoDocumentosSection({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </Wrapper>
   );
 }

@@ -162,7 +162,7 @@ export default function WebProcShell() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-6xl scroll-pt-[5.5rem] px-4 py-6 sm:px-6 sm:py-8">
         {isActus && (
           <p className="mb-6 rounded-md border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
             Você está no Actus Connect com autorização interna Actus (escopo transversal de

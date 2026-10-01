@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import ProtocoloSectionCard from "@/components/webproc/ProtocoloSectionCard";
 import { formatAuthorDisplay } from "@/integrations/supabase/webproc-api";
 import type { WebProcProcessoDetail } from "@/integrations/supabase/webproc-types";
 import { processoStatusLabel } from "@/lib/webproc-status-labels";
@@ -26,30 +27,26 @@ export default function ProcessoCancelamentoSection({
     : "—";
 
   return (
-    <section
-      aria-labelledby="cancelamento-heading"
-      className="rounded-md border border-border bg-muted/40 px-4 py-4 space-y-3"
+    <ProtocoloSectionCard
+      headingId="cancelamento-heading"
+      title="Cancelamento"
+      accentRole="cancelamento"
+      description="Registro de governança do cancelamento. Estas informações não podem ser alteradas."
     >
-      <div>
-        <h2 id="cancelamento-heading" className="font-serif text-lg font-semibold text-primary">
-          Cancelamento
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Registro de governança do cancelamento. Estas informações não podem ser alteradas.
-        </p>
-      </div>
-      <dl className="grid gap-3 sm:grid-cols-2 text-sm">
+      <dl className="grid gap-4 sm:grid-cols-2 text-sm">
         <div className="sm:col-span-2">
-          <dt className="text-muted-foreground">Motivo</dt>
-          <dd className="font-medium text-foreground whitespace-pre-wrap">{motivo}</dd>
+          <dt className="text-xs font-medium text-muted-foreground">Motivo</dt>
+          <dd className="mt-1 font-medium text-foreground whitespace-pre-wrap break-words">
+            {motivo}
+          </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Cancelado em</dt>
-          <dd className="font-medium">{formatDateTime(processo.cancelado_at)}</dd>
+          <dt className="text-xs font-medium text-muted-foreground">Cancelado em</dt>
+          <dd className="mt-1 font-medium">{formatDateTime(processo.cancelado_at)}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Cancelado por</dt>
-          <dd className="font-medium">
+          <dt className="text-xs font-medium text-muted-foreground">Cancelado por</dt>
+          <dd className="mt-1 font-medium">
             {canceladoPor.primary}
             {canceladoPor.secondary ? (
               <span className="block text-xs text-muted-foreground font-normal">
@@ -59,10 +56,10 @@ export default function ProcessoCancelamentoSection({
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Status anterior</dt>
-          <dd className="font-medium">{statusAnterior}</dd>
+          <dt className="text-xs font-medium text-muted-foreground">Status anterior</dt>
+          <dd className="mt-1 font-medium">{statusAnterior}</dd>
         </div>
       </dl>
-    </section>
+    </ProtocoloSectionCard>
   );
 }

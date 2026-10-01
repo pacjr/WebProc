@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProcessoDocumentosSection from "@/components/webproc/ProcessoDocumentosSection";
+import ProtocoloContextHeader from "@/components/webproc/ProtocoloContextHeader";
+import ProtocoloSectionCard from "@/components/webproc/ProtocoloSectionCard";
+import { protocoloWorkspaceClassName } from "@/lib/operational-visual-language";
 import ProcessoFormFields, {
   emptyProcessoForm,
   formStateToDraftUpdate,
@@ -294,30 +297,38 @@ export default function NovoProcesso() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-primary">
-          Novo protocolo
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Informe a identificação inicial e salve um rascunho. O status inicial será{" "}
-          <span className="font-medium">Em preenchimento</span>.
-        </p>
-      </div>
+    <div className={protocoloWorkspaceClassName}>
+      <ProtocoloContextHeader
+        title="Novo protocolo"
+        clienteNome={membership?.cliente.nome ?? "—"}
+        statusLabel="Em preenchimento"
+        modeHint={
+          <p className="font-medium text-primary" role="status">
+            Modo edição — criação de rascunho
+          </p>
+        }
+        metaLine="Informe identificação, prazos e documentos; salve quando estiver pronto."
+      />
 
-      <div className="rounded-lg border border-border bg-card p-4 sm:p-6 shadow-card space-y-8">
-        <ProcessoFormFields
-          form={form}
-          clienteNome={membership?.cliente.nome ?? "—"}
-          dtEntrada={dtEntradaPreview}
-          dtFatalError={dtFatalError}
-          processoOuExecucaoError={processoOuExecucaoError}
-          layout="sectioned"
-          clientePresentation="context"
-          onChange={updateField}
-        />
+      <ProcessoFormFields
+        form={form}
+        clienteNome={membership?.cliente.nome ?? "—"}
+        dtEntrada={dtEntradaPreview}
+        dtFatalError={dtFatalError}
+        processoOuExecucaoError={processoOuExecucaoError}
+        layout="cards"
+        clientePresentation="context"
+        onChange={updateField}
+      />
 
+      <ProtocoloSectionCard
+        headingId="documentos-heading"
+        title="Documentos"
+        accentRole="documentos"
+        description="Links ou arquivos necessários para protocolização."
+      >
         <ProcessoDocumentosSection
+          embedded
           documents={documents}
           canEdit
           linkNome={linkNome}
@@ -344,25 +355,29 @@ export default function NovoProcesso() {
           onCancelRemove={() => setPendingRemoveDocument(null)}
           onConfirmRemove={() => void handleConfirmRemoveDocument()}
         />
+      </ProtocoloSectionCard>
 
-        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end border-t border-border pt-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/app/processos")}
-            disabled={saving || linkSaving || fileBusy}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="legal"
-            onClick={() => void handleSave()}
-            disabled={saving || linkSaving || fileBusy}
-          >
-            {saving ? "Salvando..." : "Salvar rascunho"}
-          </Button>
-        </div>
+      <div
+        className="flex flex-col-reverse gap-3 rounded-lg border border-border bg-card/80 px-4 py-4 sm:flex-row sm:justify-end sm:px-5"
+        role="group"
+        aria-label="Ações do rascunho"
+      >
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => navigate("/app/processos")}
+          disabled={saving || linkSaving || fileBusy}
+        >
+          Voltar
+        </Button>
+        <Button
+          type="button"
+          variant="legal"
+          onClick={() => void handleSave()}
+          disabled={saving || linkSaving || fileBusy}
+        >
+          {saving ? "Salvando..." : "Salvar rascunho"}
+        </Button>
       </div>
     </div>
   );

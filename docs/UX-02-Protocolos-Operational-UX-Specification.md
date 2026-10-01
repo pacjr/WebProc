@@ -429,9 +429,9 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 |---------------|-----------------|-----|----------------|-----------|
 | List/search | Basic list, no search | Product term Processos; no mobile cards; no overdue | PROTO-UI.1 | UI wiring |
 | Create | Works | Copy/IA; exec on create heavy | PROTO-UI.2 | UI wiring |
-| Edit | Detail form | View vs edit IA | PROTO-UI.3 | UI wiring |
-| Status | RPC lifecycle | Checklist says “link” not documento | PROTO-UI.3 | UI wiring |
-| Detail | Combined form | Section IA | PROTO-UI.3 | UI wiring |
+| Edit | Operational workspace + read blocks | — | **PROTO-UI.3 CLOSED/PASS** | Closed |
+| Status | Badge + Prazos operational panel | — | **PROTO-UI.3** | Closed |
+| Detail | Multi-column cards + accents | — | **PROTO-UI.3** | Closed |
 | Documents — link | **PROTO-DOC.1 CLOSED/PASS** | RPC remove + product copy; create via existing INSERT | — | Closed |
 | Documents — file | **PROTO-DOC.2 CLOSED/PASS** | Upload/download wired | — | Closed |
 | Document open/download | Links: Abrir; files: **Baixar** | — | — | Closed |
@@ -467,12 +467,13 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 - **Scope:** No identification radio; both XOR fields visible with mutual disable; Documentos on Novo; ensure-draft before link; update-on-save (`draftIdProc`).
 - **Non-scope:** PROTO-DOC.2 upload; governance/Pulse (see **AR-PROTO-GOV-01** in TECHNICAL-DEBT).
 
-### PROTO-UI.3 — Detail IA + protocolization UX
+### PROTO-UI.3 / PROTO-UI.3b — Protocolos operational UX + visual language
 
-- **Scope:** View/edit modes; status banners; checklist includes arquivo; reabrir flow copy.  
-- **Non-scope:** File upload.  
-- **Deps:** PROTO-UI.2.  
-- **Gate:** Protocol + reabrir E2E on DEV.
+- **Status:** **CLOSED / PASS** (2026-10-01). PO visual approval 2026-10-01 (revision 2).
+- **Visual language (suite baseline):** [`docs/design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md`](./design/ACTUS-CONNECT-OPERATIONAL-VISUAL-LANGUAGE.md) v0.1 — shared Actus Connect grammar; WebProc Protocolos is the reference implementation.
+- **Scope delivered:** Desktop workspace grid; semantic accent cards; context header; read/edit modes; focus scoping; Documentos/Protocolização/Cancelamento presentation; mobile collapse; shell scroll padding.
+- **Illustrative reference:** `docs/design/actus-connect-operational-ui-reference.png` (not a functional spec).
+- **Non-scope (unchanged domain):** PROTO-DOC.3; Pulse/list/grid redesign; D0/D+1 UI; image-only chrome (search, sidebar, extra actions).
 
 ### PROTO-DOC.1 — Unified Documentos (links)
 
