@@ -79,6 +79,7 @@ export default function ProcessoDetail() {
   const protocolSectionRef = useRef<HTMLElement>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelMotivo, setCancelMotivo] = useState("");
+  const [cancelMotivoError, setCancelMotivoError] = useState<string | null>(null);
   const [cancelando, setCancelando] = useState(false);
 
   const isCreator = Boolean(processo && user && processo.created_by === user.id);
@@ -412,11 +413,18 @@ export default function ProcessoDetail() {
   const handleConfirmCancel = async () => {
     if (!canCancel || !processo) return;
 
+    const trimmedMotivo = cancelMotivo.trim();
+    if (!trimmedMotivo) {
+      setCancelMotivoError("Informe o motivo do cancelamento.");
+      return;
+    }
+
+    setCancelMotivoError(null);
     setCancelando(true);
     try {
       const { result, error, message } = await cancelarProcesso(
         processo.id_proc,
-        cancelMotivo,
+        trimmedMotivo,
       );
 
       if (error || !result?.success) {
@@ -425,6 +433,7 @@ export default function ProcessoDetail() {
 
       setCancelDialogOpen(false);
       setCancelMotivo("");
+      setCancelMotivoError(null);
       await loadDetail();
       toast.success(
         result.already_cancelado
@@ -671,7 +680,15 @@ export default function ProcessoDetail() {
         onClose={closeProtocolBlocker}
       />
 
-      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+      <AlertDialog
+        open={cancelDialogOpen}
+        onOpenChange={(open) => {
+          setCancelDialogOpen(open);
+          if (!open) {
+            setCancelMotivoError(null);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar protocolo?</AlertDialogTitle>
@@ -683,17 +700,37 @@ export default function ProcessoDetail() {
                 </p>
                 <p>
                   Use esta opção quando o protocolo não deve mais seguir para importação ou
-                  processamento.
+                  processamento. O motivo informado permanece registrado no histórico do protocolo.
                 </p>
                 <div className="space-y-2 pt-1">
-                  <Label htmlFor="cancel_motivo">Motivo (opcional)</Label>
+                  <Label htmlFor="cancel_motivo">
+                    Motivo do cancelamento <span className="text-destructive">*</span>
+                  </Label>
                   <Textarea
                     id="cancel_motivo"
                     value={cancelMotivo}
-                    onChange={(e) => setCancelMotivo(e.target.value)}
+                    onChange={(e) => {
+                      setCancelMotivo(e.target.value);
+                      if (cancelMotivoError) {
+                        setCancelMotivoError(null);
+                      }
+                    }}
                     rows={2}
                     placeholder="Ex.: protocolo aberto por engano"
+                    aria-invalid={cancelMotivoError ? true : undefined}
+                    aria-describedby={
+                      cancelMotivoError ? "cancel_motivo_error" : "cancel_motivo_hint"
+                    }
+                    disabled={cancelando}
                   />
+                  <p id="cancel_motivo_hint" className="text-xs text-muted-foreground">
+                    Campo obrigatório.
+                  </p>
+                  {cancelMotivoError ? (
+                    <p id="cancel_motivo_error" className="text-sm text-destructive" role="alert">
+                      {cancelMotivoError}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </AlertDialogDescription>

@@ -55,6 +55,7 @@ const LIFECYCLE_ERROR_MESSAGES: Record<string, string> = {
     "Este processo não está pendente e não pode ser reaberto.",
   invalid_status_for_cancelar:
     "Este protocolo não pode mais ser cancelado neste fluxo.",
+  cancelamento_motivo_obrigatorio: "Informe o motivo do cancelamento.",
   missing_processo_ou_execucao:
     "Informe o Nº do Processo ou a Execução Provisória.",
   identificacao_xor_violation:
@@ -418,10 +419,11 @@ export async function reabrirProcesso(idProc: number) {
   };
 }
 
-export async function cancelarProcesso(idProc: number, motivo?: string | null) {
+export async function cancelarProcesso(idProc: number, motivo: string) {
+  const trimmed = motivo.trim();
   const { data, error } = await webprocDb().rpc("cancelar_processo", {
     p_id_proc: idProc,
-    p_motivo: motivo?.trim() ? motivo.trim() : null,
+    p_motivo: trimmed,
   });
 
   if (error) {

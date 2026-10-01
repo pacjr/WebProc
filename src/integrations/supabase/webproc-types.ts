@@ -31,6 +31,7 @@ export interface WebProcProcesso {
   cancelado_por: string | null;
   motivo_cancelamento: string | null;
   origem_cancelamento: string | null;
+  status_antes_cancelamento: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -126,6 +127,7 @@ export interface WebProcCancelarResult {
   id_proc: number;
   status: ProcessoStatus;
   cancelado_at?: string | null;
+  status_antes_cancelamento?: string | null;
   r2_cleanup_marked?: number;
   already_cancelado?: boolean;
 }

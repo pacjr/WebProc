@@ -353,7 +353,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 ## AR-PROTO-GOV-01 — Protocol Temporal & Decision Governance
 
-**Status:** **APPROVED / RECORDED** (2026-10-01). **Not implemented** in PROTO-UI.2d — documentation and backlog only.
+**Status:** **APPROVED / RECORDED** (2026-10-01). **Partially implemented** — mandatory cancellation reason (**PROTO-GOV.1**, 2026-10-01). Data Fatal history, Pulse D0/D+1, notifications, and automatic cancellation remain **not implemented**.
 
 ### Separation of concepts
 
@@ -385,9 +385,9 @@ Channels may include in-app and email. Notifications **consume the same temporal
 
 Editable `dt_fatal` must **not** erase historical truth. Future implementation must audit at minimum: `id_proc`, previous `dt_fatal`, new `dt_fatal`, actor, timestamp, reason/motivo. Current `dt_fatal` remains effective value. Example: fatal 01/10 changed on 02/10 to 05/10 must preserve that 01/10 was once valid and the change occurred after that deadline.
 
-### Cancellation governance (future — domain gap)
+### Cancellation governance
 
-Cancellation remains lifecycle → `CANCELADO`, never DELETE. **Approved:** **cancellation reason required** with decision trail: `id_proc`, actor, timestamp, previous status, reason, Data Fatal effective at cancellation. **`cancelar_processo` today accepts optional `p_motivo`** — record as **domain gap** requiring forward migration / RPC contract change. **Do not** auto-cancel overdue protocols.
+Cancellation remains lifecycle → `CANCELADO`, never DELETE. **Mandatory cancellation reason — IMPLEMENTED (PROTO-GOV.1):** `webproc.cancelar_processo` rejects NULL, empty, and whitespace-only `p_motivo` (`cancelamento_motivo_obrigatorio`). **Decision trail on `webproc.processos` (no separate audit table):** `id_proc` (row identity), `cancelado_por` + `cancelado_at`, `motivo_cancelamento` (trimmed), `status_antes_cancelamento` (lifecycle immediately before cancel), `dt_fatal` unchanged on the row (effective Data Fatal at cancellation time), `origem_cancelamento`. **Do not** auto-cancel overdue protocols.
 
 ### Governance boundary
 
@@ -399,7 +399,7 @@ The system may **observe and inform**; it must **not** automatically decide admi
 
 **Delivered:** When **Protocolar** is blocked by incomplete mandatory requirements, a central **AlertDialog** lists blockers derived from `validateProtocolFields` / `collectProtocolizationBlockers` (same rules as checklist). **No `protocolar_processo` RPC** on client-known incomplete state. Server readiness domain codes map to the same dialog; other failures remain toast. After close, protocolization checklist section receives restrained ring/background emphasis and focus.
 
-**Implementation explicitly out of scope for AR-PROTO-GOV-01 recording:** Data Fatal history tables, cancellation-required migrations, Pulse aging queries, notification/email logic, automatic cancellation, protocolization modal, PROTO-DOC.2, PROTO-UI.3, visual redesign.
+**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, PROTO-DOC.2, PROTO-UI.3, visual redesign.
 
 ## Authorship Model (WP-01C)
 
