@@ -312,15 +312,32 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **Status:** **CLOSED/PASS** (2026-10-01). Data Fatal default on create; Data de Entrada presentation; cancel action for draft/pending creator via existing RPC (no DELETE).
 
-**Remaining implementation gaps (post UI.2):**
+### PROTO-DOC.1 — Unified Documentos foundation (links)
+
+**Status:** **CLOSED/PASS** (2026-10-01). PO approved; committed on `main` (no push).
+
+**Delivered:**
+
+- Single **Documentos** section (`ProcessoDocumentosSection`) for links today; list query `listProcessoDocuments` returns active rows (LINK + future ARQUIVO when stored).
+- Link create unchanged: direct INSERT via `addProcessoLink` (draft creator, `EM_PREENCHIMENTO`).
+- Link remove: **`remover_documento` RPC** (`removerDocumento` helper); confirmation dialog; authoritative list refresh (no direct DELETE, no optimistic-only removal).
+- Checklist / client validation: **`countActiveProcessoDocuments`** / `activeDocumentCount` (not `links.length`).
+- Product copy: Nome do documento, Endereço do documento, Adicionar, Abrir, Remover; restrained file-attachment “em breve” note (no fake upload).
+- Domain error mapping: `documento_not_found`, `invalid_status_for_document_mutation`, `arquivo_removal_requires_coordination`.
+
+**Validation (DEV):** `npm run typecheck` PASS; `npm run build` PASS; `git diff --check` PASS; CLIENT smoke A–J on `localhost:8080` (see UX-02 § PROTO-DOC.1 evidence).
+
+**DB migration:** **None** (existing WP-03 contract sufficient).
+
+**Remaining implementation gaps (post DOC.1):**
 
 | Gap | Class |
 |-----|--------|
-| Documentos: file upload + unified list + `remover_documento` RPC | PROTO-DOC.* |
+| Documentos: upload prepare, PUT, confirm, download; ARQUIVO in unified list; file-removal coordination; stored-file checklist | **PROTO-DOC.2 (pending)** |
 | Detail view/edit IA | PROTO-UI.3 |
 | List server-side search | optional backend |
 
-**Product/UI-UX Readiness:** NOT closed — PROTO-DOC + PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-UI.1/2 operational foundation closed).
+**Product/UI-UX Readiness:** NOT closed — PROTO-DOC.2 + PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-DOC.1 link foundation closed).
 
 ## Authorship Model (WP-01C)
 

@@ -432,15 +432,15 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 | Edit | Detail form | View vs edit IA | PROTO-UI.3 | UI wiring |
 | Status | RPC lifecycle | Checklist says “link” not documento | PROTO-UI.3 | UI wiring |
 | Detail | Combined form | Section IA | PROTO-UI.3 | UI wiring |
-| Documents — link | Partial | Section “Links”; DELETE not RPC | PROTO-DOC.1 | UI wiring + RPC wiring |
-| Documents — file | Edge only | No React | PROTO-DOC.2 | Edge wiring |
-| Document open/download | Links direct URL | Files need download-prepare | PROTO-DOC.2 | Edge wiring |
-| Unified document list | Links only query | Query all types; merge | PROTO-DOC.1 | UI wiring |
-| Protocol doc count | `links.length` only | Must count files too | PROTO-DOC.2 | UI wiring |
+| Documents — link | **PROTO-DOC.1 CLOSED/PASS** | RPC remove + product copy; create via existing INSERT | — | Closed |
+| Documents — file | Edge only | No React upload/download | PROTO-DOC.2 | Edge wiring |
+| Document open/download | Links: Abrir (URL) | Files need download-prepare | PROTO-DOC.2 | Edge wiring |
+| Unified document list | **PROTO-DOC.1** | Query all types; UI shows LINK + future ARQUIVO | PROTO-DOC.2 | Partial (files) |
+| Protocol doc count | **PROTO-DOC.1** active helper | Must include stored files when wired | PROTO-DOC.2 | Partial |
 | Execução Provisória | On form | Placement vs spec | PROTO-UI.2 | UI wiring |
 | Responsive | Partial table scroll | Card list | PROTO-UI.1 | UI wiring |
 | CLIENT/ACTUS | Implemented | Label/banner only | PROTO-UI.1 | UI wiring |
-| Link remove | Direct DELETE | Broken vs WP-03 RLS | PROTO-DOC.1 | RPC wiring |
+| Link remove | **`remover_documento` RPC** | — | — | Closed |
 | Cancel protocol | `cancelar_processo` RPC | **PROTO-UI.2** detail action (draft/pending creator) | — | Closed |
 | Operational history | DB events | No UI | Post-MVP | — |
 | Server list search | — | Not in API | Future | DB/domain if scale |
@@ -472,16 +472,17 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### PROTO-DOC.1 — Unified Documentos (links)
 
-- **Scope:** Rename section; unified list query; `remover_documento` RPC; add link UX.  
-- **Non-scope:** File upload.  
-- **Deps:** PROTO-UI.3 (can overlap).  
-- **Gate:** Link add/remove; protocol requires ≥1 document with link only.
+- **Status:** **CLOSED/PASS** (2026-10-01).
+- **Scope:** Unified **Documentos** section; `listProcessoDocuments` + active-document helper; `remover_documento` RPC with confirmation; add-link product copy.
+- **Non-scope:** File upload/download (PROTO-DOC.2).
+- **Gate evidence:** CLIENT DEV smoke A–J — Documentos visible on editable draft; add link; Abrir; remove with confirmation via RPC; invalid URL messaging; ACTUS read-only (no add/remove); checklist tracks active document count; mobile width without horizontal overflow; no direct DELETE in UI path.
 
 ### PROTO-DOC.2 — File upload/download
 
-- **Scope:** Edge prepare/PUT/confirm; download; progress/errors; protocol checklist counts files.  
-- **Non-scope:** File removal, R2 admin.  
-- **Deps:** PROTO-DOC.1.  
+- **Status:** **Pending** (not started).
+- **Scope:** Upload prepare; PUT; confirm; download; ARQUIVO rendering in unified **Documentos**; file-removal coordination; stored-file checklist participation; progress/errors.
+- **Non-scope:** File removal beyond governed coordination, R2 admin.
+- **Deps:** PROTO-DOC.1 (closed).
 - **Gate:** Upload pdf + protocol; ACTUS download read.
 
 ### PROTO-UX.GATE — Readiness regression
@@ -505,7 +506,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 ### Repository / domain findings
 
 - Lifecycle RPCs enforce protocol rules including documents via `process_has_active_documents`.  
-- Link DELETE via Data API revoked; UI still deletes directly — **bug/gap**.  
+- Link removal: UI uses **`remover_documento`** (PROTO-DOC.1); direct DELETE removed from frontend path.
 - File pipeline complete at Edge; React not wired.  
 - `getProtocolRequirements` / checklist text understates arquivo requirement.  
 - ACTUS read-only cross-client; CLIENT creator-only mutations.  

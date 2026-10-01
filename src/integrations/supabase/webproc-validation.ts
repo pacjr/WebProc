@@ -38,7 +38,7 @@ export function validateLinkUrl(url: string) {
   if (!trimmed) {
     return {
       valid: false as const,
-      message: "Informe a URL do link.",
+      message: "Informe o endereço do documento.",
     };
   }
 
@@ -47,13 +47,13 @@ export function validateLinkUrl(url: string) {
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
       return {
         valid: false as const,
-        message: "Informe uma URL válida (http:// ou https://).",
+        message: "Informe um endereço válido (http:// ou https://).",
       };
     }
   } catch {
     return {
       valid: false as const,
-      message: "Informe uma URL válida (http:// ou https://).",
+      message: "Informe um endereço válido (http:// ou https://).",
     };
   }
 
@@ -145,7 +145,7 @@ export function validateProtocolFields(
     dt_fatal: string;
     instrucao: string;
   },
-  savedDocumentCount: number
+  activeDocumentCount: number
 ): ProtocolFieldErrors {
   const errors: ProtocolFieldErrors = {};
   const identificacao = validateIdentificacaoXor(form);
@@ -164,7 +164,7 @@ export function validateProtocolFields(
     errors.instrucao = "Informe a instrução.";
   }
 
-  if (savedDocumentCount === 0) {
+  if (activeDocumentCount === 0) {
     errors.documento = "Adicione ao menos um link ou arquivo ao processo.";
   }
 

@@ -71,13 +71,26 @@ export type WebProcProcessoDraftUpdate = {
   dt_fatal?: string | null;
 };
 
-export interface WebProcProcessoLink {
+export type WebProcDocumentoTipo = "LINK" | "ARQUIVO";
+
+export interface WebProcProcessoDocument {
   id: string;
   id_proc: number;
-  tipo: "LINK";
+  tipo: WebProcDocumentoTipo;
   nome: string | null;
-  url: string;
+  url: string | null;
+  nome_arquivo?: string | null;
+  storage_state?: string | null;
   created_at: string;
+}
+
+/** @deprecated Use WebProcProcessoDocument */
+export type WebProcProcessoLink = WebProcProcessoDocument & { tipo: "LINK"; url: string };
+
+export interface WebProcRemoverDocumentoResult {
+  success: boolean;
+  document_id: string;
+  tipo: WebProcDocumentoTipo;
 }
 
 export interface WebProcAuthorIdentity {
@@ -293,6 +306,12 @@ export type WebProcDatabase = {
           p_motivo?: string | null;
         };
         Returns: WebProcCancelarResult;
+      };
+      remover_documento: {
+        Args: {
+          p_document_id: string;
+        };
+        Returns: WebProcRemoverDocumentoResult;
       };
       is_active_connect_actus_user: {
         Args: Record<string, never>;

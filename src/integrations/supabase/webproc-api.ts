@@ -3,13 +3,18 @@ import {
   getBusinessDateToday,
   validateProtocolFields,
 } from "@/integrations/supabase/webproc-validation";
+import {
+  countActiveProcessoDocuments,
+  isActiveProcessoDocument,
+} from "@/lib/webproc-documents";
 import type {
   WebProcAuthorIdentity,
   WebProcMembership,
   WebProcProcesso,
   WebProcProcessoDetail,
   WebProcProcessoInsert,
-  WebProcProcessoLink,
+  WebProcProcessoDocument,
+  WebProcRemoverDocumentoResult,
   WebProcProcessoListItem,
   WebProcProtocolRequirement,
   WebProcProtocolarResult,
@@ -63,6 +68,11 @@ const LIFECYCLE_ERROR_MESSAGES: Record<string, string> = {
   cliente_id_immutable: "O cliente do processo não pode ser alterado.",
   status_transition_not_allowed:
     "A transição de status deve ser feita pelas ações de protocolar ou reabrir.",
+  documento_not_found: "Documento não encontrado ou já removido.",
+  invalid_status_for_document_mutation:
+    "Documentos só podem ser alterados enquanto o protocolo está em preenchimento.",
+  arquivo_removal_requires_coordination:
+    "A remoção de arquivos anexados será disponibilizada em uma próxima entrega.",
 };
 
 function mapMembershipRow(row: MembershipRow): WebProcMembership | null {
@@ -284,19 +294,31 @@ export async function saveProcessoDraft(
   };
 }
 
-export async function listProcessoLinks(idProc: number) {
+export async function listProcessoDocuments(idProc: number) {
   const { data, error } = await webprocDb()
     .from("processo_documentos")
-    .select("id, id_proc, tipo, nome, url, created_at")
+    .select("id, id_proc, tipo, nome, url, nome_arquivo, storage_state, created_at")
     .eq("id_proc", idProc)
-    .eq("tipo", "LINK")
     .order("created_at", { ascending: true });
 
+  const rows = (data ?? []) as WebProcProcessoDocument[];
+
   return {
-    data: (data ?? []) as WebProcProcessoLink[],
+    data: rows.filter((row) => isActiveProcessoDocument(row)),
     error,
   };
 }
+
+/** @deprecated Use listProcessoDocuments */
+export async function listProcessoLinks(idProc: number) {
+  const { data, error } = await listProcessoDocuments(idProc);
+  return {
+    data: data.filter((row) => row.tipo === "LINK") as WebProcProcessoDocument[],
+    error,
+  };
+}
+
+export { countActiveProcessoDocuments as countActiveProcessoDocumentsForProtocol };
 
 export async function addProcessoLink(
   idProc: number,
@@ -316,8 +338,34 @@ export async function addProcessoLink(
     .single();
 }
 
-export async function deleteProcessoLink(linkId: string) {
-  return webprocDb().from("processo_documentos").delete().eq("id", linkId);
+export async function removerDocumento(documentId: string) {
+  const { data, error } = await webprocDb().rpc("remover_documento", {
+    p_document_id: documentId,
+  });
+
+  if (error) {
+    return {
+      result: null as WebProcRemoverDocumentoResult | null,
+      error,
+      message: mapLifecycleError(error.message),
+    };
+  }
+
+  const result = data as WebProcRemoverDocumentoResult;
+
+  if (!result?.success) {
+    return {
+      result,
+      error: null,
+      message: "Não foi possível remover o documento. Tente novamente.",
+    };
+  }
+
+  return {
+    result,
+    error: null,
+    message: null as string | null,
+  };
 }
 
 export async function protocolarProcesso(idProc: number) {
@@ -424,9 +472,9 @@ export function getProtocolRequirements(
     dt_fatal: string;
     instrucao: string;
   },
-  savedDocumentCount: number
+  activeDocumentCount: number
 ): WebProcProtocolRequirement[] {
-  const validation = validateProtocolFields(form, savedDocumentCount);
+  const validation = validateProtocolFields(form, activeDocumentCount);
 
   return [
     {
@@ -456,12 +504,16 @@ export function getBusinessDateTodayLabel() {
   return getBusinessDateToday();
 }
 
-function mapLifecycleError(message: string) {
+export function mapWebprocDomainError(message: string) {
   for (const [code, label] of Object.entries(LIFECYCLE_ERROR_MESSAGES)) {
     if (message.includes(code)) {
       return label;
     }
   }
 
-  return message;
+  return "Não foi possível concluir a operação. Tente novamente.";
+}
+
+function mapLifecycleError(message: string) {
+  return mapWebprocDomainError(message);
 }

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft, ExternalLink, Paperclip, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import ProcessoDocumentosSection from "@/components/webproc/ProcessoDocumentosSection";
 import ProcessoFormFields, {
   emptyProcessoForm,
   formStateToDraftUpdate,
@@ -20,20 +21,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useWebProc } from "@/contexts/WebProcContext";
 import {
   addProcessoLink,
   cancelarProcesso,
-  deleteProcessoLink,
+  countActiveProcessoDocumentsForProtocol,
   formatAuthorDisplay,
   getProcessoDetail,
   getProtocolRequirements,
-  listProcessoLinks,
+  listProcessoDocuments,
+  mapWebprocDomainError,
   protocolarProcesso,
   reabrirProcesso,
+  removerDocumento,
   saveProcessoDraft,
 } from "@/integrations/supabase/webproc-api";
 import {
@@ -42,10 +44,7 @@ import {
   validateProtocolFields,
   validateProtocoloDraftFields,
 } from "@/integrations/supabase/webproc-validation";
-import type {
-  WebProcProcessoDetail,
-  WebProcProcessoLink,
-} from "@/integrations/supabase/webproc-types";
+import type { WebProcProcessoDetail, WebProcProcessoDocument } from "@/integrations/supabase/webproc-types";
 import { toast } from "sonner";
 import { processoStatusLabel } from "@/lib/webproc-status-labels";
 
@@ -56,7 +55,9 @@ export default function ProcessoDetail() {
   const parsedId = Number(idProc);
 
   const [processo, setProcesso] = useState<WebProcProcessoDetail | null>(null);
-  const [links, setLinks] = useState<WebProcProcessoLink[]>([]);
+  const [documents, setDocuments] = useState<WebProcProcessoDocument[]>([]);
+  const [pendingRemoveDocument, setPendingRemoveDocument] =
+    useState<WebProcProcessoDocument | null>(null);
   const [form, setForm] = useState<ProcessoFormState>(emptyProcessoForm);
   const [linkNome, setLinkNome] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
@@ -90,29 +91,29 @@ export default function ProcessoDetail() {
     }
 
     setLoading(true);
-    const [{ processo: loadedProcesso, error }, { data: loadedLinks, error: linksError }] =
+    const [{ processo: loadedProcesso, error }, { data: loadedDocuments, error: documentsError }] =
       await Promise.all([
         getProcessoDetail(parsedId),
-        listProcessoLinks(parsedId),
+        listProcessoDocuments(parsedId),
       ]);
 
     if (error) {
       toast.error("Erro ao carregar protocolo: " + error.message);
       setProcesso(null);
-      setLinks([]);
+      setDocuments([]);
     } else if (!loadedProcesso) {
       setProcesso(null);
-      setLinks([]);
+      setDocuments([]);
     } else {
       setProcesso(loadedProcesso);
       setForm(processoToFormState(loadedProcesso));
     }
 
-    if (linksError) {
-      toast.error("Erro ao carregar documentos: " + linksError.message);
-      setLinks([]);
+    if (documentsError) {
+      toast.error("Erro ao carregar documentos: " + documentsError.message);
+      setDocuments([]);
     } else {
-      setLinks(loadedLinks);
+      setDocuments(loadedDocuments);
     }
 
     setLoading(false);
@@ -132,9 +133,14 @@ export default function ProcessoDetail() {
     }
   };
 
+  const activeDocumentCount = useMemo(
+    () => countActiveProcessoDocumentsForProtocol(documents),
+    [documents],
+  );
+
   const protocolRequirements = useMemo(
-    () => getProtocolRequirements(form, links.length),
-    [form, links.length],
+    () => getProtocolRequirements(form, activeDocumentCount),
+    [form, activeDocumentCount],
   );
 
   const persistDraft = async () => {
@@ -223,22 +229,22 @@ export default function ProcessoDetail() {
       });
 
       if (error) {
-        throw error;
+        throw new Error(mapWebprocDomainError(error.message));
       }
 
       setLinkNome("");
       setLinkUrl("");
       setLinkUrlError(null);
 
-      const { data: refreshedLinks, error: linksError } = await listProcessoLinks(
+      const { data: refreshedDocuments, error: documentsError } = await listProcessoDocuments(
         processo.id_proc,
       );
 
-      if (linksError) {
-        throw linksError;
+      if (documentsError) {
+        throw documentsError;
       }
 
-      setLinks(refreshedLinks);
+      setDocuments(refreshedDocuments);
       toast.success("Documento adicionado.");
     } catch (error) {
       const message =
@@ -249,22 +255,36 @@ export default function ProcessoDetail() {
     }
   };
 
-  const handleDeleteLink = async (linkId: string) => {
-    if (!canEdit || !processo) return;
+  const handleConfirmRemoveDocument = async () => {
+    if (!canEdit || !processo || !pendingRemoveDocument) return;
 
     setLinkSaving(true);
     try {
-      const { error } = await deleteProcessoLink(linkId);
+      const { error, message } = await removerDocumento(pendingRemoveDocument.id);
+
       if (error) {
-        throw error;
+        throw new Error(message ?? error.message);
       }
 
-      setLinks((current) => current.filter((link) => link.id !== linkId));
+      if (message) {
+        throw new Error(message);
+      }
+
+      const { data: refreshedDocuments, error: documentsError } = await listProcessoDocuments(
+        processo.id_proc,
+      );
+
+      if (documentsError) {
+        throw documentsError;
+      }
+
+      setDocuments(refreshedDocuments);
+      setPendingRemoveDocument(null);
       toast.success("Documento removido.");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro desconhecido ao remover documento.";
-      toast.error(message);
+      const text =
+        error instanceof Error ? error.message : "Não foi possível remover o documento.";
+      toast.error(text);
     } finally {
       setLinkSaving(false);
     }
@@ -277,7 +297,7 @@ export default function ProcessoDetail() {
     try {
       await persistDraft();
 
-      const protocolErrors = validateProtocolFields(form, links.length);
+      const protocolErrors = validateProtocolFields(form, activeDocumentCount);
       const protocolMessage = getFirstValidationMessage(protocolErrors);
       if (protocolMessage) {
         setDtFatalError(protocolErrors.dt_fatal ?? null);
@@ -500,114 +520,26 @@ export default function ProcessoDetail() {
           onChange={updateField}
         />
 
-        <section className="space-y-4 border-t border-border pt-8" aria-labelledby="documentos-heading">
-          <div>
-            <h2
-              id="documentos-heading"
-              className="font-serif text-lg font-semibold text-primary"
-            >
-              Documentos
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Adicione links ou arquivos necessários para protocolização.
-            </p>
-          </div>
-
-          {links.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
-          ) : (
-            <ul className="space-y-3">
-              {links.map((link) => (
-                <li
-                  key={link.id}
-                  className="flex flex-col gap-3 rounded-md border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{link.nome || "Documento externo"}</p>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-primary hover:underline inline-flex items-center gap-1 break-all"
-                    >
-                      Abrir
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                    </a>
-                  </div>
-                  {canEdit ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={linkSaving}
-                      onClick={() => void handleDeleteLink(link.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Remover
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {canEdit ? (
-            <div className="space-y-4 rounded-md border border-dashed border-border p-4">
-              <p className="text-sm font-medium">Adicionar link</p>
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="link_nome">Descrição (opcional)</Label>
-                  <Input
-                    id="link_nome"
-                    value={linkNome}
-                    onChange={(e) => setLinkNome(e.target.value)}
-                    placeholder="Ex.: Sentença"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="link_url">Endereço (URL)</Label>
-                  <Input
-                    id="link_url"
-                    value={linkUrl}
-                    onChange={(e) => {
-                      setLinkUrl(e.target.value);
-                      if (linkUrlError) {
-                        setLinkUrlError(null);
-                      }
-                    }}
-                    placeholder="https://..."
-                  />
-                  {linkUrlError ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      {linkUrlError}
-                    </p>
-                  ) : null}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={linkSaving}
-                  onClick={() => void handleAddLink()}
-                >
-                  Adicionar link
-                </Button>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md bg-muted/40 px-4 py-3">
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <Paperclip className="h-4 w-4 mt-0.5 shrink-0" aria-hidden />
-                  <p>
-                    <span className="font-medium text-foreground">Anexar arquivo</span> — em
-                    breve nesta seção (upload será habilitado na próxima entrega).
-                  </p>
-                </div>
-                <Button type="button" variant="outline" size="sm" disabled>
-                  Anexar arquivo
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </section>
+        <ProcessoDocumentosSection
+          documents={documents}
+          canEdit={canEdit}
+          linkNome={linkNome}
+          linkUrl={linkUrl}
+          linkUrlError={linkUrlError}
+          linkSaving={linkSaving}
+          pendingRemoveDocument={pendingRemoveDocument}
+          onLinkNomeChange={setLinkNome}
+          onLinkUrlChange={(value) => {
+            setLinkUrl(value);
+            if (linkUrlError) {
+              setLinkUrlError(null);
+            }
+          }}
+          onAddLink={() => void handleAddLink()}
+          onRequestRemove={setPendingRemoveDocument}
+          onCancelRemove={() => setPendingRemoveDocument(null)}
+          onConfirmRemove={() => void handleConfirmRemoveDocument()}
+        />
 
         {canEdit ? (
           <section
