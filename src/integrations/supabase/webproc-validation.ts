@@ -177,3 +177,32 @@ export function getFirstValidationMessage(
   const values = Object.values(errors as Record<string, string | undefined>);
   return values.find(Boolean) ?? null;
 }
+
+/** Domain codes that mean mandatory protocolization requirements are incomplete. */
+export const PROTOCOLIZATION_READINESS_DOMAIN_CODES = [
+  "missing_processo_ou_execucao",
+  "identificacao_xor_violation",
+  "missing_dt_fatal",
+  "invalid_dt_fatal_past",
+  "missing_instrucao",
+  "missing_documento",
+] as const;
+
+export function collectProtocolizationBlockers(
+  form: {
+    n_processo: string;
+    exec_prov: string;
+    dt_fatal: string;
+    instrucao: string;
+  },
+  activeDocumentCount: number,
+) {
+  const errors = validateProtocolFields(form, activeDocumentCount);
+  return Object.values(errors).filter((message): message is string => Boolean(message));
+}
+
+export function isProtocolizationReadinessFailure(errorCodeOrMessage: string) {
+  return PROTOCOLIZATION_READINESS_DOMAIN_CODES.some((code) =>
+    errorCodeOrMessage.includes(code),
+  );
+}

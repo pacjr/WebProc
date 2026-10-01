@@ -532,7 +532,7 @@ Summary for UX planning:
 - Distinguish lifecycle status, temporal conditions (Data Fatal hoje / vencida + aging), and human decisions.
 - **Pulse** surfaces attention conditions; **Protocolos** executes operations — no auto-cancel on overdue.
 - Future **Data Fatal change history** and **required cancel reason** are domain requirements, not yet implemented.
-- **UX-PROTO-BLOCK-01:** prominent protocolization blocking dialog (missing requirements list) — approved, future Protocolos slice; toast-only failure is insufficient long term.
+- **UX-PROTO-BLOCK-01:** **CLOSED / PASS** — central protocolization blocker dialog + checklist emphasis (PO visual smoke PASS).
 
 ---
 

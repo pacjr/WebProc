@@ -393,9 +393,11 @@ Cancellation remains lifecycle → `CANCELADO`, never DELETE. **Approved:** **ca
 
 The system may **observe and inform**; it must **not** automatically decide administrative consequences of overdue protocols unless Actus defines that later (cancel, regularize, change deadline, justify, escalate, continue). **Automatic cancellation is not approved.**
 
-### UX-PROTO-BLOCK-01 — Protocolization blocking feedback (approved, not implemented)
+### UX-PROTO-BLOCK-01 — Protocolization blocking feedback
 
-Protocolization failure due to incomplete mandatory requirements must **not** rely only on a corner toast. Future UX: prominent central blocking surface (AlertDialog/modal) with title, list of missing requirements, return action, and emphasis on incomplete checklist/section after close. Toast remains for secondary success/info. Classify for a **future Protocolos UX slice** (not P2 deferral).
+**Status:** **CLOSED / PASS** (2026-10-01). PO manual visual smoke: central blocker displayed correctly; missing document clearly visible; visual behavior approved.
+
+**Delivered:** When **Protocolar** is blocked by incomplete mandatory requirements, a central **AlertDialog** lists blockers derived from `validateProtocolFields` / `collectProtocolizationBlockers` (same rules as checklist). **No `protocolar_processo` RPC** on client-known incomplete state. Server readiness domain codes map to the same dialog; other failures remain toast. After close, protocolization checklist section receives restrained ring/background emphasis and focus.
 
 **Implementation explicitly out of scope for AR-PROTO-GOV-01 recording:** Data Fatal history tables, cancellation-required migrations, Pulse aging queries, notification/email logic, automatic cancellation, protocolization modal, PROTO-DOC.2, PROTO-UI.3, visual redesign.
 

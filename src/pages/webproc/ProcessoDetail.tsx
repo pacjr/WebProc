@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import ProcessoDocumentosSection from "@/components/webproc/ProcessoDocumentosSection";
+import ProtocolizationBlockerDialog from "@/components/webproc/ProtocolizationBlockerDialog";
 import ProcessoFormFields, {
   emptyProcessoForm,
   formStateToDraftUpdate,
@@ -39,11 +40,14 @@ import {
   saveProcessoDraft,
 } from "@/integrations/supabase/webproc-api";
 import {
+  collectProtocolizationBlockers,
   getFirstValidationMessage,
+  isProtocolizationReadinessFailure,
   validateLinkUrl,
   validateProtocolFields,
   validateProtocoloDraftFields,
 } from "@/integrations/supabase/webproc-validation";
+import { cn } from "@/lib/utils";
 import type { WebProcProcessoDetail, WebProcProcessoDocument } from "@/integrations/supabase/webproc-types";
 import { toast } from "sonner";
 import { processoStatusLabel } from "@/lib/webproc-status-labels";
@@ -69,6 +73,10 @@ export default function ProcessoDetail() {
   const [linkSaving, setLinkSaving] = useState(false);
   const [protocolando, setProtocolando] = useState(false);
   const [reabrindo, setReabrindo] = useState(false);
+  const [protocolBlockerOpen, setProtocolBlockerOpen] = useState(false);
+  const [protocolBlockerItems, setProtocolBlockerItems] = useState<string[]>([]);
+  const [requirementsHighlighted, setRequirementsHighlighted] = useState(false);
+  const protocolSectionRef = useRef<HTMLElement>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelMotivo, setCancelMotivo] = useState("");
   const [cancelando, setCancelando] = useState(false);
@@ -142,6 +150,33 @@ export default function ProcessoDetail() {
     () => getProtocolRequirements(form, activeDocumentCount),
     [form, activeDocumentCount],
   );
+
+  const focusProtocolRequirements = useCallback(() => {
+    setRequirementsHighlighted(true);
+    requestAnimationFrame(() => {
+      protocolSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      protocolSectionRef.current?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  const openProtocolBlocker = useCallback(
+    (items: string[]) => {
+      setProtocolBlockerItems(items);
+      setProtocolBlockerOpen(true);
+    },
+    [],
+  );
+
+  const closeProtocolBlocker = useCallback(() => {
+    setProtocolBlockerOpen(false);
+    focusProtocolRequirements();
+  }, [focusProtocolRequirements]);
+
+  useEffect(() => {
+    if (protocolRequirements.every((requirement) => requirement.met)) {
+      setRequirementsHighlighted(false);
+    }
+  }, [protocolRequirements]);
 
   const persistDraft = async () => {
     if (!processo) {
@@ -298,18 +333,35 @@ export default function ProcessoDetail() {
       await persistDraft();
 
       const protocolErrors = validateProtocolFields(form, activeDocumentCount);
-      const protocolMessage = getFirstValidationMessage(protocolErrors);
-      if (protocolMessage) {
+      const blockers = collectProtocolizationBlockers(form, activeDocumentCount);
+      if (blockers.length > 0) {
         setDtFatalError(protocolErrors.dt_fatal ?? null);
         setIdentificacaoError(protocolErrors.processo_ou_execucao ?? null);
-        throw new Error(protocolMessage);
+        openProtocolBlocker(blockers);
+        return;
       }
 
       setDtFatalError(null);
+      setIdentificacaoError(null);
 
       const { result, error, message } = await protocolarProcesso(processo.id_proc);
 
       if (error || !result?.success) {
+        const domainSignal = [result?.error, error?.message, message]
+          .filter(Boolean)
+          .join(" ");
+        if (isProtocolizationReadinessFailure(domainSignal)) {
+          const mapped = mapWebprocDomainError(domainSignal);
+          if (protocolErrors.dt_fatal || domainSignal.includes("invalid_dt_fatal")) {
+            setDtFatalError(mapped);
+          }
+          if (protocolErrors.processo_ou_execucao || domainSignal.includes("identificacao")) {
+            setIdentificacaoError(mapped);
+          }
+          openProtocolBlocker([mapped]);
+          return;
+        }
+
         if (message?.includes("anterior à data de hoje")) {
           setDtFatalError(message);
         }
@@ -543,7 +595,12 @@ export default function ProcessoDetail() {
 
         {canEdit ? (
           <section
-            className="space-y-4 border-t border-border pt-8"
+            ref={protocolSectionRef}
+            tabIndex={-1}
+            className={cn(
+              "space-y-4 border-t border-border pt-8 outline-none transition-colors",
+              requirementsHighlighted && "rounded-lg ring-2 ring-primary/40 bg-muted/40 p-4 -mx-1 sm:mx-0",
+            )}
             aria-labelledby="protocolizacao-heading"
           >
             <div>
@@ -607,6 +664,12 @@ export default function ProcessoDetail() {
           </div>
         )}
       </div>
+
+      <ProtocolizationBlockerDialog
+        open={protocolBlockerOpen}
+        blockers={protocolBlockerItems}
+        onClose={closeProtocolBlocker}
+      />
 
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
