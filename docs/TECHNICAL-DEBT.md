@@ -312,6 +312,16 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **Status:** **CLOSED/PASS** (2026-10-01). Data Fatal default on create; Data de Entrada presentation; cancel action for draft/pending creator via existing RPC (no DELETE).
 
+### PROTO-UI.2b — Novo identification + Documentos on create
+
+**Status:** **CLOSED/PASS** (2026-10-01). **Manual PO browser gate** in the PO’s real CLIENT session (`localhost:8080`); not automated E2E (Cursor MCP browser is session-isolated from the PO browser).
+
+**Delivered:**
+
+- Removed identification radio; **Nº do Processo** and **Execução Provisória** always visible with mutual disable (no destructive clearing); XOR validation unchanged.
+- **Documentos** on Novo via reused `ProcessoDocumentosSection`; `ensureDraftPersisted` + `draftIdProc` so link add creates one draft and **Salvar rascunho** updates via `saveProcessoDraft` (no duplicate INSERT in session).
+- Lighter **Cliente** presentation on Novo (`clientePresentation="context"`).
+
 ### PROTO-DOC.1 — Unified Documentos foundation (links)
 
 **Status:** **CLOSED/PASS** (2026-10-01). PO approved; committed on `main` (no push).
@@ -338,6 +348,56 @@ Applies from **initial create / draft save** onward (frontend enforced).
 | List server-side search | optional backend |
 
 **Product/UI-UX Readiness:** NOT closed — PROTO-DOC.2 + PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-DOC.1 link foundation closed).
+
+---
+
+## AR-PROTO-GOV-01 — Protocol Temporal & Decision Governance
+
+**Status:** **APPROVED / RECORDED** (2026-10-01). **Not implemented** in PROTO-UI.2d — documentation and backlog only.
+
+### Separation of concepts
+
+| Concept | Meaning |
+|---------|---------|
+| **Lifecycle state** | `EM_PREENCHIMENTO`, `PENDENTE`, `IMPORTADO`, `CONCLUIDO`, `CANCELADO` |
+| **Temporal condition** | Derived from `dt_fatal` vs current business time — **not** a lifecycle status |
+| **Human operational decision** | Cancel, change Data Fatal, continue handling, etc. |
+
+Do not overload lifecycle status with temporal conditions.
+
+### Data Fatal — D0 (“Data Fatal hoje”)
+
+When a **non-terminal** protocol has `dt_fatal` equal to the **current business date**, expose an operational **attention** condition (“Data Fatal hoje”). Initial primary surface: **Pulse** (anticipate operational risk). **No automatic lifecycle mutation.**
+
+### Data Fatal — D+1 and beyond (“Data Fatal vencida”)
+
+When **business today > dt_fatal** and the protocol remains operationally unresolved / non-terminal, derive **“Data Fatal vencida”** with aging (D+1, D+2, …). Stronger attention condition. The system **must not** automatically cancel, change `dt_fatal`, change lifecycle, or infer fault. **Actus governance** decides the response.
+
+### Pulse responsibility (future)
+
+Pulse should eventually surface temporal exceptions (drafts aging, Data Fatal today, Data Fatal overdue, pending without evolution). **Pulse = observation/supervision**; **Protocolos = operational execution**. Not implemented in this slice.
+
+### Notifications (future)
+
+Channels may include in-app and email. Notifications **consume the same temporal-condition rules**; email is delivery only, not authority for overdue state. Not implemented.
+
+### Data Fatal history (future — domain gap)
+
+Editable `dt_fatal` must **not** erase historical truth. Future implementation must audit at minimum: `id_proc`, previous `dt_fatal`, new `dt_fatal`, actor, timestamp, reason/motivo. Current `dt_fatal` remains effective value. Example: fatal 01/10 changed on 02/10 to 05/10 must preserve that 01/10 was once valid and the change occurred after that deadline.
+
+### Cancellation governance (future — domain gap)
+
+Cancellation remains lifecycle → `CANCELADO`, never DELETE. **Approved:** **cancellation reason required** with decision trail: `id_proc`, actor, timestamp, previous status, reason, Data Fatal effective at cancellation. **`cancelar_processo` today accepts optional `p_motivo`** — record as **domain gap** requiring forward migration / RPC contract change. **Do not** auto-cancel overdue protocols.
+
+### Governance boundary
+
+The system may **observe and inform**; it must **not** automatically decide administrative consequences of overdue protocols unless Actus defines that later (cancel, regularize, change deadline, justify, escalate, continue). **Automatic cancellation is not approved.**
+
+### UX-PROTO-BLOCK-01 — Protocolization blocking feedback (approved, not implemented)
+
+Protocolization failure due to incomplete mandatory requirements must **not** rely only on a corner toast. Future UX: prominent central blocking surface (AlertDialog/modal) with title, list of missing requirements, return action, and emphasis on incomplete checklist/section after close. Toast remains for secondary success/info. Classify for a **future Protocolos UX slice** (not P2 deferral).
+
+**Implementation explicitly out of scope for AR-PROTO-GOV-01 recording:** Data Fatal history tables, cancellation-required migrations, Pulse aging queries, notification/email logic, automatic cancellation, protocolization modal, PROTO-DOC.2, PROTO-UI.3, visual redesign.
 
 ## Authorship Model (WP-01C)
 

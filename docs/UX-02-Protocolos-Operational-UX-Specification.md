@@ -458,10 +458,14 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### PROTO-UI.2 — Novo protocolo + core edit fields
 
-- **Scope:** Create page IA; XOR messaging; radio identification; validation copy.  
-- **Non-scope:** Documentos overhaul.  
-- **Deps:** PROTO-UI.1 optional parallel.  
-- **Gate:** Create draft → detail; draft save errors.
+- **Scope:** Create page IA; XOR messaging; validation copy; Data Fatal default; cancel on detail (see TECHNICAL-DEBT PROTO-UI.2).
+- **Status:** **CLOSED/PASS** (dates/cancel slice).
+
+### PROTO-UI.2b — Novo dual identification + Documentos on create
+
+- **Status:** **CLOSED/PASS** (2026-10-01) — **manual PO browser gate** (PO CLIENT session; MCP automation not used).
+- **Scope:** No identification radio; both XOR fields visible with mutual disable; Documentos on Novo; ensure-draft before link; update-on-save (`draftIdProc`).
+- **Non-scope:** PROTO-DOC.2 upload; governance/Pulse (see **AR-PROTO-GOV-01** in TECHNICAL-DEBT).
 
 ### PROTO-UI.3 — Detail IA + protocolization UX
 
@@ -515,9 +519,20 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### Genuine decisions still required (PO)
 
-1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete).
+1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete). **AR-PROTO-GOV-01:** future required cancellation reason + audit trail (domain gap vs optional `p_motivo` today).
 2. **List search at scale:** Client-side filter sufficient for MVP or prioritize server-side search RPC?  
 3. **ARQUIVO remove:** Defer entirely vs later Edge-coordinated removal UX?
+
+### AR-PROTO-GOV-01 — Protocol temporal & decision governance (approved)
+
+**Source of truth:** [`docs/TECHNICAL-DEBT.md`](./TECHNICAL-DEBT.md) § AR-PROTO-GOV-01.
+
+Summary for UX planning:
+
+- Distinguish lifecycle status, temporal conditions (Data Fatal hoje / vencida + aging), and human decisions.
+- **Pulse** surfaces attention conditions; **Protocolos** executes operations — no auto-cancel on overdue.
+- Future **Data Fatal change history** and **required cancel reason** are domain requirements, not yet implemented.
+- **UX-PROTO-BLOCK-01:** prominent protocolization blocking dialog (missing requirements list) — approved, future Protocolos slice; toast-only failure is insufficient long term.
 
 ---
 
@@ -525,4 +540,5 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 | Date | Change |
 |------|--------|
+| 2026-10-01 | PROTO-UI.2b manual gate; AR-PROTO-GOV-01 + UX-PROTO-BLOCK-01 recorded |
 | 2026-09-30 | UX-02 initial specification for PO review |
