@@ -264,8 +264,13 @@ export default function ProcessoFormFields({
           id="dt_entrada"
           value={format(new Date(dtEntrada), "dd/MM/yyyy")}
           readOnly
+          disabled
           className="bg-muted"
+          aria-describedby="dt_entrada_hint"
         />
+        <p id="dt_entrada_hint" className="text-xs text-muted-foreground">
+          Definida automaticamente na criação e não pode ser alterada.
+        </p>
       </div>
 
       <div className="space-y-2">

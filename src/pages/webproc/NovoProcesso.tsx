@@ -4,6 +4,8 @@ import { useWebProc } from "@/contexts/WebProcContext";
 import { insertProcesso } from "@/integrations/supabase/webproc-api";
 import {
   getFirstValidationMessage,
+  getLocalDateInputToday,
+  localDateInputToReferenceIso,
   validateProtocoloDraftFields,
 } from "@/integrations/supabase/webproc-validation";
 import ProcessoFormFields, {
@@ -11,6 +13,13 @@ import ProcessoFormFields, {
   formStateToDraftUpdate,
   type ProcessoFormState,
 } from "@/components/webproc/ProcessoFormFields";
+
+function createNovoProtocoloFormState(): ProcessoFormState {
+  return {
+    ...emptyProcessoForm,
+    dt_fatal: getLocalDateInputToday(),
+  };
+}
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -24,7 +33,8 @@ export default function NovoProcesso() {
     }
   }, [connectAccess.kind, loading, navigate]);
 
-  const [form, setForm] = useState<ProcessoFormState>(emptyProcessoForm);
+  const [form, setForm] = useState<ProcessoFormState>(createNovoProtocoloFormState);
+  const dtEntradaPreview = localDateInputToReferenceIso(getLocalDateInputToday());
   const [saving, setSaving] = useState(false);
   const [dtFatalError, setDtFatalError] = useState<string | null>(null);
   const [processoOuExecucaoError, setProcessoOuExecucaoError] = useState<string | null>(
@@ -100,7 +110,7 @@ export default function NovoProcesso() {
         <ProcessoFormFields
           form={form}
           clienteNome={membership?.cliente.nome ?? "—"}
-          dtEntrada={new Date().toISOString()}
+          dtEntrada={dtEntradaPreview}
           dtFatalError={dtFatalError}
           processoOuExecucaoError={processoOuExecucaoError}
           layout="sectioned"

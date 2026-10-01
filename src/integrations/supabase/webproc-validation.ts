@@ -6,6 +6,16 @@ export function getBusinessDateToday(): string {
   }).format(new Date());
 }
 
+/** YYYY-MM-DD in the browser's local calendar (for `<input type="date">` defaults). */
+export function getLocalDateInputToday(): string {
+  return new Intl.DateTimeFormat("en-CA").format(new Date());
+}
+
+/** Stable local reference for displaying a calendar date before the row exists. */
+export function localDateInputToReferenceIso(dateStr: string): string {
+  return `${dateStr}T12:00:00`;
+}
+
 export function dtFatalInputToStorageIso(dateStr: string): string {
   return new Date(`${dateStr}T00:00:00-03:00`).toISOString();
 }

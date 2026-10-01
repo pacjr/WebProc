@@ -8,13 +8,25 @@ import ProcessoFormFields, {
   processoToFormState,
   type ProcessoFormState,
 } from "@/components/webproc/ProcessoFormFields";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useWebProc } from "@/contexts/WebProcContext";
 import {
   addProcessoLink,
+  cancelarProcesso,
   deleteProcessoLink,
   formatAuthorDisplay,
   getProcessoDetail,
@@ -56,12 +68,20 @@ export default function ProcessoDetail() {
   const [linkSaving, setLinkSaving] = useState(false);
   const [protocolando, setProtocolando] = useState(false);
   const [reabrindo, setReabrindo] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelMotivo, setCancelMotivo] = useState("");
+  const [cancelando, setCancelando] = useState(false);
 
   const isCreator = Boolean(processo && user && processo.created_by === user.id);
   const canEdit = Boolean(
     canMutateAsClient && isCreator && processo?.status === "EM_PREENCHIMENTO",
   );
   const canReopen = Boolean(canMutateAsClient && isCreator && processo?.status === "PENDENTE");
+  const canCancel = Boolean(
+    canMutateAsClient &&
+      isCreator &&
+      (processo?.status === "EM_PREENCHIMENTO" || processo?.status === "PENDENTE"),
+  );
 
   const loadDetail = useCallback(async () => {
     if (!Number.isFinite(parsedId)) {
@@ -317,6 +337,37 @@ export default function ProcessoDetail() {
     }
   };
 
+  const handleConfirmCancel = async () => {
+    if (!canCancel || !processo) return;
+
+    setCancelando(true);
+    try {
+      const { result, error, message } = await cancelarProcesso(
+        processo.id_proc,
+        cancelMotivo,
+      );
+
+      if (error || !result?.success) {
+        throw new Error(message ?? error?.message ?? "Erro ao cancelar protocolo.");
+      }
+
+      setCancelDialogOpen(false);
+      setCancelMotivo("");
+      await loadDetail();
+      toast.success(
+        result.already_cancelado
+          ? "Protocolo já estava cancelado."
+          : "Protocolo cancelado. O cadastro permanece registrado.",
+      );
+    } catch (error) {
+      const text =
+        error instanceof Error ? error.message : "Erro desconhecido ao cancelar.";
+      toast.error(text);
+    } finally {
+      setCancelando(false);
+    }
+  };
+
   if (!Number.isFinite(parsedId)) {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center">
@@ -384,18 +435,47 @@ export default function ProcessoDetail() {
             <p className="text-sm text-muted-foreground">
               Protocolo protocolado e aguardando importação. Para corrigir, reabra o rascunho.
             </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={reabrindo || cancelando}
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                Cancelar protocolo
+              </Button>
+              <Button
+                type="button"
+                variant="legal"
+                disabled={reabrindo || cancelando}
+                onClick={() => void handleReabrir()}
+              >
+                {reabrindo ? "Reabrindo..." : "Editar"}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {canCancel && canEdit ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
             <Button
               type="button"
-              variant="legal"
-              disabled={reabrindo}
-              onClick={() => void handleReabrir()}
+              variant="outline"
+              disabled={saving || protocolando || cancelando}
+              onClick={() => setCancelDialogOpen(true)}
             >
-              {reabrindo ? "Reabrindo..." : "Editar"}
+              Cancelar protocolo
             </Button>
           </div>
         ) : null}
 
-        {!canEdit && !canReopen && isCreator ? (
+        {!canEdit && !canReopen && isCreator && processo.status === "CANCELADO" ? (
+          <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
+            Este protocolo foi cancelado. O cadastro permanece registrado para consulta.
+          </p>
+        ) : null}
+
+        {!canEdit && !canReopen && isCreator && processo.status !== "CANCELADO" ? (
           <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
             Este protocolo não pode mais ser editado neste fluxo.
           </p>
@@ -595,6 +675,49 @@ export default function ProcessoDetail() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar protocolo?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  O protocolo será marcado como cancelado. Nenhum cadastro será excluído — o
+                  histórico permanece disponível.
+                </p>
+                <p>
+                  Use esta opção quando o protocolo não deve mais seguir para importação ou
+                  processamento.
+                </p>
+                <div className="space-y-2 pt-1">
+                  <Label htmlFor="cancel_motivo">Motivo (opcional)</Label>
+                  <Textarea
+                    id="cancel_motivo"
+                    value={cancelMotivo}
+                    onChange={(e) => setCancelMotivo(e.target.value)}
+                    rows={2}
+                    placeholder="Ex.: protocolo aberto por engano"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelando}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelando}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                void handleConfirmCancel();
+              }}
+            >
+              {cancelando ? "Cancelando..." : "Confirmar cancelamento"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

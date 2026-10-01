@@ -108,6 +108,15 @@ export interface WebProcReabrirResult {
   already_open: boolean;
 }
 
+export interface WebProcCancelarResult {
+  success: boolean;
+  id_proc: number;
+  status: ProcessoStatus;
+  cancelado_at?: string | null;
+  r2_cleanup_marked?: number;
+  already_cancelado?: boolean;
+}
+
 export interface WebProcProtocolRequirement {
   id: string;
   label: string;
@@ -277,6 +286,13 @@ export type WebProcDatabase = {
           p_id_proc: number;
         };
         Returns: WebProcReabrirResult;
+      };
+      cancelar_processo: {
+        Args: {
+          p_id_proc: number;
+          p_motivo?: string | null;
+        };
+        Returns: WebProcCancelarResult;
       };
       is_active_connect_actus_user: {
         Args: Record<string, never>;

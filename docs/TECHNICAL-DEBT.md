@@ -304,11 +304,15 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 | Topic | PO expectation | Current domain/UI | Next slice |
 |-------|----------------|-------------------|------------|
-| Cancelamento | Allowed only `EM_PREENCHIMENTO` / `PENDENTE`; not delete | `cancelar_processo` RPC exists; **no UI** | PO decision + UX slice |
-| Data de Entrada | Default now, immutable | Matches (`dt_entrada` on insert) | — |
-| Data Fatal | PO notes “default now, editable” | **No default on create** in UI; editable when set; past-date rules enforced | PROTO-UI.2+ UX gap |
+| Cancelamento | Allowed only `EM_PREENCHIMENTO` / `PENDENTE`; not delete | **PROTO-UI.2 CLOSED/PASS** — detail action + `cancelar_processo` RPC | — |
+| Data de Entrada | Default now, immutable | **PROTO-UI.2** — DB `DEFAULT now()`; UI read-only + copy | — |
+| Data Fatal | Default now on create, editable | **PROTO-UI.2** — local-date default on Novo; domain past-date rules unchanged | — |
 
-**Remaining implementation gaps (post UI.1):**
+### PROTO-UI.2 — Dates + cancellation operational rules
+
+**Status:** **CLOSED/PASS** (2026-10-01). Data Fatal default on create; Data de Entrada presentation; cancel action for draft/pending creator via existing RPC (no DELETE).
+
+**Remaining implementation gaps (post UI.2):**
 
 | Gap | Class |
 |-----|--------|
@@ -316,7 +320,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 | Detail view/edit IA | PROTO-UI.3 |
 | List server-side search | optional backend |
 
-**Product/UI-UX Readiness:** NOT closed — PROTO-DOC + PROTO-UI.2/3 + PROTO-UX.GATE remain (PROTO-UI.1 operational foundation closed).
+**Product/UI-UX Readiness:** NOT closed — PROTO-DOC + PROTO-UI.3 + PROTO-UX.GATE remain (PROTO-UI.1/2 operational foundation closed).
 
 ## Authorship Model (WP-01C)
 

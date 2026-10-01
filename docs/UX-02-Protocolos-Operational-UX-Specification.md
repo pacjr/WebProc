@@ -120,7 +120,7 @@ Nine legacy-aligned concepts plus one approved extension:
 | Required | Required at **protocolization** only |
 | Editable | Draft + creator |
 | Validation | Draft save: if set, date ≥ today (SP). Protocol: required + same rule. Server: `invalid_dt_fatal_past`, `missing_dt_fatal` |
-| Default | Empty in draft |
+| Default | **Today (local browser date)** on Novo protocolo; editable before save and while draft |
 | List | Show date; **overdue indicator** when status is operational-active and date &lt; today (presentation only; domain may already track situations — UI may badge “Prazo vencido” without new backend) |
 | Mobile | Native `type="date"` with `min` = today (SP) |
 
@@ -441,7 +441,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 | Responsive | Partial table scroll | Card list | PROTO-UI.1 | UI wiring |
 | CLIENT/ACTUS | Implemented | Label/banner only | PROTO-UI.1 | UI wiring |
 | Link remove | Direct DELETE | Broken vs WP-03 RLS | PROTO-DOC.1 | RPC wiring |
-| Cancel protocol | `cancelar_processo` RPC | No UI | Optional PO | No gap for Readiness |
+| Cancel protocol | `cancelar_processo` RPC | **PROTO-UI.2** detail action (draft/pending creator) | — | Closed |
 | Operational history | DB events | No UI | Post-MVP | — |
 | Server list search | — | Not in API | Future | DB/domain if scale |
 
@@ -509,12 +509,12 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 - File pipeline complete at Edge; React not wired.  
 - `getProtocolRequirements` / checklist text understates arquivo requirement.  
 - ACTUS read-only cross-client; CLIENT creator-only mutations.  
-- `cancelar_processo` exists; no UI.  
+- `cancelar_processo` exposed in PROTO-UI.2 (detail, draft/pending creator).
 - No operational event timeline in frontend.
 
 ### Genuine decisions still required (PO)
 
-1. **Cancelar protocolo:** Expose `cancelar_processo` in UX for draft/pending creator? (Domain ready; legacy toolbar had Excluir — different semantics.)  
+1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete).
 2. **List search at scale:** Client-side filter sufficient for MVP or prioritize server-side search RPC?  
 3. **ARQUIVO remove:** Defer entirely vs later Edge-coordinated removal UX?
 

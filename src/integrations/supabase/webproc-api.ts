@@ -14,6 +14,7 @@ import type {
   WebProcProtocolRequirement,
   WebProcProtocolarResult,
   WebProcReabrirResult,
+  WebProcCancelarResult,
   WebProcSalvarRascunhoResult,
 } from "@/integrations/supabase/webproc-types";
 
@@ -47,6 +48,8 @@ const LIFECYCLE_ERROR_MESSAGES: Record<string, string> = {
     "Este processo não está em preenchimento e não pode ser salvo.",
   invalid_status_for_reabrir:
     "Este processo não está pendente e não pode ser reaberto.",
+  invalid_status_for_cancelar:
+    "Este protocolo não pode mais ser cancelado neste fluxo.",
   missing_processo_ou_execucao:
     "Informe o Nº do Processo ou a Execução Provisória.",
   identificacao_xor_violation:
@@ -362,6 +365,37 @@ export async function reabrirProcesso(idProc: number) {
 
   return {
     result: data as WebProcReabrirResult,
+    error: null,
+    message: null as string | null,
+  };
+}
+
+export async function cancelarProcesso(idProc: number, motivo?: string | null) {
+  const { data, error } = await webprocDb().rpc("cancelar_processo", {
+    p_id_proc: idProc,
+    p_motivo: motivo?.trim() ? motivo.trim() : null,
+  });
+
+  if (error) {
+    return {
+      result: null as WebProcCancelarResult | null,
+      error,
+      message: mapLifecycleError(error.message),
+    };
+  }
+
+  const result = data as WebProcCancelarResult;
+
+  if (!result.success) {
+    return {
+      result,
+      error: null,
+      message: mapLifecycleError("unknown_error"),
+    };
+  }
+
+  return {
+    result,
     error: null,
     message: null as string | null,
   };
