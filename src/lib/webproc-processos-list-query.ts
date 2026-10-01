@@ -6,6 +6,12 @@ export type ProcessosListPageSize = (typeof PROCESSOS_LIST_PAGE_SIZES)[number];
 
 export const PROCESSOS_LIST_DEFAULT_PAGE_SIZE: ProcessosListPageSize = 20;
 
+/** Active operational lifecycle states for Data Fatal attention filters (Pulse-aligned). */
+export const WEBPROC_ACTIVE_OPERATIONAL_STATUSES = [
+  "EM_PREENCHIMENTO",
+  "PENDENTE",
+] as const satisfies readonly ProcessoStatus[];
+
 export type ProcessosListFatalFilter = "todas" | "hoje" | "vencidas" | "futuras";
 
 export type ProcessosListSort = "recent" | "dt_fatal";

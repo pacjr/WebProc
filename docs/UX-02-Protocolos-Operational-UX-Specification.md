@@ -489,6 +489,14 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 - **Status:** **CLOSED / PASS** (2026-10-01). **PO visual approval:** 2026-10-01 (CLIENT desktop).
 - **Scope:** Primary collection chrome + violet query band via shared `operationalCollection*` tokens; no API/behavior change.
 
+### PULSE-DOM.1 / DOM.1a — Data Fatal operational attention (Pulse read contract)
+
+- **Status:** **READY FOR PO REVIEW** (2026-10-01). **Not** PULSE-UI.1a (presentation deferred).
+- **Contract:** `pulse_summary.snapshot.fatal_today_count` / `fatal_overdue_count` — **operational attention** (not historical volume), America/Sao_Paulo business dates, scope filters only (not Pulse period); explicit `status` filter composes with attention predicates.
+- **Temporal vs operational:** Grid/list may still show a **“Hoje”** badge when the stored Data Fatal falls on today (**temporal fact**). **Operational attention** (Pulse counts, `fatal=hoje`, `fatal=vencidas`) requires status **Em preenchimento** or **Pendente** plus the date rule.
+- **Definitions (aligned Pulse + PROTO-GRID):** **hoje:** active status and business date of `dt_fatal` = today; **vencida:** active status and business date &lt; today.
+- **Drill-through target (UI.1a):** `/app/processos?fatal=hoje` | `fatal=vencidas` (+ optional `status`).
+
 ### PROTO-DOC.1 — Unified Documentos (links)
 
 - **Status:** **CLOSED/PASS** (2026-10-01).

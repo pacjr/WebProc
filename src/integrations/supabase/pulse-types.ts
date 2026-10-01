@@ -34,6 +34,10 @@ export interface PulseSummary {
   snapshot: {
     mode: PulseSnapshotMode;
     status_counts: PulseStatusCounts;
+    /** Active status + Data Fatal business date = today (America/Sao_Paulo); scope filters apply. */
+    fatal_today_count: number;
+    /** Active status + Data Fatal business date < today; scope filters apply. */
+    fatal_overdue_count: number;
   };
 }
 

@@ -509,7 +509,40 @@ The system may **observe and inform**; it must **not** automatically decide admi
 | WP-04C.3c — Pulse MVP readiness review | CLOSED | Recommendation **A**: PULSE MVP FUNCTIONALLY COMPLETE — STOP FEATURE DEVELOPMENT |
 | WP-04C.3d — Pulse MVP closeout + pre-prod gate | PO review | Documentation / validation only (no feature WP) |
 
-**No active Pulse feature work package.** Next Connect work returns to broader roadmap / production readiness, not additional Pulse UI slices unless PO explicitly reopens scope.
+**PO reopened:** **PULSE-DOM.1** + **PULSE-DOM.1a** (active-status alignment) — **READY FOR PO REVIEW** (2026-10-01). **PULSE-UI.1a** (presentation) remains **not started**.
+
+### PULSE-DOM.1 / DOM.1a — Data Fatal operational attention contract
+
+**Status:** **READY FOR PO REVIEW** (2026-10-01). **Counts only** — no attention list RPC, no Pulse UI redesign.
+
+**Migrations:**
+
+- `20261001163000_pulse_dom1_data_fatal_attention.sql` — adds `fatal_today_count` / `fatal_overdue_count` to `webproc.pulse_summary` (historical on DEV; do not rewrite).
+- `20261001170000_pulse_dom1a_active_fatal_attention.sql` — **DOM.1a:** both attention counts require `status IN ('EM_PREENCHIMENTO','PENDENTE')` plus date predicates.
+
+**Authoritative distinction:**
+
+| Concept | Rule |
+|---------|------|
+| **Temporal fact** | Stored `dt_fatal` business date = today (list “Hoje” badge may show this on any status). |
+| **Operational attention** | Active status **and** Data Fatal today or overdue (Pulse counts + Protocolos `fatal=hoje` / `fatal=vencidas`). |
+
+**Counts (after DOM.1a):**
+
+- `fatal_today_count` — active status **and** `(dt_fatal AT TIME ZONE 'America/Sao_Paulo')::date = business today`; `dt_fatal IS NOT NULL`; scope filters (`p_cliente_id`, `p_created_by`, `p_status`); **not period-bound**; **not** gated by `p_snapshot_mode`.
+- `fatal_overdue_count` — active status **and** business date &lt; today; same scope filters; **not period-bound**.
+
+**Semantics:** Pulse and PROTO-GRID `listProcessosPaginated` operational fatal filters are aligned; overdue list badge remains status-gated; “Hoje” list badge remains date-only. See AR-PROTO-GOV-01; **no** risk/SLA/score labels.
+
+**Status filter:** Attention counts respect `p_status` like `status_counts` — e.g. filter `CONCLUIDO` yields `fatal_overdue_count = 0`.
+
+**Harness:** `supabase/reference/pulse_dom1_data_fatal_attention_harness.sql` (through DOM.1a). **CLIENT RLS smoke:** `node supabase/reference/pulse_dom1a_client_rls_smoke.mjs` (gitignored DEV credentials / env only; no secrets in logs).
+
+**Index:** **None added.** Existing partial `processos_temporal_worker_candidates_idx` covers worker slice only. **PULSE-PERF-01 (deferred):** composite on `(status, (dt_fatal AT TIME ZONE 'America/Sao_Paulo')::date)` if attention queries lag at scale — PO approval required.
+
+**Drill-through (PULSE-UI.1a):** Protocolos URLs `/app/processos?fatal=hoje` and `/app/processos?fatal=vencidas` (optional `status=…`). ACTUS Pulse **cliente** analytical filter has **no** matching Protocolos URL param today — preserve via future slice or ACTUS navigation context only.
+
+**No active Pulse feature work beyond DOM.1 / pending UI.1a** until PO closes next gate.
 
 ### WP-04C.3 — ACTUS PULSE MVP (implementation closeout)
 

@@ -13,6 +13,7 @@ import {
 import {
   escapePostgrestIlikePattern,
   getDtFatalFilterBounds,
+  WEBPROC_ACTIVE_OPERATIONAL_STATUSES,
 } from "@/lib/webproc-processos-list-query";
 import type {
   WebProcAuthorIdentity,
@@ -230,11 +231,14 @@ export async function listProcessosPaginated(
 
   if (fatal === "hoje") {
     const { start, endExclusive } = getDtFatalFilterBounds("hoje");
-    query = query.gte("dt_fatal", start).lt("dt_fatal", endExclusive);
+    query = query
+      .in("status", [...WEBPROC_ACTIVE_OPERATIONAL_STATUSES])
+      .gte("dt_fatal", start)
+      .lt("dt_fatal", endExclusive);
   } else if (fatal === "vencidas") {
     const { start } = getDtFatalFilterBounds("vencidas");
     query = query
-      .in("status", ["EM_PREENCHIMENTO", "PENDENTE"])
+      .in("status", [...WEBPROC_ACTIVE_OPERATIONAL_STATUSES])
       .not("dt_fatal", "is", null)
       .lt("dt_fatal", start);
   } else if (fatal === "futuras") {

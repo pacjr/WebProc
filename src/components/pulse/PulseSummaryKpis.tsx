@@ -70,6 +70,8 @@ export function PulseSummaryKpis({
   const totalScope = sumStatusCounts(snapshot);
   const pendentes = snapshot.PENDENTE ?? 0;
   const concluidas = snapshot.CONCLUIDO ?? 0;
+  const fatalToday = summary.snapshot.fatal_today_count ?? 0;
+  const fatalOverdue = summary.snapshot.fatal_overdue_count ?? 0;
 
   return (
     <div
@@ -106,6 +108,16 @@ export function PulseSummaryKpis({
           <KpiCard label="Total no escopo" value={totalScope} />
           <KpiCard label="Pendentes" value={pendentes} />
           <KpiCard label="Concluídas" value={concluidas} />
+          <KpiCard
+            label="Data Fatal hoje"
+            value={fatalToday}
+            hint="Protocolos em preenchimento ou pendente com Data Fatal hoje (escopo atual)."
+          />
+          <KpiCard
+            label="Data Fatal vencida"
+            value={fatalOverdue}
+            hint="Protocolos em preenchimento ou pendente com Data Fatal anterior a hoje."
+          />
         </div>
       </section>
     </div>
