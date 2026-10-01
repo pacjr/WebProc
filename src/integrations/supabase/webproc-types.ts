@@ -523,13 +523,6 @@ export interface WebProcMembership {
   };
 }
 
-export interface WebProcProcessoDetail extends WebProcProcesso {
-  author: WebProcAuthorIdentity | null;
-  cliente: {
-    nome: string;
-  };
-}
-
 export type WebProcProcessoListItem = Pick<
   WebProcProcesso,
   | "id_proc"
@@ -539,6 +532,15 @@ export type WebProcProcessoListItem = Pick<
   | "dt_entrada"
   | "dt_fatal"
   | "status"
+  | "motivo_cancelamento"
 > & {
   author: WebProcAuthorIdentity | null;
 };
+
+export interface WebProcProcessoDetail extends WebProcProcesso {
+  author: WebProcAuthorIdentity | null;
+  canceladoPor: WebProcAuthorIdentity | null;
+  cliente: {
+    nome: string;
+  };
+}

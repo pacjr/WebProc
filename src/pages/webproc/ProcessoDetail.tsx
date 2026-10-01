@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import ProcessoDocumentosSection from "@/components/webproc/ProcessoDocumentosSection";
 import ProtocolizationBlockerDialog from "@/components/webproc/ProtocolizationBlockerDialog";
+import ProcessoCancelamentoSection from "@/components/webproc/ProcessoCancelamentoSection";
 import ProcessoFormFields, {
   emptyProcessoForm,
   formStateToDraftUpdate,
@@ -550,10 +551,8 @@ export default function ProcessoDetail() {
           </div>
         ) : null}
 
-        {!canEdit && !canReopen && isCreator && processo.status === "CANCELADO" ? (
-          <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted/40 px-4 py-3">
-            Este protocolo foi cancelado. O cadastro permanece registrado para consulta.
-          </p>
+        {processo.status === "CANCELADO" ? (
+          <ProcessoCancelamentoSection processo={processo} />
         ) : null}
 
         {!canEdit && !canReopen && isCreator && processo.status !== "CANCELADO" ? (

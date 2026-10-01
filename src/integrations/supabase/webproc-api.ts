@@ -172,7 +172,7 @@ export async function listProcessos() {
   const { data: processos, error } = await webprocDb()
     .from("processos")
     .select(
-      "id_proc, n_processo, exec_prov, reclamante, dt_entrada, dt_fatal, status, created_by"
+      "id_proc, n_processo, exec_prov, reclamante, dt_entrada, dt_fatal, status, created_by, motivo_cancelamento"
     )
     .order("created_at", { ascending: false });
 
@@ -197,6 +197,7 @@ export async function listProcessos() {
     dt_entrada: processo.dt_entrada,
     dt_fatal: processo.dt_fatal,
     status: processo.status,
+    motivo_cancelamento: processo.motivo_cancelamento,
     author: identities.get(processo.created_by) ?? null,
   })) satisfies WebProcProcessoListItem[];
 
@@ -227,9 +228,10 @@ export async function getProcessoDetail(idProc: number) {
   const { clientes: _clientes, ...processoBase } = row;
   const processo = processoBase as WebProcProcesso;
 
-  const { identities, error: identityError } = await fetchAuthorIdentities([
-    processo.created_by,
-  ]);
+  const identityUserIds = [processo.created_by, processo.cancelado_por].filter(
+    (id): id is string => Boolean(id),
+  );
+  const { identities, error: identityError } = await fetchAuthorIdentities(identityUserIds);
 
   if (identityError || !cliente) {
     return { processo: null, error: identityError };
@@ -239,6 +241,9 @@ export async function getProcessoDetail(idProc: number) {
     processo: {
       ...processo,
       author: identities.get(processo.created_by) ?? null,
+      canceladoPor: processo.cancelado_por
+        ? (identities.get(processo.cancelado_por) ?? null)
+        : null,
       cliente: {
         nome: cliente.nome,
       },

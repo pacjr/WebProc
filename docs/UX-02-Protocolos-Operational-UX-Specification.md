@@ -519,7 +519,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### Genuine decisions still required (PO)
 
-1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete). **PROTO-GOV.1 / AR-PROTO-GOV-01:** mandatory cancellation reason enforced server-side; motivo + `status_antes_cancelamento` persisted on `processos`.
+1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete). **PROTO-GOV.1 / AR-PROTO-GOV-01:** mandatory cancellation reason enforced server-side; motivo + `status_antes_cancelamento` persisted on `processos`. **PROTO-GOV.1b:** cancellation evidence read-only in list (motivo column/card) and detail (**Cancelamento** section).
 2. **List search at scale:** Client-side filter sufficient for MVP or prioritize server-side search RPC?  
 3. **ARQUIVO remove:** Defer entirely vs later Edge-coordinated removal UX?
 

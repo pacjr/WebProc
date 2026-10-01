@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { useWebProc } from "@/contexts/WebProcContext";
 import { processoStatusLabel } from "@/lib/webproc-status-labels";
+import { cancellationReasonForList } from "@/lib/webproc-cancellation-display";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -39,12 +40,15 @@ function isDtFatalOverdue(
 function ProtocoloListCard({
   item,
   onOpen,
+  showAuthor,
 }: {
   item: WebProcProcessoListItem;
   onOpen: () => void;
+  showAuthor: boolean;
 }) {
   const author = formatAuthorDisplay(item.author);
   const overdue = isDtFatalOverdue(item.dt_fatal, item.status);
+  const cancelReason = cancellationReasonForList(item.status, item.motivo_cancelamento);
 
   return (
     <button
@@ -77,9 +81,20 @@ function ProtocoloListCard({
             ) : null}
           </dd>
         </div>
+        {showAuthor ? (
+          <div className="col-span-2">
+            <dt className="text-muted-foreground">Cadastrado por</dt>
+            <dd className="font-medium">{author.primary}</dd>
+          </div>
+        ) : null}
         <div className="col-span-2">
-          <dt className="text-muted-foreground">Cadastrado por</dt>
-          <dd className="font-medium">{author.primary}</dd>
+          <dt className="text-muted-foreground">Motivo do cancelamento</dt>
+          <dd
+            className="font-medium line-clamp-2"
+            title={cancelReason.full ?? undefined}
+          >
+            {cancelReason.display}
+          </dd>
         </div>
       </dl>
     </button>
@@ -165,11 +180,12 @@ export default function ProcessosList() {
                 <ProtocoloListCard
                   key={processo.id_proc}
                   item={processo}
+                  showAuthor={!isClientActor}
                   onOpen={() => navigate(`/app/processos/${processo.id_proc}`)}
                 />
               ))}
             </div>
-            <div className="hidden md:block overflow-x-auto">
+            <div className={isClientActor ? "hidden md:block" : "hidden md:block overflow-x-auto"}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -180,13 +196,20 @@ export default function ProcessosList() {
                     <TableHead>Data de Entrada</TableHead>
                     <TableHead>Data Fatal</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Cadastrado por</TableHead>
+                    <TableHead className="min-w-[10rem] max-w-[14rem]">
+                      Motivo do cancelamento
+                    </TableHead>
+                    {!isClientActor ? <TableHead>Cadastrado por</TableHead> : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {processos.map((processo) => {
                     const author = formatAuthorDisplay(processo.author);
                     const overdue = isDtFatalOverdue(processo.dt_fatal, processo.status);
+                    const cancelReason = cancellationReasonForList(
+                      processo.status,
+                      processo.motivo_cancelamento,
+                    );
 
                     return (
                       <TableRow
@@ -214,14 +237,24 @@ export default function ProcessosList() {
                             {processoStatusLabel(processo.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="leading-tight">
-                            <p className="font-medium">{author.primary}</p>
-                            {author.secondary ? (
-                              <p className="text-xs text-muted-foreground">{author.secondary}</p>
-                            ) : null}
-                          </div>
+                        <TableCell className="max-w-[14rem]">
+                          <span
+                            className="block truncate"
+                            title={cancelReason.full ?? undefined}
+                          >
+                            {cancelReason.display}
+                          </span>
                         </TableCell>
+                        {!isClientActor ? (
+                          <TableCell>
+                            <div className="leading-tight">
+                              <p className="font-medium">{author.primary}</p>
+                              {author.secondary ? (
+                                <p className="text-xs text-muted-foreground">{author.secondary}</p>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                        ) : null}
                       </TableRow>
                     );
                   })}

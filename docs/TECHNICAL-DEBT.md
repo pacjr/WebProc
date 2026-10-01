@@ -353,7 +353,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 ## AR-PROTO-GOV-01 — Protocol Temporal & Decision Governance
 
-**Status:** **APPROVED / RECORDED** (2026-10-01). **Partially implemented** — mandatory cancellation reason (**PROTO-GOV.1**, 2026-10-01). Data Fatal history, Pulse D0/D+1, notifications, and automatic cancellation remain **not implemented**.
+**Status:** **APPROVED / RECORDED** (2026-10-01). **Partially implemented** — mandatory cancellation reason (**PROTO-GOV.1**) + read-only cancellation evidence in Protocolos list/detail (**PROTO-GOV.1b**, 2026-10-01). Data Fatal history, Pulse D0/D+1, notifications, and automatic cancellation remain **not implemented**.
 
 ### Separation of concepts
 
@@ -387,7 +387,7 @@ Editable `dt_fatal` must **not** erase historical truth. Future implementation m
 
 ### Cancellation governance
 
-Cancellation remains lifecycle → `CANCELADO`, never DELETE. **Mandatory cancellation reason — IMPLEMENTED (PROTO-GOV.1):** `webproc.cancelar_processo` rejects NULL, empty, and whitespace-only `p_motivo` (`cancelamento_motivo_obrigatorio`). **Decision trail on `webproc.processos` (no separate audit table):** `id_proc` (row identity), `cancelado_por` + `cancelado_at`, `motivo_cancelamento` (trimmed), `status_antes_cancelamento` (lifecycle immediately before cancel), `dt_fatal` unchanged on the row (effective Data Fatal at cancellation time), `origem_cancelamento`. **Do not** auto-cancel overdue protocols.
+Cancellation remains lifecycle → `CANCELADO`, never DELETE. **Mandatory cancellation reason — IMPLEMENTED (PROTO-GOV.1):** `webproc.cancelar_processo` rejects NULL, empty, and whitespace-only `p_motivo` (`cancelamento_motivo_obrigatorio`). **Decision trail on `webproc.processos` (no separate audit table):** `id_proc` (row identity), `cancelado_por` + `cancelado_at`, `motivo_cancelamento` (trimmed), `status_antes_cancelamento` (lifecycle immediately before cancel), `dt_fatal` unchanged on the row (effective Data Fatal at cancellation time), `origem_cancelamento`. **Read-only UX (PROTO-GOV.1b):** list column/card **Motivo do cancelamento** for `CANCELADO`; detail **Cancelamento** block (motivo, cancelado em/por, status anterior). **Do not** auto-cancel overdue protocols.
 
 ### Governance boundary
 
