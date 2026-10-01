@@ -1,13 +1,10 @@
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import {
   dtFatalStorageToInputValue,
   getBusinessDateToday,
-  type IdentificacaoModo,
 } from "@/integrations/supabase/webproc-validation";
 import type { WebProcProcesso } from "@/integrations/supabase/webproc-types";
 
@@ -67,6 +64,8 @@ interface ProcessoFormFieldsProps {
   dtFatalError?: string | null;
   processoOuExecucaoError?: string | null;
   layout?: ProcessoFormLayout;
+  /** On Novo, cliente is contextual identity — lighter than a full read-only input. */
+  clientePresentation?: "field" | "context";
   onChange: (field: keyof ProcessoFormState, value: string) => void;
 }
 
@@ -87,14 +86,6 @@ function SectionHeading({
   );
 }
 
-function deriveIdentificacaoModo(form: ProcessoFormState): IdentificacaoModo | "" {
-  const hasN = Boolean(form.n_processo.trim());
-  const hasE = Boolean(form.exec_prov.trim());
-  if (hasN && !hasE) return "n_processo";
-  if (hasE && !hasN) return "exec_prov";
-  return "";
-}
-
 export default function ProcessoFormFields({
   form,
   clienteNome,
@@ -103,45 +94,30 @@ export default function ProcessoFormFields({
   dtFatalError = null,
   processoOuExecucaoError = null,
   layout = "flat",
+  clientePresentation = "field",
   onChange,
 }: ProcessoFormFieldsProps) {
   const minDtFatal = getBusinessDateToday();
   const sectioned = layout === "sectioned";
-  const [identificacaoModo, setIdentificacaoModo] = useState<IdentificacaoModo | "">(() =>
-    deriveIdentificacaoModo(form),
-  );
-
-  const hasBothIdentificadores =
-    Boolean(form.n_processo.trim()) && Boolean(form.exec_prov.trim());
-
-  useEffect(() => {
-    if (disabled) return;
-    const derived = deriveIdentificacaoModo(form);
-    if (hasBothIdentificadores) {
-      setIdentificacaoModo("");
-      return;
-    }
-    if (derived) {
-      setIdentificacaoModo(derived);
-    }
-  }, [disabled, form.n_processo, form.exec_prov, hasBothIdentificadores]);
-
-  const handleIdentificacaoModoChange = (value: string) => {
-    if (value !== "n_processo" && value !== "exec_prov") return;
-    setIdentificacaoModo(value);
-    if (value === "n_processo") {
-      onChange("exec_prov", "");
-    } else {
-      onChange("n_processo", "");
-    }
-  };
+  const nFilled = Boolean(form.n_processo.trim());
+  const eFilled = Boolean(form.exec_prov.trim());
+  const hasBothIdentificadores = nFilled && eFilled;
+  const nProcessoInputDisabled = disabled || (eFilled && !nFilled);
+  const execProvInputDisabled = disabled || (nFilled && !eFilled);
 
   const identificacaoFields = (
     <>
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="cliente">Cliente</Label>
-        <Input id="cliente" value={clienteNome} readOnly className="bg-muted" />
-      </div>
+      {clientePresentation === "context" ? (
+        <p className="text-sm text-muted-foreground md:col-span-2">
+          Cliente:{" "}
+          <span className="font-medium text-foreground">{clienteNome}</span>
+        </p>
+      ) : (
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="cliente">Cliente</Label>
+          <Input id="cliente" value={clienteNome} readOnly className="bg-muted" />
+        </div>
+      )}
 
       {disabled ? (
         <div className="md:col-span-2 space-y-3">
@@ -164,63 +140,43 @@ export default function ProcessoFormFields({
         </div>
       ) : (
         <>
-          <fieldset className="md:col-span-2 space-y-3 border-0 p-0 m-0">
-            <legend className="text-sm font-medium">Forma de identificação</legend>
-            <RadioGroup
-              value={identificacaoModo || undefined}
-              onValueChange={handleIdentificacaoModoChange}
-              className="flex flex-col gap-2 sm:flex-row sm:gap-6"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="n_processo" id="id_modo_n_processo" />
-                <Label htmlFor="id_modo_n_processo" className="font-normal cursor-pointer">
-                  Nº do Processo
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="exec_prov" id="id_modo_exec_prov" />
-                <Label htmlFor="id_modo_exec_prov" className="font-normal cursor-pointer">
-                  Execução Provisória
-                </Label>
-              </div>
-            </RadioGroup>
-          </fieldset>
-
-          {identificacaoModo === "n_processo" ? (
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="n_processo">Nº do Processo</Label>
-              <Input
-                id="n_processo"
-                value={form.n_processo}
-                aria-invalid={Boolean(processoOuExecucaoError)}
-                aria-describedby={
-                  processoOuExecucaoError ? "processo_ou_execucao_error" : undefined
-                }
-                onChange={(e) => onChange("n_processo", e.target.value)}
-              />
-            </div>
-          ) : null}
-
-          {identificacaoModo === "exec_prov" ? (
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="exec_prov">Execução Provisória</Label>
-              <Input
-                id="exec_prov"
-                value={form.exec_prov}
-                aria-invalid={Boolean(processoOuExecucaoError)}
-                aria-describedby={
-                  processoOuExecucaoError ? "processo_ou_execucao_error" : undefined
-                }
-                onChange={(e) => onChange("exec_prov", e.target.value)}
-              />
-            </div>
-          ) : null}
-
-          {!identificacaoModo ? (
-            <p className="text-sm text-muted-foreground md:col-span-2">
-              Selecione uma forma de identificação acima para informar o valor.
+          {hasBothIdentificadores ? (
+            <p className="text-sm text-amber-700 dark:text-amber-500 md:col-span-2" role="status">
+              Informe apenas uma identificação — deixe um dos campos vazio.
             </p>
-          ) : null}
+          ) : (
+            <p className="text-sm text-muted-foreground md:col-span-2">
+              Informe o Nº do Processo ou a Execução Provisória (apenas um).
+            </p>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="n_processo">Nº do Processo</Label>
+            <Input
+              id="n_processo"
+              value={form.n_processo}
+              disabled={nProcessoInputDisabled}
+              aria-invalid={Boolean(processoOuExecucaoError)}
+              aria-describedby={
+                processoOuExecucaoError ? "processo_ou_execucao_error" : undefined
+              }
+              onChange={(e) => onChange("n_processo", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="exec_prov">Execução Provisória</Label>
+            <Input
+              id="exec_prov"
+              value={form.exec_prov}
+              disabled={execProvInputDisabled}
+              aria-invalid={Boolean(processoOuExecucaoError)}
+              aria-describedby={
+                processoOuExecucaoError ? "processo_ou_execucao_error" : undefined
+              }
+              onChange={(e) => onChange("exec_prov", e.target.value)}
+            />
+          </div>
         </>
       )}
 
@@ -315,7 +271,7 @@ export default function ProcessoFormFields({
   );
 
   const identificacaoDescription =
-    "Escolha uma forma de identificação — Nº do Processo ou Execução Provisória — e preencha apenas o campo correspondente.";
+    "Informe o Nº do Processo ou a Execução Provisória — apenas um dos campos.";
 
   if (!sectioned) {
     return (
