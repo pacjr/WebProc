@@ -372,23 +372,33 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **Validation:** `npm run typecheck` PASS; `npm run build` PASS; `git diff --check` PASS.
 
-### PROTO-DOC.3 — Coordinated file removal & retention
+### PROTO-DOC.3 — Coordinated file removal & cancellation cleanup
 
-**Status:** **DEFINED / NOT STARTED** (2026-10-01). Follow-up; does **not** block PROTO-DOC.2.
+**Status:** **CLOSED / PASS** (2026-10-02). PO/DEV smoke on **`cxrnptygbzqzobtdxpwo`**: CLIENT smoke script 23/23 PASS (`supabase/reference/proto_doc3_client_dev_smoke.mjs`); SQL harness PASS (`proto_doc3_coordinated_file_removal_harness.sql`). Migrations `20261002120000`, `20261002130100` (column grant for `r2_cleanup_pending` SELECT). Edge `webproc-document-remove`, `webproc-document-r2-cleanup` ACTIVE.
 
-**Scope (approved direction — implement only after domain discovery):**
+**Mechanism (minimal — reuses WP-03 model):**
 
-**A. Manual file removal** — For `EM_PREENCHIMENTO` only (after reopen from `PENDENTE` if applicable): coordinate storage object deletion, document domain state, audit/evidence, UI refresh/readiness. **Never** ARQUIVO removal as direct DB DELETE only. Inspect existing `remover_documento` / `storage_state` model before naming new states (conceptual labels like REMOVAL_PENDING/REMOVED are not authoritative until discovery).
+| Path | Flow |
+|------|------|
+| **Manual ARQUIVO remove** (`EM_PREENCHIMENTO`, creator) | Edge `webproc-document-remove`: `server_resolve_arquivo_removal_target` → R2 DELETE → `server_finalize_arquivo_removal` ( `DOCUMENT_REMOVED` + **DELETE** row). Browser `remover_documento` RPC **unchanged** — still rejects ARQUIVO (`arquivo_removal_requires_coordination`). |
+| **Cancel cleanup** | `cancelar_processo` (unchanged TX) → `mark_documentos_r2_cleanup_for_process` (`r2_cleanup_pending`). UI fires **best-effort** `webproc-document-r2-cleanup` after successful cancel (non-blocking). Edge: list candidates → R2 DELETE → `server_confirm_arquivo_purged_after_r2` (`DOCUMENT_REMOVED` + **PURGED** row retained). |
+| **Active / download** | `r2_cleanup_pending` ARQUIVO excluded from active list/readiness (`process_has_active_documents` + client `isActiveProcessoDocument`). Download resolver blocks `CANCELADO`, `r2_cleanup_pending`, and `PURGED`. |
 
-**B. Cancellation cleanup** — On `CANCELADO`: governance evidence and document metadata remain auditable; uploaded physical objects must not be retained indefinitely without operational purpose. Direction: persist cancellation → mark/schedule physical file cleanup → delete storage object → confirm/document cleanup. **Successful storage deletion is not a synchronous prerequisite** for `cancelar_processo`; failed cleanup must be retryable without invalidating cancellation. Links need no physical storage cleanup.
+**Retry / idempotency:** R2 DELETE treats 404 as success; `confirm_arquivo_purged_after_r2` idempotent when already `PURGED`. Failed cleanup leaves `r2_cleanup_pending=true` — re-invoke cleanup Edge (same `id_proc`).
 
-**Audit principle:** Physical file deletion ≠ deletion of historical evidence. DOC.3 must inspect existing audit/domain structures and preserve safe metadata (document id, filename, size, content type, creator, timestamps, removal/cleanup actor/time where applicable). **No new schema in DOC.2/DOC.2a.** Ordinary removal in `EM_PREENCHIMENTO` should not be unnecessarily bureaucratic; for protocols reopened from `PENDENTE`, inspect whether existing lifecycle/audit evidence suffices before requiring extra removal-reason fields.
+**Governance:** Manual remove — event snapshot in `operacional_eventos` then row deleted. Cancel cleanup — event + `PURGED` metadata on row (`purged_at`, filename/MIME/size fields preserved on row until any future archival policy).
 
-**Remaining Product/UI-UX gaps (post DOC.2):**
+**Orphan boundary (unchanged):** prepare/confirm sequencing from PROTO-DOC.2; no general storage GC in this slice. **TD-DOC3-ORPHAN-01 (deferred):** abandoned prepare rows without confirm — monitor via `storage_state`; not a DOC.3 blocker.
+
+**DOC3-RETRY-01 (deferred):** scheduled/background retry for failed post-cancel R2 cleanup. Current state is durable (`r2_cleanup_pending`); creator may re-invoke `webproc-document-r2-cleanup` or ops runbook; cancellation never rolls back.
+
+**Validation:** `npm run typecheck` PASS; `npm run build` PASS; `git diff --check` PASS (CRLF warnings only).
+
+**Remaining Product/UI-UX gaps (post DOC.3):**
 
 | Gap | Class |
 |-----|--------|
-| Coordinated ARQUIVO removal + cancellation storage cleanup | **PROTO-DOC.3** |
+| Coordinated ARQUIVO removal + cancellation storage cleanup | **Closed — PROTO-DOC.3** |
 | Processos grid server pagination/filters | **Closed — PROTO-GRID.1 / 1a** |
 
 ### PROTO-UI.3 / PROTO-UI.3b — Protocolos operational UX + visual language

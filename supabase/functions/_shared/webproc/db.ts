@@ -93,6 +93,12 @@ function mapDownloadDbError(
   if (lower.includes('invalid_storage_state_for_download')) {
     return new HttpError('Document is not available for download', 409, 'invalid_storage_state_for_download');
   }
+  if (lower.includes('invalid_status_for_download')) {
+    return new HttpError('Document is not available for download', 409, 'invalid_status_for_download');
+  }
+  if (lower.includes('document_cleanup_pending')) {
+    return new HttpError('Document is not available for download', 409, 'document_cleanup_pending');
+  }
   if (lower.includes('invalid_object_key_format')) {
     return new HttpError('Document storage invariant failed', 500, 'invalid_object_key_format');
   }
@@ -165,6 +171,122 @@ export async function countStoredArquivoRows(idProc: number, documentId?: string
   const { count, error } = await query;
   if (error) throw mapDbError(error, 'Document lookup failed');
   return count ?? 0;
+}
+
+export interface ResolveRemovalTargetResult {
+  success: boolean;
+  document_id: string;
+  id_proc: number;
+  object_key: string;
+  content_type: string;
+  nome_arquivo: string;
+}
+
+function mapRemovalDbError(
+  error: { message?: string; details?: string; hint?: string },
+  fallback: string,
+): HttpError {
+  const message = [error.message, error.details, error.hint].filter(Boolean).join(' | ') || fallback;
+  const lower = message.toLowerCase();
+
+  if (lower.includes('not_authenticated')) {
+    return new HttpError('Authentication required', 401, 'not_authenticated');
+  }
+  if (lower.includes('documento_not_found')) {
+    return new HttpError('Document not found', 404, 'documento_not_found');
+  }
+  if (lower.includes('membership_required')) {
+    return new HttpError('Active client membership required', 403, 'membership_required');
+  }
+  if (lower.includes('not_process_creator')) {
+    return new HttpError('Only the process creator may remove documents', 403, 'not_process_creator');
+  }
+  if (lower.includes('invalid_status_for_document_mutation')) {
+    return new HttpError('Process is not open for document changes', 409, 'invalid_status_for_document_mutation');
+  }
+  if (lower.includes('invalid_document_type')) {
+    return new HttpError('Invalid document type for removal', 409, 'invalid_document_type');
+  }
+
+  return new HttpError('Document removal authorization failed', 409, 'removal_not_authorized');
+}
+
+export async function serverResolveArquivoRemovalTarget(input: {
+  document_id: string;
+  actor_user_id: string;
+}): Promise<ResolveRemovalTargetResult> {
+  const supabase = createWebprocServiceClient();
+  const { data, error } = await supabase.rpc('server_resolve_arquivo_removal_target', {
+    p_document_id: input.document_id,
+    p_actor_user_id: input.actor_user_id,
+  });
+
+  if (error) throw mapRemovalDbError(error, 'Removal resolution failed');
+  if (!data?.success) {
+    throw new HttpError('Removal resolution failed', 409, 'removal_not_authorized');
+  }
+
+  return data as ResolveRemovalTargetResult;
+}
+
+export async function serverFinalizeArquivoRemoval(input: {
+  document_id: string;
+  actor_user_id: string;
+}): Promise<{ success: boolean; document_id: string }> {
+  const supabase = createWebprocServiceClient();
+  const { data, error } = await supabase.rpc('server_finalize_arquivo_removal', {
+    p_document_id: input.document_id,
+    p_actor_user_id: input.actor_user_id,
+  });
+
+  if (error) throw mapRemovalDbError(error, 'Finalize removal failed');
+  if (!data?.success) {
+    throw new HttpError('Finalize removal failed', 500, 'removal_finalize_failed');
+  }
+
+  return data as { success: boolean; document_id: string };
+}
+
+export type R2CleanupCandidate = {
+  document_id: string;
+  object_key: string;
+  storage_state: string;
+};
+
+export async function serverListR2CleanupForProcess(input: {
+  id_proc: number;
+  actor_user_id: string;
+}): Promise<R2CleanupCandidate[]> {
+  const supabase = createWebprocServiceClient();
+  const { data, error } = await supabase.rpc('server_list_r2_cleanup_for_process', {
+    p_id_proc: input.id_proc,
+    p_actor_user_id: input.actor_user_id,
+  });
+
+  if (error) throw mapRemovalDbError(error, 'Cleanup listing failed');
+  if (!data?.success) {
+    throw new HttpError('Cleanup listing failed', 500, 'cleanup_list_failed');
+  }
+
+  const candidates = data.candidates;
+  if (!Array.isArray(candidates)) return [];
+  return candidates as R2CleanupCandidate[];
+}
+
+export async function serverConfirmArquivoPurgedAfterR2(
+  documentId: string,
+): Promise<{ success: boolean; already_purged?: boolean }> {
+  const supabase = createWebprocServiceClient();
+  const { data, error } = await supabase.rpc('server_confirm_arquivo_purged_after_r2', {
+    p_document_id: documentId,
+  });
+
+  if (error) throw mapRemovalDbError(error, 'Confirm purge failed');
+  if (!data?.success) {
+    throw new HttpError('Confirm purge failed', 500, 'cleanup_confirm_failed');
+  }
+
+  return data as { success: boolean; already_purged?: boolean };
 }
 
 export async function serverResolveArquivoDownloadTarget(input: {

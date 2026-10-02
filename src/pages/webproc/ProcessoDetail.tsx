@@ -30,6 +30,7 @@ import { useWebProc } from "@/contexts/WebProcContext";
 import {
   addProcessoLink,
   cancelarProcesso,
+  cleanupProcessoDocumentR2AfterCancel,
   countActiveProcessoDocumentsForProtocol,
   downloadProcessoDocumentFile,
   formatAuthorDisplay,
@@ -39,6 +40,7 @@ import {
   mapWebprocDomainError,
   protocolarProcesso,
   reabrirProcesso,
+  removeProcessoDocumentFile,
   removerDocumento,
   saveProcessoDraft,
   uploadProcessoDocumentFile,
@@ -368,14 +370,18 @@ export default function ProcessoDetail() {
 
     setLinkSaving(true);
     try {
-      const { error, message } = await removerDocumento(pendingRemoveDocument.id);
+      if (pendingRemoveDocument.tipo === "ARQUIVO") {
+        await removeProcessoDocumentFile(pendingRemoveDocument.id);
+      } else {
+        const { error, message } = await removerDocumento(pendingRemoveDocument.id);
 
-      if (error) {
-        throw new Error(message ?? error.message);
-      }
+        if (error) {
+          throw new Error(message ?? error.message);
+        }
 
-      if (message) {
-        throw new Error(message);
+        if (message) {
+          throw new Error(message);
+        }
       }
 
       const { data: refreshedDocuments, error: documentsError } = await listProcessoDocuments(
@@ -507,6 +513,7 @@ export default function ProcessoDetail() {
       setCancelMotivo("");
       setCancelMotivoError(null);
       await loadDetail();
+      void cleanupProcessoDocumentR2AfterCancel(processo.id_proc);
       toast.success(
         result.already_cancelado
           ? "Protocolo já estava cancelado."

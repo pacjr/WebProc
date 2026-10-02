@@ -391,7 +391,7 @@ export async function listProcessoDocuments(idProc: number) {
   const { data, error } = await webprocDb()
     .from("processo_documentos")
     .select(
-      "id, id_proc, tipo, nome, url, nome_arquivo, storage_state, tamanho, content_type, created_at",
+      "id, id_proc, tipo, nome, url, nome_arquivo, storage_state, r2_cleanup_pending, tamanho, content_type, created_at",
     )
     .eq("id_proc", idProc)
     .order("created_at", { ascending: true });
@@ -431,6 +431,45 @@ export async function addProcessoLink(
     })
     .select("id, id_proc, tipo, nome, url, created_at")
     .single();
+}
+
+type RemoveDocumentFileSuccess = {
+  success: true;
+  document_id: string;
+  tipo: "ARQUIVO";
+};
+
+export async function removeProcessoDocumentFile(documentId: string) {
+  return invokeWebprocDocumentEdge<RemoveDocumentFileSuccess>(
+    "webproc-document-remove",
+    { document_id: documentId },
+  );
+}
+
+type R2CleanupSuccess = {
+  success: true;
+  id_proc: number;
+  candidates: number;
+  purged: number;
+  failed: number;
+  remaining: number;
+};
+
+/** Best-effort post-cancellation R2 cleanup; does not throw on partial failure. */
+export async function cleanupProcessoDocumentR2AfterCancel(idProc: number) {
+  try {
+    const { data, error } = await supabase.functions.invoke("webproc-document-r2-cleanup", {
+      body: { id_proc: idProc },
+    });
+
+    if (error || !data || typeof data !== "object" || !("success" in data) || data.success !== true) {
+      return { ok: false as const, data: null as R2CleanupSuccess | null };
+    }
+
+    return { ok: true as const, data: data as R2CleanupSuccess };
+  } catch {
+    return { ok: false as const, data: null as R2CleanupSuccess | null };
+  }
 }
 
 export async function removerDocumento(documentId: string) {

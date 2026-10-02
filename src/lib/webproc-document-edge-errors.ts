@@ -20,6 +20,14 @@ const DOCUMENT_EDGE_ERROR_MESSAGES: Record<string, string> = {
   document_not_found: "Documento não encontrado ou indisponível.",
   download_not_available: "Download indisponível para este documento.",
   invalid_storage_state_for_download: "Download indisponível para este documento.",
+  invalid_status_for_download: "Download indisponível para este documento.",
+  document_cleanup_pending: "Download indisponível para este documento.",
+  document_bytes_unavailable: "Download indisponível para este documento.",
+  removal_not_authorized: "Não foi possível remover o documento.",
+  removal_finalize_failed: "Falha ao concluir a remoção do arquivo. Tente novamente.",
+  storage_deletion_failed:
+    "Não foi possível excluir o arquivo no armazenamento. Tente novamente.",
+  invalid_document_type: "Este documento não pode ser removido desta forma.",
 };
 
 export function mapDocumentEdgeError(codeOrMessage: string | null | undefined): string {

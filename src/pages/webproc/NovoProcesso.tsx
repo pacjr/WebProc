@@ -17,6 +17,7 @@ import {
   insertProcesso,
   listProcessoDocuments,
   mapWebprocDomainError,
+  removeProcessoDocumentFile,
   removerDocumento,
   saveProcessoDraft,
   uploadProcessoDocumentFile,
@@ -274,14 +275,18 @@ export default function NovoProcesso() {
 
     setLinkSaving(true);
     try {
-      const { error, message } = await removerDocumento(pendingRemoveDocument.id);
+      if (pendingRemoveDocument.tipo === "ARQUIVO") {
+        await removeProcessoDocumentFile(pendingRemoveDocument.id);
+      } else {
+        const { error, message } = await removerDocumento(pendingRemoveDocument.id);
 
-      if (error) {
-        throw new Error(message ?? error.message);
-      }
+        if (error) {
+          throw new Error(message ?? error.message);
+        }
 
-      if (message) {
-        throw new Error(message);
+        if (message) {
+          throw new Error(message);
+        }
       }
 
       await refreshDocuments(draftIdProc);

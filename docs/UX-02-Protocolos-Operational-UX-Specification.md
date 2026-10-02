@@ -339,7 +339,7 @@ Three-step Edge flow (authenticated JWT):
 
 **Authorization:** Same as links — creator, `EM_PREENCHIMENTO`, active client membership.
 
-**Removal:** ARQUIVO cannot use `remover_documento` from browser (`arquivo_removal_requires_coordination`) — MVP UX: **no Remover for files** unless a future governed slice adds Edge-coordinated removal; links only Remover.
+**Removal:** LINK — `remover_documento` RPC + confirmation (PROTO-DOC.1). ARQUIVO — **Remover** in `EM_PREENCHIMENTO` only via Edge `webproc-document-remove` (coordinated R2 + finalize); direct RPC still returns `arquivo_removal_requires_coordination`. `PENDENTE` — no document mutation; **Editar/Reabrir** → `EM_PREENCHIMENTO` first. `CANCELADO` — read-only; no Remover; post-cancel R2 cleanup is async (protocol already cancelled).
 
 ### 11.B UX specification
 
@@ -525,11 +525,11 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 - **Deps:** PROTO-DOC.1 (closed).
 - **Document mutability:** See TECHNICAL-DEBT (PENDENTE read-only until **Editar/Reabrir**; no separate pending-document edit path).
 
-### PROTO-DOC.3 — Coordinated file removal & retention
+### PROTO-DOC.3 — Coordinated file removal & cancellation cleanup
 
-- **Status:** **DEFINED / NOT STARTED** (2026-10-01).
-- **Scope:** Coordinated manual file removal; post-cancel physical cleanup; audit vs physical deletion — full direction in **TECHNICAL-DEBT** § PROTO-DOC.3.
-- **Non-scope:** PROTO-DOC.2 upload/download (closed).
+- **Status:** **CLOSED / PASS** (2026-10-02 PO/DEV smoke).
+- **Scope:** ARQUIVO **Remover** (Edge-coordinated); cancel marks `r2_cleanup_pending` + best-effort cleanup Edge; download blocked when cancelled/cleanup-pending/purged; governance via `operacional_eventos`.
+- **Non-scope:** PROTO-DOC.2 upload/download (closed); legal retention periods; general orphan GC.
 
 ### PROTO-UX.GATE — Readiness regression
 
@@ -563,7 +563,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete). **PROTO-GOV.1 / AR-PROTO-GOV-01:** mandatory cancellation reason enforced server-side; motivo + `status_antes_cancelamento` persisted on `processos`. **PROTO-GOV.1b:** cancellation evidence read-only in list (motivo column/card) and detail (**Cancelamento** section).
 2. **List search at scale:** Client-side filter sufficient for MVP or prioritize server-side search RPC?  
-3. **ARQUIVO remove / cancel cleanup:** **PROTO-DOC.3** defined (TECHNICAL-DEBT); not started.
+3. **ARQUIVO remove / cancel cleanup:** **PROTO-DOC.3 CLOSED/PASS** (TECHNICAL-DEBT § PROTO-DOC.3).
 
 ### AR-PROTO-GOV-01 — Protocol temporal & decision governance (approved)
 

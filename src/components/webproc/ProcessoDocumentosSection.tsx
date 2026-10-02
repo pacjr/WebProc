@@ -144,7 +144,7 @@ export default function ProcessoDocumentosSection({
                     )}
                   </div>
                 </div>
-                {canEdit && isLink ? (
+                {canEdit && (isLink || doc.tipo === "ARQUIVO") ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -280,7 +280,9 @@ export default function ProcessoDocumentosSection({
             <AlertDialogTitle>Remover documento?</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingRemoveDocument
-                ? `O documento “${getDocumentoDisplayName(pendingRemoveDocument)}” será removido deste protocolo. Esta ação não pode ser desfeita.`
+                ? pendingRemoveDocument.tipo === "ARQUIVO"
+                  ? `O arquivo “${getDocumentoDisplayName(pendingRemoveDocument)}” será excluído deste protocolo e do armazenamento. Esta ação não pode ser desfeita.`
+                  : `O documento “${getDocumentoDisplayName(pendingRemoveDocument)}” será removido deste protocolo. Esta ação não pode ser desfeita.`
                 : "O documento será removido deste protocolo."}
             </AlertDialogDescription>
           </AlertDialogHeader>

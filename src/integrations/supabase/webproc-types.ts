@@ -82,6 +82,7 @@ export interface WebProcProcessoDocument {
   url: string | null;
   nome_arquivo?: string | null;
   storage_state?: string | null;
+  r2_cleanup_pending?: boolean;
   tamanho?: number | null;
   content_type?: string | null;
   created_at: string;

@@ -18,5 +18,11 @@ verify_jwt = true
 [functions.webproc-document-download-prepare]
 verify_jwt = true
 
+[functions.webproc-document-remove]
+verify_jwt = true
+
+[functions.webproc-document-r2-cleanup]
+verify_jwt = true
+
 [functions.provision-client-membership]
 verify_jwt = true
