@@ -48,15 +48,18 @@ WebProc **application code and RC** are frozen and functionally complete on DEV.
 
 **Can a brand-new production project be built from repository migrations alone?**
 
-**Classification: REQUIRED-BEFORE-PROD (verify) — likely BLOCKER without PO decision.**
+**PROD-INFRA.1 (2026-10-02):**
 
-Evidence:
+| Apply path | Result |
+|------------|--------|
+| All **28** migrations in timestamp order on empty DB | **NO** — **live local proof:** fails at **`20251002135826`** (`public.t_processoweb` does not exist, SQLSTATE 42P01) |
+| **WebProc subset** only (`20260307180000` → latest, **25** files; skip three `202510*`) | **YES** — **live local proof PASS** (2026-10-02); Strategy B **`migration repair`** + future `db push` drill documented in infra doc |
 
-1. **`20251002135826_*`** — `DROP POLICY … ON public.t_processoweb` / `t_docsprocessos`. If legacy tables are absent, migration **fails** (PostgreSQL requires the relation to exist for `DROP POLICY ON table`).
-2. **`20251007145916_*`** — `CREATE TABLE public.arquivos_enviados` with `REFERENCES public.t_processoweb(id_proc)`.
-3. **`20260307180000_wp01_webproc_schema.sql`** — greenfield **WebProc** schema; does not create legacy `t_processoweb`.
+Evidence and contracts: [`docs/architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md`](./architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md).
 
-WebProc runtime uses **`webproc` only**; legacy `public` objects are preserved per TD-WP-02 but **early migrations assume pre-existing legacy schema**. DEV likely accumulated history; **prod greenfield must be dry-run tested**.
+**Recommended production strategy:** **Strategy B** — selective apply / production baseline path; **do not rewrite** migrations already applied on DEV.
+
+WebProc runtime uses **`webproc` only**; legacy `public` objects are **not** referenced from `src/` or WebProc Edge.
 
 **Manual SQL outside migrations:** `supabase/reference/*.sql` harnesses — **not** applied in prod (DEV validation only). `legacy_public_baseline_local.sql` — reference, not migration.
 
@@ -238,11 +241,31 @@ Previously: hardcoded DEV Supabase URL/key in `client.ts` — **RESOLVED** by **
 
 ---
 
+## PROD-INFRA.1 — Greenfield infrastructure & migration readiness
+
+**Status:** **CLOSED / PASS** (PO approval 2026-10-02). **Production NOT declared ready.**
+
+**Delivered:** Migration inventory; legacy analysis; runtime graph; Strategy B; infra contracts; **PROD-INFRA.1a local greenfield proof** (see infra doc).
+
+**Reproducible from zero:** **NO** (28-file chain) / **YES** (WP-01+ **25** migrations — **live local PASS**).
+
+---
+
+## PROD-INFRA.1a — Strategy B greenfield execution proof
+
+**Status:** **CLOSED / PASS** (PO approval 2026-10-02).
+
+**Executed (local only):** Full 28-chain failure at `20251002135826` (legacy `public.t_processoweb` absent); WP-01+ selective apply **25/25**; production strategy = WP-01+ apply + **`migration repair`** for three legacy versions; future `db push --local` drill **PASS**; no structural dependency on legacy public tables. DEV **`cxrnptygbzqzobtdxpwo`** not mutated.
+
+**Strategy B classification:** **PASS** (local greenfield proof).
+
+**Evidence:** [`docs/architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md`](./architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md) § Executive result / PROD-INFRA.1a.
+
+---
+
 ## Recommended immediate next slice
 
-**PROD-INFRA.1** — Empty-project migration dry-run + prod Supabase/R2 provisioning checklist.
-
-Then **PROD-BOOTSTRAP.1** (ADMIN + first tenant runbook).
+**PROD-BOOTSTRAP.1** — ADMIN + first tenant runbook.
 
 ---
 

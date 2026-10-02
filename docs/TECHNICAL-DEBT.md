@@ -510,7 +510,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **Qualification:** ACTUS **ADMIN** browser smoke limited by DEV seed (**ACTUS_OPERADOR**); **WP-04B** not reopened.
 
-**Production:** **NOT YET DECLARED READY.** **PROD-READINESS.1** — **CLOSED / PASS** (audit): [`docs/PRODUCTION-READINESS.md`](./PRODUCTION-READINESS.md). **PROD-CONFIG.1** — **CLOSED / PASS** (2026-10-02): frontend Supabase URL/key via `VITE_*` + fail-fast; local `.env` gitignored. Frontend hardcoded DEV blocker — **RESOLVED**. Next slice: **PROD-INFRA.1**.
+**Production:** **NOT YET DECLARED READY.** **PROD-READINESS.1** — **CLOSED / PASS**; **PROD-CONFIG.1** — **CLOSED / PASS**; **PROD-INFRA.1** — **CLOSED / PASS** (PO approval 2026-10-02); **PROD-INFRA.1a** — **CLOSED / PASS** (PO approval 2026-10-02): Strategy B greenfield **25/25** WP-01+ local proof; full 28-chain legacy failure expected; `migration repair` baseline + future migration drill **PASS** — [`docs/architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md`](./architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md). Next: **PROD-BOOTSTRAP.1**.
 
 **RC freeze rule:** Changes to the WebProc RC baseline require: (1) confirmed defect/regression; (2) security issue; (3) production deployment requirement; (4) explicit PO decision to change RC scope. **POLISH** and **BACKLOG** do not modify the frozen RC baseline by default.
 
