@@ -520,7 +520,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **Qualification:** ACTUS **ADMIN** browser smoke limited by DEV seed (**ACTUS_OPERADOR**); **WP-04B** not reopened.
 
-**Production:** **NOT YET DECLARED READY.** **PROD-READINESS.1** — **CLOSED / PASS**; **PROD-CONFIG.1** — **CLOSED / PASS**; **PROD-INFRA.1** / **PROD-INFRA.1a** — **CLOSED / PASS** (PO approval 2026-10-02). **LEGACY-CLEANUP.1** — **CLOSED / PASS** (PO approval 2026-10-02): legacy Edge source + stale public types removed from repo; migrations/DEV cloud data unchanged; PROTO-DOC.3 R2 path unchanged. Next: **PROD-BOOTSTRAP.1**.
+**Production:** **NOT YET DECLARED READY.** **PROD-READINESS.1** — **CLOSED / PASS**; **PROD-CONFIG.1** — **CLOSED / PASS**; **PROD-INFRA.1** / **PROD-INFRA.1a** — **CLOSED / PASS**; **LEGACY-CLEANUP.1** — **CLOSED / PASS**; **PROD-BOOTSTRAP.1** — **CLOSED / PASS** (PO approval 2026-10-02): [`docs/operations/WEBPROC-PRODUCTION-BOOTSTRAP.md`](./operations/WEBPROC-PRODUCTION-BOOTSTRAP.md); local rehearsal PASS (Layer B–C + **PENDING_AUTH**); invite/activate/browser smoke **deferred to staging**. Next phase: **STAGING-CUTOVER.1** (not started).
 
 **RC freeze rule:** Changes to the WebProc RC baseline require: (1) confirmed defect/regression; (2) security issue; (3) production deployment requirement; (4) explicit PO decision to change RC scope. **POLISH** and **BACKLOG** do not modify the frozen RC baseline by default.
 

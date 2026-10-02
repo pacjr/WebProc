@@ -275,9 +275,23 @@ Previously: hardcoded DEV Supabase URL/key in `client.ts` — **RESOLVED** by **
 
 ---
 
+## PROD-BOOTSTRAP.1 — Production bootstrap contract & rehearsal
+
+**Status:** **CLOSED / PASS** (PO approval 2026-10-02).
+
+**Delivered:** [`docs/operations/WEBPROC-PRODUCTION-BOOTSTRAP.md`](./operations/WEBPROC-PRODUCTION-BOOTSTRAP.md) — Layers **A–E** authority; Layer **B** = trusted operator Auth + one-time SQL `usuarios_actus` **ADMIN**; **C–D** = supported Admin RPCs + **`provision-client-membership`**; **E** = operator/bootstrap Actus identities (no product UI).
+
+**Local rehearsal PASS:** clean start, synthetic first ADMIN, probes, first client via `admin_create_cliente`, membership to **`PENDING_AUTH`**, cleanup; **no DEV mutation**.
+
+**Deferred to staging:** Edge invite, `/auth/activate`, full CLIENT resolution, two-tenant browser smoke, SMTP/redirects — **not** recorded as PASS here.
+
+**Production:** **NOT YET DECLARED READY** — requires PO/Actus environment decisions, staging infra, expose `webproc`, Edge/R2/Auth/SMTP, full bootstrap + invite/activation smoke, backup policy, go-live gate.
+
+---
+
 ## Recommended immediate next slice
 
-**PROD-BOOTSTRAP.1** — ADMIN + first tenant runbook.
+**STAGING-CUTOVER.1** — staging project + Strategy B infra + full bootstrap/deferred smoke (not started).
 
 ---
 

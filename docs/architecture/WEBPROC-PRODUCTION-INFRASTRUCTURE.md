@@ -467,7 +467,7 @@ Strategy B does **not**:
 
 ## Recommended immediate next slice
 
-**PROD-BOOTSTRAP.1** — ADMIN + first tenant operational runbook.
+**PROD-BOOTSTRAP.1** — **CLOSED / PASS** (PO approval 2026-10-02) — [`docs/operations/WEBPROC-PRODUCTION-BOOTSTRAP.md`](../operations/WEBPROC-PRODUCTION-BOOTSTRAP.md). **Next:** **STAGING-CUTOVER.1**.
 
 ---
 
