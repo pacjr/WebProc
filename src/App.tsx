@@ -14,6 +14,7 @@ import WebProcShell from "@/components/webproc/WebProcShell";
 import ProcessosList from "@/pages/webproc/ProcessosList";
 import NovoProcesso from "@/pages/webproc/NovoProcesso";
 import ProcessoDetail from "@/pages/webproc/ProcessoDetail";
+import ConnectSobrePage from "@/pages/connect/ConnectSobrePage";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PulsePage = lazy(() => import("@/pages/webproc/PulsePage"));
@@ -93,6 +94,7 @@ const App = () => {
                   </Suspense>
                 }
               />
+              <Route path="sobre" element={<ConnectSobrePage />} />
             </Route>
             {/* Reserved for WP-04 native Connect Dashboard; temporary redirect */}
             <Route path="/dashboard" element={<Navigate to="/app/processos" replace />} />

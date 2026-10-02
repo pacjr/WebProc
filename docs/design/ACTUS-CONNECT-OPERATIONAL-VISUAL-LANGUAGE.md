@@ -51,7 +51,7 @@ Do not introduce additional display fonts without PO approval.
 
 ## 4. Layout / workspace
 
-- **Constrained operational workspace** — content column aligned with app shell (currently `max-w-6xl` on Protocolos pages, matching `WebProcShell` main width).
+- **Constrained operational workspace** — content column `max-w-6xl` centered in the shell content area (sidebar consumes ~14rem on desktop; workspace width unchanged from PROTO-UI.3 / Grid / Pulse).
 - **Desktop multi-column** where semantically useful — e.g. main information column + operational side column; full-width bands below for cross-cutting areas (documents, readiness).
 - **Mobile single column** — grid `order` or equivalent; typical Protocolos order: Identificação → Prazos e andamento → Informações → Documentos → lifecycle/readiness actions.
 - **Cards may differ in width and role** — not every block is an equal full-width stacked card.
@@ -181,8 +181,9 @@ Actions must not all compete at equal visual weight. Group related actions; sepa
 - **Desktop:** Multi-column operational layout permitted when IA supports it.
 - **Narrow viewports:** Single column; preserve **logical reading order** (Protocolos: Identificação → Prazos → Informações → Documentos).
 - **No horizontal scroll** for normal CLIENT workflows; long text uses `break-words` / `break-all` where needed.
-- **Do not** render a “sidebar” or phone mock column beside desktop content — mobile reference is collapse only.
-- **No new bottom navigation** in v0.1; existing shell navigation remains authoritative.
+- **Desktop shell (CONNECT-SHELL.1):** Persistent **application sidebar** for primary navigation; operational pages keep **`max-w-6xl`** in the content column (sidebar width is chrome, not a second content column).
+- **Mobile:** Sheet drawer — same information architecture as desktop sidebar; no bottom tab bar.
+- Illustrative reference phone mock remains **layout collapse only**, not a duplicate desktop column.
 
 ---
 
@@ -198,6 +199,30 @@ Actions must not all compete at equal visual weight. Group related actions; sepa
 | Status badge treatment | Domain status enums and labels |
 | Spacing / radius philosophy (`--radius`, card padding) | Governance rules (XOR, protocolization) |
 | Responsive collapse principles | Pulse cockpit metrics; list/grid columns |
+
+---
+
+## 11A. Application shell (CONNECT-SHELL.1 / 1a / 1b)
+
+**Status:** **CONNECT-SHELL.1 / 1a / 1b — CLOSED / PASS** (PO visual approval **2026-10-02**). Committed on `main`; supersedes pre-shell functional RC **`5d798ff`**.
+
+**Principle:** The **application shell** carries restrained **institutional identity** (subtle light-blue rail/surface); **operational surfaces retain semantic color ownership** (green / amber / red / violet roles in content). The shell must **not** become a competing semantic color system or increase saturation beyond the approved institutional tint.
+
+**Chromatic rule (1b):** Connect **product/navigation identity** uses the **blue institutional family** (shell tokens derived from the approved **documentos / sky** palette and structural **primary** identity — `connectShellProductIdentity`). **Violet** supports **informational/institutional** content sparingly (derived from **informações** — `connectShellInstitutionalInfo`, Sobre technology block). **Green, amber, and red** remain reserved for operational semantics (prazos, protocolização attention, cancelamento/destructive). Navigation is **monochrome blue grammar** — not per-item multicolor.
+
+| Element | Treatment |
+|---------|-----------|
+| **Shell surface** | Low-saturation **sky-blue rail** (`connectShellSurfaceClassName`) — visible in light and dark; nav well + footer levels via alpha/borders; no gradients or status hues. |
+| **Brand hierarchy** | Eyebrow **Actus** → serif **Connect** → organization/supervisory context (border-separated in brand block). |
+| **Desktop (lg+)** | Persistent left sidebar (~14rem): branded rail, nav, footer (Tema, Sair), Insight attribution link. |
+| **Mobile (&lt; lg)** | **Sheet** inherits same surface, brand block, nav grammar, and footer; slim header (menu + context only). |
+| **Navigation hierarchy** | Pulse; **Protocolos** group; **Administração** (label + link when allowed); **Institucional** → Sobre. |
+| **Active state** | 3px **sky-blue** rail + low-alpha blue fill + semibold label + blue icon — not color alone; hover weaker blue than active. |
+| **Insight attribution** | “Tecnologia por **Insight AI Solutions**” → [https://www.insightaisolutions.com.br/](https://www.insightaisolutions.com.br/) (`noopener noreferrer`, new tab, sr-only external hint). Subordinate to Actus Connect. |
+| **Sobre** | Product header: neutral + **blue** identity accent; **Tecnologia** block: subtle **violet/informações** tint; “Conheça a Insight” outline secondary; version as compact footer metadata. |
+| **Content workspace** | Unchanged `max-w-6xl` operational column. |
+
+Code: `operational-visual-language.ts` (`connectShell*`, `connectInstitutional*`), `ConnectShellBrandBlock`, `ConnectInsightAttribution`, `ConnectShellFooterActions`, `ConnectAppSidebar`, `ConnectMobileShellBar`, `ConnectShellNavList`, `ConnectSobrePage`, `WebProcShell`.
 
 ---
 
@@ -236,7 +261,7 @@ Normative doc path for future slices: this file (v0.1+).
 | `ProtocoloContextHeader` | **WebProc-local** (pattern reusable) | Entity context header; rename/generalize when second surface needs it |
 | `webproc-field-styles.ts` | **Shared candidate** (WebProc-local name) | Scoped focus classes |
 | `ProcessoFormFields` workspace grid | **WebProc-local** | XOR, fields, read mode — domain-specific |
-| `WebProcShell` `scroll-pt-[5.5rem]` | **Actus Connect shell** | Prevents sticky header overlap |
+| `WebProcShell` + `connectShell*` (`operational-visual-language.ts`) | **Actus Connect shell** | Desktop sidebar; mobile Sheet; `scroll-pt` on mobile header only |
 | `webproc-processos-list-query.ts` | **WebProc-local** (pattern reusable) | URL state + dt_fatal filter bounds for grid |
 | `listProcessosPaginated` (API) | **WebProc-local** | Server range + exact count |
 | Global CSS (`index.css`, login theme) | **Actus-shared** | `--primary`, `--destructive`, `--radius`, shadows |

@@ -444,7 +444,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **DB migration:** **None.** No domain, RPC, Edge, auth, Pulse list, or FlowProc changes in this slice.
 
-**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; Processos grid **PROTO-GRID.1 / 1a closed**; Pulse MVP **WP-04C.3 closed**; documents **PROTO-DOC.3 closed**. **PROTO-UX.GATE — CLOSED / PASS** (2026-10-02). **WEBPROC RC — PO APPROVED** (2026-10-02, WEBPROC-RC.1); see § WEBPROC Release Candidate.
+**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; Processos grid **PROTO-GRID.1 / 1a closed**; Pulse MVP **WP-04C.3 closed**; documents **PROTO-DOC.3 closed**; application shell **CONNECT-SHELL.1 / 1a / 1b closed** (PO visual **2026-10-02**). **PROTO-UX.GATE — CLOSED / PASS** (2026-10-02). **WEBPROC RC re-frozen** after shell — see § WEBPROC Release Candidate.
 
 ### PROTO-GRID.1 — Protocolos operational grid + server-side pagination
 
@@ -476,30 +476,43 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 ---
 
-## WEBPROC Release Candidate — WEBPROC-RC.1
+## WEBPROC Release Candidate — WEBPROC-RC.1 + shell re-freeze
 
-**WEBPROC RC — PO APPROVED** — **Date:** 2026-10-02
+**WEBPROC RC — PO APPROVED** (functional + UX, **2026-10-02**) → **RE-FROZEN** after **CONNECT-SHELL.1 / 1a / 1b** (PO visual approval **2026-10-02**).
 
-**Closeout chain:** WEBPROC-CLOSE.1 (release inventory, BLOCKERS: NONE) → WEBPROC-CLOSE.2 / **PROTO-UX.GATE** (execution + doc/copy fixes) → **WEBPROC-RC.1** (formal PO sign-off, commit, push, RC baseline freeze).
+**Closeout chain:** WEBPROC-CLOSE.1 → WEBPROC-CLOSE.2 / **PROTO-UX.GATE** → **WEBPROC-RC.1** (`5d798ff` functional RC) → **CONNECT-SHELL.1 / 1a / 1b** (application shell) → **RC re-freeze** on `main` (`feat(shell): finalize Actus Connect application shell`).
 
-**Engineering status:**
+**Previous RC baseline (superseded):** `5d798ff982e148ba9f08796e4df40a826977251b` — retained as historical functional checkpoint; **authoritative RC** is post-shell **`main` HEAD** (full SHA in CONNECT-SHELL gate report / `git log`).
+
+### CONNECT-SHELL — Application shell (2026-10-02)
+
+| Slice | Status | Notes |
+|-------|--------|--------|
+| **CONNECT-SHELL.1** | **CLOSED / PASS** | Desktop sidebar + mobile Sheet IA; capability-aware nav; `max-w-6xl` workspace preserved |
+| **CONNECT-SHELL.1a** | **CLOSED / PASS** | Brand block, Sobre, Insight link, PT-BR theme label |
+| **CONNECT-SHELL.1b** | **CLOSED / PASS** | Restrained sky-blue institutional shell; violet informational Sobre block; operational semantics unchanged |
+
+**Scope:** Frontend shell/docs only — **no** migrations, RPC, Edge, RLS, Auth contract, or domain behavior changes.
+
+**Insight official URL:** [https://www.insightaisolutions.com.br/](https://www.insightaisolutions.com.br/)
+
+**Engineering status (RC):**
 
 | Item | Status |
 |------|--------|
 | BLOCKERS | **NONE** |
 | REQUIRED | **NONE** |
 | PROTO-UX.GATE | **CLOSED / PASS** (2026-10-02) |
+| Application shell | **CLOSED / PASS** (2026-10-02) |
 | CLIENT core journey | **PASS** |
 | ACTUS supervisory journey | **PASS** |
 | Closed slices | Remain **CLOSED / PASS** (not reopened) |
 
-**Qualification:** ACTUS **ADMIN** was not browser-retested in PROTO-UX.GATE because the available DEV seed exposed **ACTUS_OPERADOR** only. **WP-04B** (Actus admin MVP) remains **CLOSED / PASS** from its prior validated gate — **not reopened** by this RC.
+**Qualification:** ACTUS **ADMIN** browser smoke limited by DEV seed (**ACTUS_OPERADOR**); **WP-04B** not reopened.
 
-**Production:** **NOT YET DECLARED READY.** Production infrastructure, environment cutover, and ops runbooks are a **separate phase** from this RC freeze.
+**Production:** **NOT YET DECLARED READY.** Next planned phase: **PROD-READINESS.1** (ops/deploy — not started).
 
-**RC baseline:** The git commit `chore(release): freeze WebProc release candidate` on `main` is the **WEBPROC RC BASELINE** (full SHA recorded in WEBPROC-RC.1 report and `git log`).
-
-**RC freeze rule:** After RC freeze, changes to the WebProc RC baseline require one of: (1) confirmed defect/regression; (2) security issue; (3) production deployment requirement; (4) explicit PO decision to change RC scope. **POLISH** and **BACKLOG** do not modify the frozen RC baseline by default.
+**RC freeze rule:** Changes to the WebProc RC baseline require: (1) confirmed defect/regression; (2) security issue; (3) production deployment requirement; (4) explicit PO decision to change RC scope. **POLISH** and **BACKLOG** do not modify the frozen RC baseline by default.
 
 ---
 

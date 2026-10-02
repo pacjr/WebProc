@@ -76,3 +76,7 @@ export const actusConnectLoginConfig = getActusConnectAuthPresentation(
 );
 
 export const ACTUS_CONNECT_APP_VERSION = "1.0.0";
+
+/** Approved product copy (auth + institutional surfaces). */
+export const ACTUS_CONNECT_PRODUCT_TAGLINE =
+  actusConnectPresentationBase.productTagline ?? "Relacionamento e entrada digital de demandas.";

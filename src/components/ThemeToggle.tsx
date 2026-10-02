@@ -24,7 +24,7 @@ export const ThemeToggle = () => {
     <button
       onClick={toggleTheme}
       className="relative inline-flex h-9 w-16 items-center rounded-full bg-muted border border-border transition-smooth hover:bg-accent"
-      aria-label="Toggle theme"
+      aria-label="Alternar tema claro e escuro"
     >
       <span
         className={`inline-block h-7 w-7 transform rounded-full bg-primary transition-smooth ${
