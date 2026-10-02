@@ -1,10 +1,39 @@
 # WebProc Technical Debt
 
-## TD-WP-01 — Temporary Client Master
+## TD-WP-01 — Connect client projection (bootstrap; Flow future SoR)
 
-`webproc.clientes` is a temporary WebProc client master table introduced in WP-01.
+`webproc.clientes` is a **thin Connect organization projection** introduced in WP-01 (`id`, `codigo_cliente`, `nome`, `ativo`). It is **not** the long-term operational client master.
 
-Future target: **FlowProc** should become the canonical client master. Do not integrate FlowProc in WP-01.
+**Frozen direction (CONNECT-FLOW.1, 2026-10-02):** **Flow** becomes the System of Record for Actus operational client master data. Connect retains a persistent projection keyed by **`codigo_cliente`**, with stable surrogate **`clientes.id`** for all WebProc FKs. Connect must **not** expand this table into a duplicate Flow master.
+
+**Normative boundary:** [`docs/architecture/CONNECT-FLOW-MASTER-DATA-BOUNDARY.md`](./architecture/CONNECT-FLOW-MASTER-DATA-BOUNDARY.md)
+
+**Bootstrap:** Actus ADMIN client CRUD remains acceptable until Flow-driven upsert exists. **No WebProc RC blocker.**
+
+## AR-CONNECT-FLOW-01 — Master data & identity boundary (CONNECT-FLOW.1)
+
+**Status:** **CLOSED / DECISION FROZEN** (2026-10-02). Discovery CONNECT-FLOW.1; architecture doc above.
+
+**Assessment:** **READY WITH DOCUMENTED DEBT** — no WebProc Release Candidate architecture change required.
+
+**Frozen highlights:**
+
+- **`codigo_cliente`** = preferred Flow ↔ Connect correlation key (not auto-generated; **`flow_client_id` not introduced now**).
+- **`clientes.id`** = stable Connect-local PK; preserve on upsert-by-code.
+- Flow ↔ Connect integration via **explicit contract only** (no shared tables / cross-writes; transport TBD).
+- Connect authoritative: Auth, memberships, access, roles, Actus operators.
+- Flow collaborator ≠ Connect user until Connect provisions membership.
+- Deactivation ≠ deletion; historical processos/audit/Pulse preserved.
+
+**REQUIRED-BEFORE-FLOW** (not RC blockers):
+
+| ID | Work |
+|----|------|
+| CF-FLOW-01 | Flow → Connect **upsert/provisioning contract** keyed by **`codigo_cliente`**, preserving **`clientes.id`** |
+| CF-FLOW-02 | Transition Flow-owned projection fields (`nome`, `ativo`, create path) to **sync-only / read-only / contingency** in Connect admin |
+| CF-FLOW-03 | Optional **sync metadata** on projection **only if** operational need is demonstrated (not `flow_client_id` by default) |
+
+**BACKLOG:** `webproc` vs `connect` schema naming; multi-client active membership if product requires it (conflicts with current single-active-membership DB rule).
 
 ## TD-WP-02 — Legacy Supabase Objects
 
@@ -161,7 +190,7 @@ Connect client identity uses internal `webproc.clientes.id` and mandatory **`cod
 
 ## TD-AC-MIG-01 — Customer Master Reconciliation (deferred)
 
-`webproc.clientes` remains a **temporary** Connect client master (TD-WP-01) until FlowProc / Flow canonical master. `codigo_cliente` anchors transitional reconciliation; full migration alignment is out of scope for WP-04A.3b.
+`webproc.clientes` is a **bootstrap projection** (TD-WP-01 / AR-CONNECT-FLOW-01). **`codigo_cliente`** is the frozen preferred Flow ↔ Connect correlation key; full Flow upsert contract is **REQUIRED-BEFORE-FLOW**, not WP-04A.3b scope.
 
 ## WP-04A.3 — Connect Provisioning (roadmap)
 
