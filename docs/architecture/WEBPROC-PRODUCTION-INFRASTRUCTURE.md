@@ -377,7 +377,7 @@ Repository-controlled WP-01+ migrations define:
 | `webproc-document-r2-cleanup` | Same | cleanup server RPCs | Delete | JWT | After PROTO-DOC.3 |
 | `provision-client-membership` | Service key, `CONNECT_AUTH_INVITE_REDIRECT_URL` or `CONNECT_PUBLIC_APP_URL` | `server_prepare/link_client_membership_auth` | No | JWT + Auth Admin API | After WP-04A.3c.1 |
 
-**Legacy (do not deploy for WebProc prod):** `list-attachments`, `upload-attachment`, `delete-attachment`.
+**Legacy Edge:** `list-attachments`, `upload-attachment`, `delete-attachment` — **removed from repository** (LEGACY-CLEANUP.1); do not deploy on prod; DEV cloud copies may still exist until retirement.
 
 **Smoke:** Upload → confirm → download → remove; admin provision → activate; cancelled protocol R2 cleanup path.
 
@@ -461,7 +461,7 @@ Strategy B does **not**:
 
 ### POST-PROD DEBT
 
-- TD-DOC3-ORPHAN-01, DOC3-RETRY-01; legacy Edge removal.
+- TD-DOC3-ORPHAN-01, DOC3-RETRY-01; DEV cloud legacy Edge retirement.
 
 ---
 

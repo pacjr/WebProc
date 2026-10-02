@@ -37,7 +37,7 @@
 
 ## TD-WP-02 — Legacy Supabase Objects
 
-Existing `public` schema tables, RLS policies, Storage objects, and legacy Edge Functions remain preserved as historical/reference sources until the new WebProc application passes validation.
+Existing `public` schema tables, RLS policies, and Storage objects on DEV may remain as historical infrastructure; **legacy Edge function source** (`list-attachments`, `upload-attachment`, `delete-attachment`) was **removed from the repository** in **LEGACY-CLEANUP.1** (2026-10-02). Cloud deployments of those functions are **not** deleted in that slice.
 
 **Rule:** No legacy object should be deleted during reconstruction.
 
@@ -77,12 +77,22 @@ Do not add dashboard or Pulse analytics tables or materialized views that duplic
 
 ## TD-AC-LEGACY-FE-01 — Legacy public-schema frontend retired (Step 2B)
 
-The legacy `/dashboard/*` Lovable frontend was removed. The following backend artifacts may remain unreferenced by the Connect frontend and are **cleanup candidates only** (no destructive DB/Edge changes in Step 2B):
+The legacy `/dashboard/*` Lovable frontend was removed.
 
-- **Public tables (historical):** e.g. `public.clientes`, `public.t_processoweb`, legacy attachment metadata as used by the old dashboard
-- **Legacy Edge Functions:** `list-attachments`, `upload-attachment`, `delete-attachment` (distinct from validated `webproc-document-*`)
+**LEGACY-CLEANUP.1 (PO approval 2026-10-02 — CLOSED / PASS):** Removed dead repository artifacts:
 
-Do not drop migrations, tables, or WP-03 functions without a separate controlled backend cleanup step.
+- **Legacy Edge Functions (source + `config.toml` entries):** `list-attachments`, `upload-attachment`, `delete-attachment` — not invoked by `src/` or current WebProc Edge; document path uses `webproc-document-*` + R2.
+- **Stale Supabase `Database['public']` table types:** legacy `t_processoweb`, `arquivos_enviados`, `t_docsprocessos`, legacy `public.clientes` — removed from `src/integrations/supabase/types.ts`; runtime typing uses `webproc-types.ts`.
+
+**Intentionally retained (historical / Strategy B):**
+
+- Migrations `20251002135826`, `20251006143435`, `20251007145916` (unchanged).
+- `supabase/reference/legacy_public_baseline_local.sql` (local validation stubs only).
+- Production infra documentation referencing legacy chain failure.
+
+**Not performed:** DEV/cloud table or Storage bucket deletion; deployed legacy Edge retirement on DEV (see cloud cleanup list in LEGACY-CLEANUP.1 report).
+
+Do not drop migrations or WP-03+ functions without a separate controlled step.
 
 ## AR-AC-IDENT-01 — Actus Connect Product Identity V1 (WP-04A.2a CLOSED)
 
@@ -510,7 +520,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **Qualification:** ACTUS **ADMIN** browser smoke limited by DEV seed (**ACTUS_OPERADOR**); **WP-04B** not reopened.
 
-**Production:** **NOT YET DECLARED READY.** **PROD-READINESS.1** — **CLOSED / PASS**; **PROD-CONFIG.1** — **CLOSED / PASS**; **PROD-INFRA.1** — **CLOSED / PASS** (PO approval 2026-10-02); **PROD-INFRA.1a** — **CLOSED / PASS** (PO approval 2026-10-02): Strategy B greenfield **25/25** WP-01+ local proof; full 28-chain legacy failure expected; `migration repair` baseline + future migration drill **PASS** — [`docs/architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md`](./architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md). Next: **PROD-BOOTSTRAP.1**.
+**Production:** **NOT YET DECLARED READY.** **PROD-READINESS.1** — **CLOSED / PASS**; **PROD-CONFIG.1** — **CLOSED / PASS**; **PROD-INFRA.1** / **PROD-INFRA.1a** — **CLOSED / PASS** (PO approval 2026-10-02). **LEGACY-CLEANUP.1** — **CLOSED / PASS** (PO approval 2026-10-02): legacy Edge source + stale public types removed from repo; migrations/DEV cloud data unchanged; PROTO-DOC.3 R2 path unchanged. Next: **PROD-BOOTSTRAP.1**.
 
 **RC freeze rule:** Changes to the WebProc RC baseline require: (1) confirmed defect/regression; (2) security issue; (3) production deployment requirement; (4) explicit PO decision to change RC scope. **POLISH** and **BACKLOG** do not modify the frozen RC baseline by default.
 

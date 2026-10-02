@@ -1,14 +1,5 @@
 project_id = "cxrnptygbzqzobtdxpwo"
 
-[functions.list-attachments]
-verify_jwt = true
-
-[functions.delete-attachment]
-verify_jwt = true
-
-[functions.upload-attachment]
-verify_jwt = true
-
 [functions.webproc-document-upload-prepare]
 verify_jwt = true
 

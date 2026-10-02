@@ -30,7 +30,7 @@ WebProc **application code and RC** are frozen and functionally complete on DEV.
 | Edge Functions (WebProc) | ACTIVE on DEV | Deploy 6 functions from repo | `supabase/functions/` | R2, capability secret, URLs | `supabase functions deploy` | **REQUIRED** | Secrets per env |
 | Cloudflare R2 | DEV bucket `webproc` (default) | Prod bucket + credentials | Edge env | **Yes** | Cloudflare + Edge secrets | **REQUIRED** | R2 CORS for browser PUT |
 | Legacy Storage bucket | `process-attachments` (migration) | Not used by WebProc UI path | Migration | — | — | **N/A** | Legacy migrations only |
-| Legacy Edge (`upload-attachment`, etc.) | In repo, in `config.toml` | **Not invoked by WebProc frontend** | — | — | Optional omit | **POST-PROD** | Dead code path |
+| Legacy Edge (`upload-attachment`, etc.) | Removed from repo (**LEGACY-CLEANUP.1**); may still exist on DEV cloud | **Not invoked by WebProc frontend** | — | — | Do not deploy on prod | **N/A** | Retire DEV deployment separately |
 | DNS / custom domain | localhost / DEV | Production app URL | PO | — | Host | **PO DECISION** | Not in repo |
 | Institutional site link | `VITE_SITE_PUBLIC_URL` optional | Prod Actus site URL | Env | Public | Build | **POLISH** | Defaults localhost |
 
@@ -95,7 +95,7 @@ Flow integration **not** required for WebProc production.
 | `webproc-document-r2-cleanup` | Post-cancel R2 cleanup | true | R2 delete | PROTO-DOC.3 |
 | `provision-client-membership` | Admin invite/link | true | Service role, invite redirect URL | server_prepare/link |
 
-**Legacy (repo, not used by `src/`):** `list-attachments`, `upload-attachment`, `delete-attachment`.
+**Legacy Edge:** `list-attachments`, `upload-attachment`, `delete-attachment` — **removed from repository** (LEGACY-CLEANUP.1); may remain deployed on DEV until cloud retirement.
 
 **Deploy order:** Migrations (document RPCs) → Edge secrets → deploy all six functions above → smoke upload/download/remove.
 
@@ -218,7 +218,7 @@ Previously: hardcoded DEV Supabase URL/key in `client.ts` — **RESOLVED** by **
 
 ### POLISH
 
-- Remove or document legacy Edge functions not used by WebProc.
+- Retire legacy Edge deployments on DEV/staging cloud (repo source removed in LEGACY-CLEANUP.1).
 - `VITE_SITE_PUBLIC_URL` for prod institutional link.
 - Frontend error monitoring.
 - Pulse chunk size / performance budgets (TD reference only).
@@ -260,6 +260,18 @@ Previously: hardcoded DEV Supabase URL/key in `client.ts` — **RESOLVED** by **
 **Strategy B classification:** **PASS** (local greenfield proof).
 
 **Evidence:** [`docs/architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md`](./architecture/WEBPROC-PRODUCTION-INFRASTRUCTURE.md) § Executive result / PROD-INFRA.1a.
+
+---
+
+## LEGACY-CLEANUP.1 — Repository legacy artifact removal
+
+**Status:** **CLOSED / PASS** (PO approval 2026-10-02).
+
+**Removed from repository:** Legacy Edge sources (`list-attachments`, `upload-attachment`, `delete-attachment`) and `config.toml` entries; stale legacy `public` frontend type contract in `types.ts`.
+
+**Retained:** All `202510*` historical migrations; Strategy B documentation; `legacy_public_baseline_local.sql`; current `webproc-document-*` R2 architecture; `provision-client-membership`; Connect ↔ Flow frozen boundary.
+
+**Not performed:** DEV cloud infrastructure/data deletion; legacy `public` tables remain protected pending Actus/Flow data policy; `process-attachments` bucket **VERIFY-FIRST** for cloud retirement.
 
 ---
 
