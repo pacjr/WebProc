@@ -35,3 +35,9 @@ scratch/
 
 # Local development seed data
 docs/dev-seed/
+
+# Local environment secrets (use .env.example as template)
+.env
+.env.local
+.env.*.local
+!.env.example
