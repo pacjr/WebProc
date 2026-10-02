@@ -444,7 +444,7 @@ Applies from **initial create / draft save** onward (frontend enforced).
 
 **DB migration:** **None.** No domain, RPC, Edge, auth, Pulse list, or FlowProc changes in this slice.
 
-**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; Processos grid **PROTO-GRID.1 / 1a closed**; suite-wide readiness still requires **PROTO-UX.GATE**, Pulse visual slice, and **PROTO-DOC.3** per roadmap.
+**Product/UI-UX Readiness:** Protocolos detail/create UX **UI.3 closed**; Processos grid **PROTO-GRID.1 / 1a closed**; Pulse MVP **WP-04C.3 closed**; documents **PROTO-DOC.3 closed**. **PROTO-UX.GATE — CLOSED / PASS** (2026-10-02). **WEBPROC RC — PO APPROVED** (2026-10-02, WEBPROC-RC.1); see § WEBPROC Release Candidate.
 
 ### PROTO-GRID.1 — Protocolos operational grid + server-side pagination
 
@@ -473,6 +473,33 @@ Applies from **initial create / draft save** onward (frontend enforced).
 **Delivered:** Shared `operationalCollection*` shell classes in `operational-visual-language.ts` — primary/legal page + data panel identity, violet query toolbar (`informacoes` role), neutral rows/pagination; no behavior change to pagination/filters/API.
 
 **DB migration:** **None.**
+
+---
+
+## WEBPROC Release Candidate — WEBPROC-RC.1
+
+**WEBPROC RC — PO APPROVED** — **Date:** 2026-10-02
+
+**Closeout chain:** WEBPROC-CLOSE.1 (release inventory, BLOCKERS: NONE) → WEBPROC-CLOSE.2 / **PROTO-UX.GATE** (execution + doc/copy fixes) → **WEBPROC-RC.1** (formal PO sign-off, commit, push, RC baseline freeze).
+
+**Engineering status:**
+
+| Item | Status |
+|------|--------|
+| BLOCKERS | **NONE** |
+| REQUIRED | **NONE** |
+| PROTO-UX.GATE | **CLOSED / PASS** (2026-10-02) |
+| CLIENT core journey | **PASS** |
+| ACTUS supervisory journey | **PASS** |
+| Closed slices | Remain **CLOSED / PASS** (not reopened) |
+
+**Qualification:** ACTUS **ADMIN** was not browser-retested in PROTO-UX.GATE because the available DEV seed exposed **ACTUS_OPERADOR** only. **WP-04B** (Actus admin MVP) remains **CLOSED / PASS** from its prior validated gate — **not reopened** by this RC.
+
+**Production:** **NOT YET DECLARED READY.** Production infrastructure, environment cutover, and ops runbooks are a **separate phase** from this RC freeze.
+
+**RC baseline:** The git commit `chore(release): freeze WebProc release candidate` on `main` is the **WEBPROC RC BASELINE** (full SHA recorded in WEBPROC-RC.1 report and `git log`).
+
+**RC freeze rule:** After RC freeze, changes to the WebProc RC baseline require one of: (1) confirmed defect/regression; (2) security issue; (3) production deployment requirement; (4) explicit PO decision to change RC scope. **POLISH** and **BACKLOG** do not modify the frozen RC baseline by default.
 
 ---
 
@@ -524,7 +551,7 @@ The system may **observe and inform**; it must **not** automatically decide admi
 
 **Delivered:** When **Protocolar** is blocked by incomplete mandatory requirements, a central **AlertDialog** lists blockers derived from `validateProtocolFields` / `collectProtocolizationBlockers` (same rules as checklist). **No `protocolar_processo` RPC** on client-known incomplete state. Server readiness domain codes map to the same dialog; other failures remain toast. After close, protocolization checklist section receives restrained ring/background emphasis and focus.
 
-**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, PROTO-DOC.3 (retention/cleanup), broad visual redesign beyond PROTO-UI.3 scope.
+**Implementation explicitly out of scope for AR-PROTO-GOV-01 (remaining):** Data Fatal history tables, Pulse aging queries, notification/email logic, automatic cancellation, broad visual redesign beyond PROTO-UI.3 scope. (**PROTO-DOC.3** coordinated file removal/cancel cleanup — **CLOSED / PASS**, 2026-10-02.)
 
 ## Authorship Model (WP-01C)
 

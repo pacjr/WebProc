@@ -533,9 +533,12 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 
 ### PROTO-UX.GATE — Readiness regression
 
+- **Status:** **CLOSED / PASS** (2026-10-02). WEBPROC-CLOSE.2 execution on DEV (`cxrnptygbzqzobtdxpwo`); baseline `main` @ `b5e8572`.
 - **Scope:** a11y pass; responsive checklist; CLIENT/ACTUS matrix; copy audit (no LINK/ARQUIVO).  
 - **Deps:** All above.  
-- **Gate:** PO sign-off for Product/UI-UX Readiness (does not close production readiness).
+- **Tested matrix:** CLIENT desktop; CLIENT ~375px; ACTUS desktop (supervisory; ADMIN CRUD not exercised — OPERADOR creds); responsive breakpoint smoke (~768px, ~1280px); light/dark major surfaces; accessibility practical gate; copy audit.
+- **Gate:** Product/UI-UX Readiness regression **PASS**.
+- **WEBPROC-RC.1:** **WEBPROC RC — PO APPROVED** (2026-10-02). Closes WEBPROC-CLOSE.2; RC baseline frozen on `main`. **Production deploy not declared ready** (separate phase).
 
 ---
 
@@ -562,7 +565,7 @@ Authority from RLS/RPC — UI mirrors existing gates only.
 ### Genuine decisions still required (PO)
 
 1. **Cancelar protocolo:** Implemented in PROTO-UI.2 (confirmed cancel, not delete). **PROTO-GOV.1 / AR-PROTO-GOV-01:** mandatory cancellation reason enforced server-side; motivo + `status_antes_cancelamento` persisted on `processos`. **PROTO-GOV.1b:** cancellation evidence read-only in list (motivo column/card) and detail (**Cancelamento** section).
-2. **List search at scale:** Client-side filter sufficient for MVP or prioritize server-side search RPC?  
+2. **List search at scale:** **CLOSED** — **PROTO-GRID.1 / 1a CLOSED/PASS** (server paginated list + filters + URL state; no separate MVP client-only search path required).
 3. **ARQUIVO remove / cancel cleanup:** **PROTO-DOC.3 CLOSED/PASS** (TECHNICAL-DEBT § PROTO-DOC.3).
 
 ### AR-PROTO-GOV-01 — Protocol temporal & decision governance (approved)
@@ -573,7 +576,7 @@ Summary for UX planning:
 
 - Distinguish lifecycle status, temporal conditions (Data Fatal hoje / vencida + aging), and human decisions.
 - **Pulse** surfaces attention conditions; **Protocolos** executes operations — no auto-cancel on overdue.
-- Future **Data Fatal change history** and **required cancel reason** are domain requirements, not yet implemented.
+- Future **Data Fatal change history** remains a domain requirement, not yet implemented. **Required cancel reason** — **implemented** (PROTO-GOV.1 / AR-PROTO-GOV-01; motivo in list + detail).
 - **UX-PROTO-BLOCK-01:** **CLOSED / PASS** — central protocolization blocker dialog + checklist emphasis (PO visual smoke PASS).
 
 ---
@@ -582,5 +585,6 @@ Summary for UX planning:
 
 | Date | Change |
 |------|--------|
+| 2026-10-02 | WEBPROC-RC.1 — PO RC approved + RC freeze; PROTO-UX.GATE (WEBPROC-CLOSE.2); §19 list-search closed; cancel-reason wording aligned to PROTO-GOV.1 |
 | 2026-10-01 | PROTO-UI.2b manual gate; AR-PROTO-GOV-01 + UX-PROTO-BLOCK-01 recorded |
 | 2026-09-30 | UX-02 initial specification for PO review |

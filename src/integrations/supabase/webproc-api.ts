@@ -84,7 +84,7 @@ const LIFECYCLE_ERROR_MESSAGES: Record<string, string> = {
   invalid_status_for_document_mutation:
     "Documentos só podem ser alterados enquanto o protocolo está em preenchimento.",
   arquivo_removal_requires_coordination:
-    "A remoção de arquivos anexados será disponibilizada em uma próxima entrega.",
+    "Use o botão Remover na seção Documentos para excluir arquivos anexados.",
 };
 
 function mapMembershipRow(row: MembershipRow): WebProcMembership | null {
